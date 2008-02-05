@@ -1,0 +1,9 @@
+addOn
+include
+build
+config/pushMailRecipients.py
+config/private.py
+config/bversion.hpp
+.objs
+.project
+.sconsign.dblite
