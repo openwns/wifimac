@@ -5,7 +5,7 @@ import wnsbase.RCS as RCS
 
 commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
                             AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'TEST'],
+                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
                             LIBRARY        = True,
                             SHORTCUTS      = True,
                             FLATINCLUDES   = False,
