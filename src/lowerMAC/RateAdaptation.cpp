@@ -44,8 +44,8 @@ RateAdaptation::RateAdaptation(wns::ldk::fun::FUN* fun, const wns::pyconfig::Vie
     managerName(config_.get<std::string>("managerName")),
     sinrMIBServiceName(config_.get<std::string>("sinrMIBServiceName")),
     perMIBServiceName(config_.get<std::string>("perMIBServiceName")),
-    raForACKFrames(config_.get<bool>("raForACKFrames")),
-    ackFramesRateId(config_.get<int>("ackFramesRateId")),
+    raForACKFrames(config_.get<bool>("myConfig.raForACKFrames")),
+    ackFramesRateId(config_.get<int>("myConfig.ackFramesRateId")),
 
     logger(config_.get("logger"))
 {
@@ -54,7 +54,7 @@ RateAdaptation::RateAdaptation(wns::ldk::fun::FUN* fun, const wns::pyconfig::Vie
     friends.phyUser = NULL;
     friends.manager = NULL;
 
-    raCreator = rateAdaptationStrategies::RateAdaptationStrategyFactory::creator(config_.get<std::string>("raStrategy"));
+    raCreator = rateAdaptationStrategies::RateAdaptationStrategyFactory::creator(config_.get<std::string>("myConfig.raStrategy"));
 }
 
 

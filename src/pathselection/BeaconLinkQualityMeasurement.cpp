@@ -59,16 +59,16 @@ BroadcastLinkQuality::BroadcastLinkQuality(const wns::pyconfig::View& config_,
     parent(parent_),
     peerAddress(peerAddress_),
     myAddress(myAddress_),
-    successRate(interval_*config.get<int>("linkParams.windowLength"), true),
+    successRate(interval_*config.get<int>("myConfig.windowLength"), true),
     missedBeaconsInRow(10),
     linkCreated(false),
-    meanFrameSize(config.get<Bit>("linkParams.meanFrameSize")),
-    expectedAckDuration(config.get<wns::simulator::Time>("linkParams.expectedAckDuration")),
-    slotDuration(config.get<wns::simulator::Time>("linkParams.slotDuration")),
-    sifsDuration(config.get<wns::simulator::Time>("linkParams.sifsDuration")),
-    preambleDuration(config.get<wns::simulator::Time>("linkParams.preambleDuration")),
-    scalingFactor(config.get<double>("linkParams.scalingFactor")),
-    maxMissedBeacons(config.get<int>("linkParams.maxMissedBeacons"))
+    meanFrameSize(config.get<Bit>("myConfig.meanFrameSize")),
+    expectedAckDuration(config.get<wns::simulator::Time>("myConfig.expectedAckDuration")),
+    slotDuration(config.get<wns::simulator::Time>("myConfig.slotDuration")),
+    sifsDuration(config.get<wns::simulator::Time>("myConfig.sifsDuration")),
+    preambleDuration(config.get<wns::simulator::Time>("myConfig.preambleDuration")),
+    scalingFactor(config.get<double>("myConfig.scalingFactor")),
+    maxMissedBeacons(config.get<int>("myConfig.maxMissedBeacons"))
 {
     ps = parent->getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::pathselection::IPathSelection>
         (config.get<std::string>("pathSelectionServiceName"));

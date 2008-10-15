@@ -50,6 +50,7 @@ srcFiles['LOWERMAC'] = [
     'src/lowerMAC/RateAdaptation.cpp',
     'src/lowerMAC/TXOP.cpp',
     'src/lowerMAC/NextFrameGetter.cpp',
+    'src/lowerMAC/DuplicateFilter.cpp',
 
     'src/lowerMAC/timing/DCF.cpp',
     'src/lowerMAC/timing/ConstantWait.cpp',

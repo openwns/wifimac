@@ -47,8 +47,8 @@ Beacon::Beacon(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
 	logger(config.get("logger")),
     currentBeacon(),
 	phyUserCommandName(config.get<std::string>("phyUserCommandName")),
-	scanFrequencies(config.getSequence("scanFrequencies")),
-    beaconPhyModeId(config.get<int>("beaconPhyModeId")),
+	scanFrequencies(config.getSequence("myConfig.scanFrequencies")),
+    beaconPhyModeId(config.get<int>("myConfig.beaconPhyModeId")),
 	beaconRxStrength(),
 	bssFrequencies()
 {
@@ -67,22 +67,22 @@ Beacon::onFUNCreated()
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(config.get<std::string>("managerName"));
     assure(friends.manager, "Management entity not found");
 
-    if (config.get<bool>("beaconEnabled"))
+    if (config.get<bool>("myConfig.enabled"))
     {
         assure(friends.manager->getStationType() != dll::StationTypes::UT(),
                "STAs cannot transmit a beacon, as nobody can synchonize to them");
         // starting the periodic beacon transmission
-        wns::simulator::Time delay = config.get<wns::simulator::Time>("startDelay");
-        wns::simulator::Time period = config.get<wns::simulator::Time>("period");
+        wns::simulator::Time delay = config.get<wns::simulator::Time>("myConfig.delay");
+        wns::simulator::Time period = config.get<wns::simulator::Time>("myConfig.period");
         startPeriodicTimeout(period, delay);
         MESSAGE_SINGLE(NORMAL, this->logger, "Starting beacon with delay " << delay << " and period " << period);
     }
 
     if (friends.manager->getStationType() == dll::StationTypes::UT())
     {
-        scanFrequencies = config.getSequence("scanFrequencies");
+        scanFrequencies = config.getSequence("myConfig.scanFrequencies");
         freqIter = scanFrequencies.begin<double>();
-        scanDuration = config.get<wns::simulator::Time>("scanDuration");
+        scanDuration = config.get<wns::simulator::Time>("myConfig.scanDuration");
         // set the transceiver to the first frequency
         MESSAGE_SINGLE(NORMAL, this->logger, "Set scanning frequency to " << *freqIter);
         friends.manager->getPhyUser()->setFrequency(*freqIter);
