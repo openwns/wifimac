@@ -69,6 +69,7 @@ void Layer2::onNodeCreated()
     this->setContext("MAC.WindowProbeHopCount", 0);
 
     // Add compound-based context providers
+    // TODO: Readin names from configuration
     getNode()->getContextProviderCollection().addProvider(
         wifimac::helper::contextprovider::HopCount(fun, "ForwardingCommand"));
     getNode()->getContextProviderCollection().addProvider(
@@ -78,7 +79,7 @@ void Layer2::onNodeCreated()
     getNode()->getContextProviderCollection().addProvider(
         wifimac::helper::contextprovider::IsUnicast(fun, "upperConvergence"));
     getNode()->getContextProviderCollection().addProvider(
-        wifimac::helper::contextprovider::ModulationCodingScheme(fun, "managerCommand"));
+        wifimac::helper::contextprovider::ModulationCodingScheme(fun, "ManagerCommand"));
     getNode()->getContextProviderCollection().addProvider(
         wifimac::helper::contextprovider::IsForMe(fun, "upperConvergence"));
 }
