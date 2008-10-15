@@ -60,6 +60,14 @@ srcFiles['LOWERMAC'] = [
     'src/lowerMAC/rateAdaptationStrategies/SINR.cpp',
 ]
 
+srcFiles['DRAFTN'] = [
+    'src/convergence/DeAggregation.cpp',
+    'src/lowerMAC/BlockUntilReply.cpp',
+    'src/lowerMAC/Aggregation.cpp',
+    'src/lowerMAC/BlockACK.cpp',
+    'src/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.cpp',
+]
+
 srcFiles['HELPER'] = [
     'src/helper/Keys.cpp',
     'src/helper/HopContextWindowProbe.cpp',
