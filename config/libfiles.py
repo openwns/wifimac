@@ -43,6 +43,15 @@ srcFiles['CONVERGENCE'] = [
     'src/convergence/ChannelState.cpp',
 ]
 
+srcFiles['DRAFTN'] = [
+    'src/convergence/DeAggregation.cpp',
+    'src/lowerMAC/BlockUntilReply.cpp',
+    'src/lowerMAC/DuplicateFilter.cpp',
+    'src/lowerMAC/Aggregation.cpp',
+    'src/lowerMAC/BlockACK.cpp',
+    'src/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.cpp',
+]
+
 srcFiles['LOWERMAC'] = [
     'src/lowerMAC/Manager.cpp',
     'src/lowerMAC/RTSCTS.cpp',
