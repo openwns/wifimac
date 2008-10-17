@@ -47,11 +47,11 @@ class PhyUserConfig(Sealed):
 	bandwidth = 20
 	phyModes = None
 
-	switchingPointOffset = dB(0.0)
+	switchingPointOffset = dB(1.0)
 
 	def __init__(self, initFrequency):
 		self.initFrequency = initFrequency
-		self.phyModes = wifimac.convergence.PhyMode.PhyModesImproved
+		self.phyModes = wifimac.convergence.PhyMode.PhyModes
 
 class PhyUser(wns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.convergence.PhyUser'

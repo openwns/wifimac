@@ -24,53 +24,53 @@
 
 namespace wifimac { namespace convergence {
 
-	/**
+    /**
 	 * @brief ErrorModellingCommand, which stores the per/cir
 	 */
-	class ErrorModellingCommand:
-		public wns::ldk::Command,
-		public wns::ldk::ErrorRateProviderInterface
-	{
-	public:
-		ErrorModellingCommand()
-			{
-				local.per = 1;
-				local.destructorCalled = NULL;
-				local.cir.set_dB(0);
-			}
+    class ErrorModellingCommand:
+        public wns::ldk::Command,
+        public wns::ldk::ErrorRateProviderInterface
+    {
+    public:
+        ErrorModellingCommand()
+            {
+                local.per = 1;
+                local.destructorCalled = NULL;
+                local.cir.set_dB(0);
+            }
 
-		~ErrorModellingCommand()
-			{
-				if(local.destructorCalled != NULL)
-					*local.destructorCalled = true;
-			}
-		virtual double getErrorRate() const
-			{
-				return local.per;
-			}
+        ~ErrorModellingCommand()
+            {
+                if(local.destructorCalled != NULL)
+                    *local.destructorCalled = true;
+            }
+        virtual double getErrorRate() const
+            {
+                return local.per;
+            }
 
-		struct {
-			double per;
-			long *destructorCalled;
-			wns::Ratio cir;
-		} local;
-		struct {} peer;
-		struct {} magic;
-	};
+        struct {
+            double per;
+            long *destructorCalled;
+            wns::Ratio cir;
+        } local;
+        struct {} peer;
+        struct {} magic;
+    };
 
-	/**
+    /**
 	 * @brief ErrorModelling implementation of the FU.
 	 *
 	 * It maps the Carry Interference Ratio (CIR) for a PhyMode
 	 * to the Packet Error Rate (PER).
 	 */
-	class ErrorModelling:
-		public wns::ldk::fu::Plain<ErrorModelling, ErrorModellingCommand>,
+    class ErrorModelling:
+        public wns::ldk::fu::Plain<ErrorModelling, ErrorModellingCommand>,
         public wns::ldk::Processor<ErrorModelling>
-	{
-	public:
-		// FUNConfigCreator interface realisation
-		ErrorModelling(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
+    {
+    public:
+        // FUNConfigCreator interface realisation
+        ErrorModelling(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
 
         /**
          * @brief Processor Interface Implementation
@@ -78,12 +78,32 @@ namespace wifimac { namespace convergence {
         void processIncoming(const wns::ldk::CompoundPtr& compound);
         void processOutgoing(const wns::ldk::CompoundPtr& compound);
 
-	private:
-		wns::pyconfig::View config;
-		wns::logger::Logger logger;
-		const std::string phyUserCommandName;
+    private:
+        wns::pyconfig::View config;
+        wns::logger::Logger logger;
+        const std::string phyUserCommandName;
         const std::string managerCommandName;
-	}; // ErrorModelling
+        const double cyclicPrefixReduction;
+
+        /// @brief Calculate probability of error in pairwise comparison of two
+        /// paths that differ in d bits
+        double Pd(double rawBer, double d) const;
+
+        /// @brief Calculate first error event probability of coding rate 1/2
+        double Pu12(double rawBer) const;
+
+        /// @brief Calculate first error event probability of coding rate 2/3
+        double Pu23(double rawBer) const;
+
+        /// @brief Calculate first error event probability of coding rate 3/4
+        double Pu34(double rawBer) const;
+
+        /// @brief Calculate first error event probability of coding rate 5/6
+        double Pu56(double rawBer) const;
+
+        /// @brief Computes the Q function as found in Proakis (3rd ed, 1995, eq. 2-1-98)
+        double Q(double x) const;
+    }; // ErrorModelling
 } // convergence
 } // wifimac
 

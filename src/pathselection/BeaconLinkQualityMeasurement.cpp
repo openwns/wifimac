@@ -151,32 +151,36 @@ BroadcastLinkQuality::newPeerMeasurement(double peerSuccessRate, wns::Ratio peer
 double
 BroadcastLinkQuality::getBestRate(wns::Ratio sinr)
 {
-    if(sinr >= wns::Ratio::from_dB(17))
+    if(sinr >= wns::Ratio::from_dB(24.8))
     {
         return (54e6);
     }
-    if(sinr >=  wns::Ratio::from_dB(16))
+    if(sinr >=  wns::Ratio::from_dB(23.5))
     {
         return(48e6);
     }
-    if(sinr >= wns::Ratio::from_dB(13))
+    if(sinr >= wns::Ratio::from_dB(18.8))
     {
         return(36e6);
     }
-    if(sinr >= wns::Ratio::from_dB(9))
+    if(sinr >= wns::Ratio::from_dB(15.4))
     {
         return(24e6);
     }
-    if(sinr >= wns::Ratio::from_dB(6))
+    if(sinr >= wns::Ratio::from_dB(12.0))
     {
         return(18e6);
     }
-    if(sinr >= wns::Ratio::from_dB(3))
+    if(sinr >= wns::Ratio::from_dB(8.8))
     {
         return(12e6);
     }
+    if(sinr >= wns::Ratio::from_dB(6.0))
+    {
+        return(6e6);
+    }
 
-    return(6e6);
+    return(1);
 }
 
 

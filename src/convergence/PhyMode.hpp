@@ -23,8 +23,6 @@
 #include <map>
 
 namespace wifimac { namespace convergence {
-	class PhyMode;
-
 	/**
 	 * @brief Holder for all necessary information about a PhyMode
 	 *
@@ -44,14 +42,6 @@ namespace wifimac { namespace convergence {
 		 * @brief Read in the configuration for this Phy-Mode
 		 */
 		void configPhyMode(const wns::pyconfig::View& config);
-
-		/**
-		 * @brief Compute the PER out of
-		 *   - the received signal strength
-		 *   - the Signal to Noise+Interference Ratio
-		 *   - the frame length
-		 */
-		double getPer(wns::Power rss, wns::Ratio sinr, Bit length) const;
 
 		/**
 		 * @brief Compute the number of symbols required to transmit
@@ -78,7 +68,10 @@ namespace wifimac { namespace convergence {
 		/**
 		 * @brief Output the phyMode description
 		 */
-		std::string getString() const { return modulation_+"-"+codingRate_;};
+        std::string getString() const { return modulation_+"-"+codingRate_;};
+
+        std::string getModulation() const { return modulation_;};
+        std::string getRate() const { return codingRate_;};
 
 		int getIndex() const { return index; };
 
@@ -103,8 +96,6 @@ namespace wifimac { namespace convergence {
 		wns::Power minRSS_;
         wns::Ratio minSINR;
         unsigned int numberOfSpatialStreams_;
-
-		std::map<wns::Ratio, double> sinr2ber_;
 
 		wns::logger::Logger logger_;
 

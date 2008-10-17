@@ -36,6 +36,7 @@ class ErrorModelling(wns.FUN.FunctionalUnit):
 	logger = None
 	phyUserCommandName = None
 	managerCommandName = None
+	cyclicPrefixReduction = 0.8
 	__plugin__ = 'wifimac.convergence.ErrorModelling'
 
 	def __init__(self,

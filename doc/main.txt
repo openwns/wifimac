@@ -1,0 +1,16 @@
+/**
+ * @page wns_wifimac_overview WiFiMAC
+ *
+ * The WiFiMAC provides an IEEE 802.11-conformant Data Link Layer,
+ * including the following features:
+ * @li IEEE 802.11 Distributed Contention Function medium access with
+ *     virtual and physical carrier sense.
+ * @li RTS/CTS frame exchange to reduce the hidden node problem
+ * @li IEEE 802.11-2007 Transmission Opportunities
+ * @li IEEE 802.11 Draft N MPDU aggregation
+ * @li IEEE 802.11 Draft N Block Acknowledgement
+ * @li IEEE 802.11 Draft N MIMO-based Modulation and Coding Schemes using
+ *     a simple post-SINR based MIMO transmission model
+ * @li Opportunistic rate adaptation with closed and open loop control
+ * @li Mesh networking with path selection using mesh points as intermediate hops
+ */
