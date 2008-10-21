@@ -298,14 +298,16 @@ class Config(Sealed):
 		# this ensures consistency, no matter on what the variables are set by default
 		self.rtsctsThreshold = 800*8
 		self.sifsDuration = 16E-6
-		# value for normal ACK
-		#self.expectedACKDuration = 44E-6
-		# value for compressed (no frame fragments) BlockACK
-		self.expectedACKDuration = 68E-6
 		self.preambleProcessingDelay = 21E-6
 		self.expectedCTSDuration = 44E-6
 		self.slotDuration = 9E-6
 
+		if(self.mode == 'basic'):
+			# value for normal ACK
+			self.expectedACKDuration = 44E-6
+		else:
+			# value for compressed (no frame fragments) BlockACK
+			self.expectedACKDuration = 68E-6
 
 	def __setattr__(self, name, val):
 		# special setattr for multiple used variables: Enable propagation of single setting to required FUs

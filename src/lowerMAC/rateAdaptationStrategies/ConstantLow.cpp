@@ -43,13 +43,13 @@ ConstantLow::ConstantLow(
 }
 
 wifimac::convergence::PhyMode
-ConstantLow::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/)
+ConstantLow::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/)
 {
     return(friends.phyUser->getPhyModeProvider()->getLowest());
 }
 
 wifimac::convergence::PhyMode
-ConstantLow::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, const wns::Ratio /*lqm*/)
+ConstantLow::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/, const wns::Ratio /*lqm*/)
 {
     return(friends.phyUser->getPhyModeProvider()->getLowest());
 }

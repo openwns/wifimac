@@ -42,6 +42,7 @@ RateAdaptation::RateAdaptation(wns::ldk::fun::FUN* fun, const wns::pyconfig::Vie
 
     phyUserName(config_.get<std::string>("phyUserName")),
     managerName(config_.get<std::string>("managerName")),
+    arqName(config_.get<std::string>("arqName")),
     sinrMIBServiceName(config_.get<std::string>("sinrMIBServiceName")),
     perMIBServiceName(config_.get<std::string>("perMIBServiceName")),
     raForACKFrames(config_.get<bool>("myConfig.raForACKFrames")),
@@ -68,6 +69,7 @@ void RateAdaptation::onFUNCreated()
 
     friends.phyUser = getFUN()->findFriend<wifimac::convergence::PhyUser*>(phyUserName);
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
+    friends.arq = getFUN()->findFriend<wifimac::lowerMAC::ITransmissionCounter*>(arqName);
 
     sinrMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::SINRInformationBase>(sinrMIBServiceName);
     perMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
@@ -94,7 +96,8 @@ void RateAdaptation::processOutgoing(const wns::ldk::CompoundPtr& compound)
     else
     {
         wns::service::dll::UnicastAddress receiver = friends.manager->getReceiverAddress(compound->getCommandPool());
-        friends.manager->setPhyMode(compound->getCommandPool(), this->getPhyMode(receiver));
+        size_t numTransmissions = friends.arq->getTransmissionCounter(compound);
+        friends.manager->setPhyMode(compound->getCommandPool(), this->getPhyMode(receiver, numTransmissions));
 
         MESSAGE_BEGIN(NORMAL, logger, m, "Send data frame to ");
         m << " rx: " << friends.manager->getReceiverAddress(compound->getCommandPool());
@@ -104,7 +107,7 @@ void RateAdaptation::processOutgoing(const wns::ldk::CompoundPtr& compound)
 }
 
 wifimac::convergence::PhyMode
-RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver)
+RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver, size_t numTransmissions)
 {
     wifimac::convergence::PhyMode pm;
 
@@ -120,11 +123,11 @@ RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver)
 
     if(sinrMIB->knowsPeerSINR(receiver))
     {
-        pm = rateAdaptation.find(receiver)->getPhyMode(receiver, sinrMIB->getAveragePeerSINR(receiver));
+        pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions, sinrMIB->getAveragePeerSINR(receiver));
     }
     else
     {
-        pm = rateAdaptation.find(receiver)->getPhyMode(receiver);
+        pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions);
     }
     return(pm);
 }

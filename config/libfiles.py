@@ -67,6 +67,7 @@ srcFiles['LOWERMAC'] = [
 
     'src/lowerMAC/rateAdaptationStrategies/ConstantLow.cpp',
     'src/lowerMAC/rateAdaptationStrategies/SINR.cpp',
+    'src/lowerMAC/rateAdaptationStrategies/Opportunistic.cpp'
 ]
 
 srcFiles['DRAFTN'] = [

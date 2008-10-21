@@ -38,7 +38,7 @@ SINR::SINR(
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_per, _manager, _phyUser, _logger),
+    Opportunistic(_per, _manager, _phyUser, _logger),
     per(_per),
     logger(_logger)
 {
@@ -47,48 +47,16 @@ SINR::SINR(
 }
 
 wifimac::convergence::PhyMode
-SINR::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, const wns::Ratio lqm)
+SINR::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t numTransmissions, const wns::Ratio lqm)
 {
-    MESSAGE_SINGLE(NORMAL, *logger, "RA getPhyMode with lqm " << lqm << ", suggested phyMode " << friends.phyUser->getPhyModeProvider()->getPhyMode(lqm));
-    return(friends.phyUser->getPhyModeProvider()->getPhyMode(lqm));
+    // Reduce lqm by 3dB for every retransmission
+    wns::Ratio myLQM = wns::Ratio::from_dB(lqm.get_dB() - (numTransmissions-1)*3.0);
+    MESSAGE_SINGLE(NORMAL, *logger, "RA getPhyMode with lqm " << lqm << " and " << numTransmissions << " transmissions, suggested phyMode " << friends.phyUser->getPhyModeProvider()->getPhyMode(myLQM));
+    return(friends.phyUser->getPhyModeProvider()->getPhyMode(myLQM));
 }
 
 wifimac::convergence::PhyMode
-SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver)
+SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions)
 {
-    if(not per->knowsPER(receiver))
-    {
-        return(friends.phyUser->getPhyModeProvider()->getPhyMode(curPhyModeId));
-    }
-
-    double curPER = per->getPER(receiver);
-    int nextPhyModeId = curPhyModeId;
-
-
-    if(curPER > 0.25)
-    {
-        // loose more than 1/4 of all frames -> go down
-        if(curPhyModeId > friends.phyUser->getPhyModeProvider()->getLowestId())
-        {
-            nextPhyModeId = curPhyModeId-1;
-        }
-    }
-    if(curPER < 0.05)
-    {
-        // nearly all frames are successful -> go up
-        if(curPhyModeId < friends.phyUser->getPhyModeProvider()->getHighestId())
-        {
-            nextPhyModeId = curPhyModeId+1;
-        }
-    }
-
-    if(curPhyModeId != nextPhyModeId)
-    {
-        MESSAGE_SINGLE(NORMAL, *logger, "RA going from MCS "<< curPhyModeId << " to " << nextPhyModeId);
-        per->reset(receiver);
-    }
-    curPhyModeId = nextPhyModeId;
-    wifimac::convergence::PhyMode mcs = friends.phyUser->getPhyModeProvider()->getPhyMode(curPhyModeId);
-
-    return(mcs);
+    return(Opportunistic::getPhyMode(receiver, numTransmissions));
 }

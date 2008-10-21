@@ -45,12 +45,16 @@ SINRwithMIMO::SINRwithMIMO(
     friends.manager = _manager;
     curSpatialStreams = 1;
 }
-//1.0062461
+
 wifimac::convergence::PhyMode
-SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, const wns::Ratio lqm)
+SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio lqm)
 {
     if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
     {
+
+        // Reduce lqm by 3dB for every retransmission
+        wns::Ratio myLQM = wns::Ratio::from_dB(lqm.get_dB() - (numTransmissions-1)*3.0);
+
         // find the number of streams which maximizes the number of data bits
         // per symbol
         unsigned int numTx = friends.manager->getNumAntennas();
@@ -87,6 +91,7 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, const
             MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
             m << " to receiver " << receiver;
             m << " lqm: " << lqm;
+            m << " transmissions: " << numTransmissions;
             m << " numTx: " << numTx;
             m << " numRx: " << numRx;
             m << " postSINR with 1 stream: " << lqm;
@@ -99,6 +104,7 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, const
 
         MESSAGE_BEGIN(NORMAL, *logger, m, "RA getPhyMode with");
         m << " lqm: " << lqm;
+        m << " transmissions: " << numTransmissions;
         m << " numTx: " << numTx;
         m << " numRx: " << numRx;
         m << " -> numSS: " << bestNumSS;
@@ -112,12 +118,12 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, const
     }
     else
     {
-        return(SINR::getPhyMode(receiver, lqm));
+        return(SINR::getPhyMode(receiver, numTransmissions, lqm));
     }
 }
 
 wifimac::convergence::PhyMode
-SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver)
+SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions)
 {
-    return(SINR::getPhyMode(receiver));
+    return(SINR::getPhyMode(receiver, numTransmissions));
 }

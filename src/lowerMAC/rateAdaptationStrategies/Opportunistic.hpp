@@ -26,28 +26,34 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_CONSTANTLOW_HPP
-#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_CONSTANTLOW_HPP
+#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTIC_HPP
+#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTIC_HPP
 
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/IRateAdaptationStrategy.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 
-#include <WNS/service/dll/Address.hpp>
+#include <WNS/ldk/Key.hpp>
+#include <WNS/distribution/Uniform.hpp>
+#include <WNS/logger/Logger.hpp>
 
 namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
-    class ConstantLow :
+    /**
+	 * @brief The Rate Adpation (RA) tries to select the optimal Modulation- and Coding-Scheme (MCS)
+	 *    for the upcomming transmission.
+	 */
+
+    class Opportunistic:
         public IRateAdaptationStrategy
     {
     public:
-        ConstantLow(
-            wifimac::management::PERInformationBase*,
-            wifimac::lowerMAC::Manager*,
-            wifimac::convergence::PhyUser*,
-            wns::logger::Logger*);
-
+        Opportunistic(
+            wifimac::management::PERInformationBase* _per,
+            wifimac::lowerMAC::Manager* _manager,
+            wifimac::convergence::PhyUser* _phyUser,
+            wns::logger::Logger* _logger);
 
         wifimac::convergence::PhyMode
         getPhyMode(const wns::service::dll::UnicastAddress receiver,
@@ -59,11 +65,17 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
                    const wns::Ratio lqm);
 
     private:
+        wifimac::management::PERInformationBase* per;
 
         struct Friends
         {
             wifimac::convergence::PhyUser* phyUser;
         } friends;
+
+        wns::logger::Logger* logger;
+
+        int curPhyModeId;
     };
 }}}
-#endif // #ifndef WIFIMAC_LOWERMAC_RATEADAPTIONSTRATEGIES_CONSTANTLOW_HPP
+
+#endif

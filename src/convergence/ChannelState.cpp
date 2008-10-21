@@ -91,11 +91,11 @@ ChannelState::ChannelState(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& c
     assure(!activeIndicators.rawEnergyDetection, "ChannelState based on rawEnergyDetection not yet implemented!");
 
     MESSAGE_BEGIN(NORMAL, logger, m, "Created, indicators: ");
-    if (activeIndicators.rawEnergyDetection)    m << "rawEnergyDetection(" << rawEnergyThreshold << ") ";
-    if (activeIndicators.phyCarrierSense)  		m << "phyCarrierSense(" << phyCarrierSenseThreshold << ") ";
-    if (activeIndicators.nav)              		m << "NAV ";
-    if (activeIndicators.ownTx)          		m << "ownTx ";
-    if (activeIndicators.ownRx)                 m << "ownRx";
+    if (activeIndicators.rawEnergyDetection)  m << "rawEnergyDetection(" << rawEnergyThreshold << ") ";
+    if (activeIndicators.phyCarrierSense)     m << "phyCarrierSense(" << phyCarrierSenseThreshold << ") ";
+    if (activeIndicators.nav)                 m << "NAV ";
+    if (activeIndicators.ownTx)               m << "ownTx ";
+    if (activeIndicators.ownRx)               m << "ownRx";
     MESSAGE_END();
 
     // Probe-Stuff

@@ -30,7 +30,6 @@
 #define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
 
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/SINR.hpp>
-//#include <WIFIMAC/lowerMAC/StopAndWaitARQ.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
@@ -56,8 +55,14 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
             wifimac::convergence::PhyUser* _phyUser,
             wns::logger::Logger* _logger);
 
-        wifimac::convergence::PhyMode getPhyMode(const wns::service::dll::UnicastAddress receiver);
-        wifimac::convergence::PhyMode getPhyMode(const wns::service::dll::UnicastAddress receiver, const wns::Ratio lqm);
+        wifimac::convergence::PhyMode
+        getPhyMode(const wns::service::dll::UnicastAddress receiver,
+                   size_t numTransmissions);
+
+        wifimac::convergence::PhyMode
+        getPhyMode(const wns::service::dll::UnicastAddress receiver,
+                   size_t numTransmissions,
+                   const wns::Ratio lqm);
 
     private:
         struct Friends

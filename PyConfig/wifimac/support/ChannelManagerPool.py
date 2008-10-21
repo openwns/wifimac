@@ -32,11 +32,11 @@ class ChannelManagerPool:
 	bssManager = None
 	channel2Manager = None
 	node2Managers = None
+	scenario = None
 
 	next = None
 
-	def __init__(self, xSize, ySize, numMeshChannels, ofdmaPhyConfig):
-		scenario = rise.Scenario.Scenario(xSize, ySize)
+	def __init__(self, scenario, numMeshChannels, ofdmaPhyConfig):
 		self.managers = []
 		for r in xrange(numMeshChannels):
 			sys = ofdmaphy.OFDMAPhy.OFDMASystem('ofdma-'+str(r))

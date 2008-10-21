@@ -7,7 +7,7 @@ from wifimac.lowerMAC import DCF
 names = dict()
 names['beacon'] = 'Beacon'
 names['broadcastDCF'] = 'BroadcastDCF'
-       
+
 def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = []
     FUs.append(Beacon(functionalUnitName = names['beacon'] + str(transceiverAddress),
@@ -16,17 +16,16 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                       phyUserCommandName = names['phyUser'] + 'Command',
                       config = config.beacon,
                       parentLogger = logger))
-    if(config.forwardingEnabled):
-        FUs.append(BeaconLinkQualityMeasurement(fuName = names['beaconLQM'] + str(transceiverAddress),
-                                                commandName = names['beaconLQM'] + 'Command',
-                                                managerName = names['manager'] + str(transceiverAddress),
-                                                beaconInterval = FUs[-1].myConfig.period,
-                                                phyUserCommandName = names['phyUser'] + 'Command',
-                                                probePrefix = 'wifimac.linkQuality',
-                                                sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
-                                                config = config.beaconLQM,
-                                                parentLogger = logger,
-                                                localIDs = probeLocalIDs))
+    FUs.append(BeaconLinkQualityMeasurement(fuName = names['beaconLQM'] + str(transceiverAddress),
+                                            commandName = names['beaconLQM'] + 'Command',
+                                            managerName = names['manager'] + str(transceiverAddress),
+                                            beaconInterval = FUs[-1].myConfig.period,
+                                            phyUserCommandName = names['phyUser'] + 'Command',
+                                            probePrefix = 'wifimac.linkQuality',
+                                            sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
+                                            config = config.beaconLQM,
+                                            parentLogger = logger,
+                                            localIDs = probeLocalIDs))
 
     FUs.append(DCF(fuName = names['broadcastDCF'] + str(transceiverAddress),
                    commandName = names['broadcastDCF'] + 'Command',

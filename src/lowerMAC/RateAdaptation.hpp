@@ -15,6 +15,7 @@
 
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/IRateAdaptationStrategy.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
+#include <WIFIMAC/lowerMAC/ITransmissionCounter.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/management/SINRInformationBase.hpp>
@@ -37,7 +38,7 @@ namespace wifimac { namespace lowerMAC {
         ~RateAdaptation();
 
         wifimac::convergence::PhyMode
-        getPhyMode(wns::service::dll::UnicastAddress receiver);
+        getPhyMode(wns::service::dll::UnicastAddress receiver, size_t numTransmissions);
 
     private:
         void
@@ -49,6 +50,7 @@ namespace wifimac { namespace lowerMAC {
 
         const std::string phyUserName;
         const std::string managerName;
+        const std::string arqName;
         const std::string sinrMIBServiceName;
         const std::string perMIBServiceName;
 
@@ -69,6 +71,7 @@ namespace wifimac { namespace lowerMAC {
         {
             wifimac::lowerMAC::Manager* manager;
             wifimac::convergence::PhyUser* phyUser;
+            wifimac::lowerMAC::ITransmissionCounter* arq;
         } friends;
 
         wifimac::lowerMAC::rateAdaptationStrategies::RateAdaptationStrategyCreator* raCreator;

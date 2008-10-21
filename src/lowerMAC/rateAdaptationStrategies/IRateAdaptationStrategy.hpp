@@ -27,8 +27,7 @@
  ******************************************************************************/
 
 #ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_IRATEADAPTATIONSTRATEGY_HPP
-#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_IRATEADPATATIONSTRATEGY_HPP
-
+#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_IRATEADAPTATIONSTRATEGY_HPP
 
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
@@ -53,9 +52,13 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
             {};
 
         virtual wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver) = 0;
+        getPhyMode(const wns::service::dll::UnicastAddress receiver,
+                   size_t numTransmissions) = 0;
+
         virtual wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver, const wns::Ratio lqm) = 0;
+        getPhyMode(const wns::service::dll::UnicastAddress receiver,
+                   size_t numTransmissions,
+                   const wns::Ratio lqm) = 0;
     };
 
     /** @brief Special creator for IRateAdaptation */

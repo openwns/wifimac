@@ -44,6 +44,7 @@ class RateAdaptation(wns.FUN.FunctionalUnit):
     logger = None
     phyUserName = None
     managerName = None
+    arqName = None
     sinrMIBServiceName = None
     perMIBServiceName = None
 
@@ -54,6 +55,7 @@ class RateAdaptation(wns.FUN.FunctionalUnit):
                  commandName,
                  phyUserName,
                  managerName,
+                 arqName,
                  sinrMIBServiceName,
                  perMIBServiceName,
                  config,
@@ -62,6 +64,7 @@ class RateAdaptation(wns.FUN.FunctionalUnit):
         self.logger = wifimac.Logger.Logger(name = "RateAdaptation", parent = parentLogger)
         self.phyUserName = phyUserName
 	self.managerName = managerName
+        self.arqName = arqName
         self.sinrMIBServiceName = sinrMIBServiceName
         self.perMIBServiceName = perMIBServiceName
         assert(config.__class__ == RateAdaptationConfig)

@@ -96,13 +96,14 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                                              parentLogger = logger)
 
     ra = RateAdaptation(functionalUnitName = names['ra'] + str(transceiverAddress),
-                                         commandName = names['ra'] + 'Command',
-                                         phyUserName = names['phyUser'] + str(transceiverAddress),
-                                         managerName = names['manager'] + str(transceiverAddress),
-                                         sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
-                                         perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
-                                         config = config.ra,
-                                         parentLogger = logger)
+                        commandName = names['ra'] + 'Command',
+                        phyUserName = names['phyUser'] + str(transceiverAddress),
+                        managerName = names['manager'] + str(transceiverAddress),
+                        arqName = names['arq'] + str(transceiverAddress),
+                        sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
+                        perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                        config = config.ra,
+                        parentLogger = logger)
 
     nextFrame = NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
                                                  commandName = names['nextFrame'] + 'Command')
@@ -166,17 +167,20 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     ## connect the common part for all FUs
     # add created FUs to FUN
     if(config.mode == 'basic'):
-            FUs.extend([ra, nextFrame, arq, txop])
+            #FUs.extend([ra, nextFrame, arq, txop])
+            FUs.extend([arq, ra, nextFrame, txop])
+            #
     for fu in FUs:
             myFUN.add(fu)
-
-    if(config.mode == 'DraftN'):
-            for fu in [ackSwitch, agg, ra, raACK, nextFrame, txop, rtscts, ackMux, block]:
-                    myFUN.add(fu)
 
     # connect FUs with each other
     for num in xrange(0, len(FUs)-1):
             FUs[num].connect(FUs[num+1])
+
+    # DraftN requires special structure to send (Block)ACKs via a different way
+    if(config.mode == 'DraftN'):
+            for fu in [ackSwitch, agg, ra, raACK, nextFrame, txop, rtscts, ackMux, block]:
+                    myFUN.add(fu)
 
     # DraftN requires special handling so that the acks are not send through the aggregation path
     if(config.mode == 'DraftN'):
