@@ -42,16 +42,14 @@ class Basic(Sealed):
         self.frequency = frequency
 
 class Mesh(Basic):
-    def __init__(self, frequency, forwarding):
+    def __init__(self, frequency):
         super(Mesh, self).__init__(frequency)
-        self.layer2.forwardingEnabled = forwarding
         self.layer2.beacon.enabled = True
 
 class Station(Basic):
     def __init__(self, frequency, position, scanFrequencies, scanDuration):
         super(Station, self).__init__(frequency)
         self.position = position
-        self.layer2.forwardingEnabled = False
         self.layer2.beacon.enabled = False
         self.layer2.beacon.scanFrequencies = scanFrequencies
         self.layer2.beacon.scanDuration = scanDuration

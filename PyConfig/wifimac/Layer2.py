@@ -191,10 +191,10 @@ class MeshLayer2(dll.Layer2.Layer2):
 		self.addresses.append(address)
 
 		self.managementServices.append(wifimac.management.InformationBases.SINR(serviceName = 'wifimac.sinrMIB.'+str(address),
-										      parentLogger = self.logger))
+											parentLogger = self.logger))
 		self.managementServices.append(wifimac.management.InformationBases.PER(serviceName = 'wifimac.perMIB.' + str(address),
-										     config = config.perMIB,
-										     parentLogger = self.logger))
+										       config = config.perMIB,
+										       parentLogger = self.logger))
 
 	def setPathSelectionService(self, name):
 		self.pathSelectionServiceName = name
@@ -245,8 +245,6 @@ class Config(Sealed):
 	blockACK = None
 	frameSynchronization = None
 	beaconLQM = None
-
-	forwardingEnabled = True
 
 	bufferSize = 10*1000*8
 	bufferSizeUnit = 'Bit'

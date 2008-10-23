@@ -39,13 +39,13 @@ names['txop']  = 'TXOP'
 def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = []
     FUs.append(Manager(functionalUnitName = names['manager'] + str(transceiverAddress),
-                                        commandName = names['manager'] + 'Command',
-                                        phyUserName = names['phyUser'] + str(transceiverAddress),
-                                        channelStateName = names['channelState'] + str(transceiverAddress),
-                                        receiveFilterName = names['rxFilter'] + str(transceiverAddress),
-                                        upperConvergenceCommandName = names['upperConvergence'],
-                                        config = config.manager,
-                                        parentLogger = logger))
+                       commandName = names['manager'] + 'Command',
+                       phyUserName = names['phyUser'] + str(transceiverAddress),
+                       channelStateName = names['channelState'] + str(transceiverAddress),
+                       receiveFilterName = names['rxFilter'] + str(transceiverAddress),
+                       upperConvergenceCommandName = names['upperConvergence'],
+                       config = config.manager,
+                       parentLogger = logger))
 
     # overhead for regular msdu
     FUs.append(wns.ldk.Tools.Overhead(functionalUnitName = names['overhead'] + str(transceiverAddress),
@@ -59,19 +59,19 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                                         moduleName = 'WiFiMAC',
                                         localIDs = probeLocalIDs))
 
-    FUs.append(wns.Buffer.Dropping( functionalUnitName = names['buffer'] + str(transceiverAddress),
-                                    commandName = names['buffer'] + 'Command',
-                                    sizeUnit = config.bufferSizeUnit,
-                                    size = config.bufferSize,
-                                    localIDs = probeLocalIDs,
-                                    probingEnabled = False))
+    FUs.append(wns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
+                                   commandName = names['buffer'] + 'Command',
+                                   sizeUnit = config.bufferSizeUnit,
+                                   size = config.bufferSize,
+                                   localIDs = probeLocalIDs,
+                                   probingEnabled = False))
 
     if(config.mode == 'basic'):
             FUs.append(DuplicateFilter(functionalUnitName = names['DuplicateFilter'] + str(transceiverAddress),
-                                                        commandName =  names['DuplicateFilter'] + 'Command',
-                                                        managerName = names['manager'] + str(transceiverAddress),
-                                                        arqCommandName = names['arq'] + 'Command',
-                                                        parentLogger = logger))
+                                       commandName =  names['DuplicateFilter'] + 'Command',
+                                       managerName = names['manager'] + str(transceiverAddress),
+                                       arqCommandName = names['arq'] + 'Command',
+                                       parentLogger = logger))
     if(config.mode == 'DraftN'):
             FUs.append(wifimac.draftn.BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
                                                commandName = names['arq'] + 'Command',
@@ -110,16 +110,16 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
 
     if(config.mode == 'basic'):
             arq = StopAndWaitARQ(fuName = names['arq'] + str(transceiverAddress),
-                                                  commandName = names['arq'] + 'Command',
-                                                  managerName = names['manager'] + str(transceiverAddress),
-                                                  csName = names['channelState'] + str(transceiverAddress),
-                                                  rxStartName = names['frameSynchronization'] + str(transceiverAddress),
-                                                  txStartEndName = names['phyUser'] + str(transceiverAddress),
-                                                  perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
-                                                  probePrefix = 'wifimac.linkQuality',
-                                                  config = config.arq,
-                                                  parentLogger = logger,
-                                                  localIDs = probeLocalIDs)
+                                 commandName = names['arq'] + 'Command',
+                                 managerName = names['manager'] + str(transceiverAddress),
+                                 csName = names['channelState'] + str(transceiverAddress),
+                                 rxStartName = names['frameSynchronization'] + str(transceiverAddress),
+                                 txStartEndName = names['phyUser'] + str(transceiverAddress),
+                                 perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                                 probePrefix = 'wifimac.linkQuality',
+                                 config = config.arq,
+                                 parentLogger = logger,
+                                 localIDs = probeLocalIDs)
 
     txop = TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
                                  commandName = names['txop'] + 'Command',
@@ -131,23 +131,24 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
 
     if(config.mode == 'DraftN'):
             rtscts = RTSCTS(functionalUnitName = names['rtscts'] + str(transceiverAddress),
-                                             commandName = names['rtscts'] + 'Command',
-                                             managerName = names['manager'] + str(transceiverAddress),
-                                             phyUserName = names['phyUser'] + str(transceiverAddress),
-                                             arqName = names['arq'] + str(transceiverAddress),
-                                             navName = names['channelState'] + str(transceiverAddress),
-                                             rxStartName = names['frameSynchronization'] + str(transceiverAddress),
-                                             txStartEndName = names['phyUser'] + str(transceiverAddress),
-                                             config = config.rtscts,
-                                             parentLogger = logger)
+                            commandName = names['rtscts'] + 'Command',
+                            managerName = names['manager'] + str(transceiverAddress),
+                            phyUserName = names['phyUser'] + str(transceiverAddress),
+                            arqName = names['arq'] + str(transceiverAddress),
+                            navName = names['channelState'] + str(transceiverAddress),
+                            rxStartName = names['frameSynchronization'] + str(transceiverAddress),
+                            txStartEndName = names['phyUser'] + str(transceiverAddress),
+                            config = config.rtscts,
+                            parentLogger = logger)
             raACK = RateAdaptation(functionalUnitName = names['ra'] + 'ACK'+ str(transceiverAddress),
-                                                    commandName = names['ra'] + 'ACK' +'Command',
-                                                    phyUserName = names['phyUser'] + str(transceiverAddress),
-                                                    managerName = names['manager'] + str(transceiverAddress),
-                                                    sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
-                                                    perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
-                                                    config = config.ra,
-                                                    parentLogger = logger)
+                                   commandName = names['ra'] + 'ACK' +'Command',
+                                   phyUserName = names['phyUser'] + str(transceiverAddress),
+                                   managerName = names['manager'] + str(transceiverAddress),
+                                   arqName = names['arq'] + str(transceiverAddress),
+                                   sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
+                                   perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                                   config = config.ra,
+                                   parentLogger = logger)
 
             ackMux = wns.Multiplexer.Dispatcher(commandName = 'ackMuxCommand',
                                                 functionalUnitName = 'ackMux' + str(transceiverAddress),
@@ -218,26 +219,26 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
     #############
     # Working FUs
     rtscts = RTSCTS(functionalUnitName = names['rtscts'] + str(transceiverAddress),
-                                     commandName = names['rtscts'] + 'Command',
-                                     managerName = names['manager'] + str(transceiverAddress),
-                                     phyUserName = names['phyUser'] + str(transceiverAddress),
-                                     arqName = names['arq'] + str(transceiverAddress),
-                                     navName = names['channelState'] + str(transceiverAddress),
-                                     rxStartName = names['frameSynchronization'] + str(transceiverAddress),
-                                     txStartEndName = names['phyUser'] + str(transceiverAddress),
-                                     config = config.rtscts,
-                                     parentLogger = logger)
+                    commandName = names['rtscts'] + 'Command',
+                    managerName = names['manager'] + str(transceiverAddress),
+                    phyUserName = names['phyUser'] + str(transceiverAddress),
+                    arqName = names['arq'] + str(transceiverAddress),
+                    navName = names['channelState'] + str(transceiverAddress),
+                    rxStartName = names['frameSynchronization'] + str(transceiverAddress),
+                    txStartEndName = names['phyUser'] + str(transceiverAddress),
+                    config = config.rtscts,
+                    parentLogger = logger)
     unicastScheduler = DCF(fuName = names['unicastDCF'] + str(transceiverAddress),
-                                            commandName = names['unicastDCF'] + 'Command',
-                                            csName = names['channelState'] + str(transceiverAddress),
-                                            arqCommandName = names['arq'] + 'Command',
-                                            config = config.unicastDCF,
-                                            parentLogger = logger)
+                           commandName = names['unicastDCF'] + 'Command',
+                           csName = names['channelState'] + str(transceiverAddress),
+                           arqCommandName = names['arq'] + 'Command',
+                           config = config.unicastDCF,
+                           parentLogger = logger)
     constantWait = ConstantWait(functionalUnitName = names['constantWait'] + str(transceiverAddress),
-                                                 commandName = names['constantWait'] + 'Command',
-                                                 managerName = names['manager'] + str(transceiverAddress),
-                                                 config = config.constantWait,
-                                                 parentLogger = logger)
+                                commandName = names['constantWait'] + 'Command',
+                                managerName = names['manager'] + str(transceiverAddress),
+                                config = config.constantWait,
+                                parentLogger = logger)
 
     #############
     # Dispatcher
