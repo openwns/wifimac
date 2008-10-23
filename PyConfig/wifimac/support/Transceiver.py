@@ -30,6 +30,7 @@ from wns import dB, dBm
 
 import wifimac.Layer2
 
+# begin example "wifimac.pyconfig.support.transceiver.Basic"
 class Basic(Sealed):
     frequency = None
     txPower = dBm(30)
@@ -40,11 +41,14 @@ class Basic(Sealed):
     def __init__(self, frequency):
         self.layer2 = wifimac.Layer2.Config(frequency)
         self.frequency = frequency
+# end example
 
+# begin example "wifimac.pyconfig.support.transceiver.Mesh"
 class Mesh(Basic):
     def __init__(self, frequency):
         super(Mesh, self).__init__(frequency)
         self.layer2.beacon.enabled = True
+# end example
 
 class Station(Basic):
     def __init__(self, frequency, position, scanFrequencies, scanDuration):

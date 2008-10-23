@@ -228,6 +228,7 @@ class dllMP(MeshLayer2):
 		self.fun.add(upperConvergence)
 		upperConvergence.connect(self.throughputProbe)
 
+# begin example "wifimac.pyconfig.layer2.config.start"
 class Config(Sealed):
 	beacon = None
 	channelState = None
@@ -245,7 +246,9 @@ class Config(Sealed):
 	blockACK = None
 	frameSynchronization = None
 	beaconLQM = None
+	# end example
 
+	# begin example "wifimac.pyconfig.layer2.config.variables"
 	bufferSize = 10*1000*8
 	bufferSizeUnit = 'Bit'
 
@@ -255,7 +258,9 @@ class Config(Sealed):
 	maxFrameSize = 65538*8
 
 	mode = 'basic'
+	# end example
 
+	# begin example "wifimac.pyconfig.layer2.config.multiusevariables"
 	# variables which are used multiple times
 	rtsctsThreshold = None
 	sifsDuration = None
@@ -263,9 +268,11 @@ class Config(Sealed):
 	expectedCTSDuration = None
 	slotDuration = None
 	preambleProcessingDelay = None
+	# end example
 
 	multipleUsedVariables = None
 
+	# begin example "wifimac.pyconfig.layer2.config.init"
 	def __init__(self, initFrequency):
 		self.beacon = wifimac.management.BeaconConfig()
 		self.channelState = wifimac.convergence.ChannelStateConfig()
@@ -284,6 +291,7 @@ class Config(Sealed):
 		self.constantWait = wifimac.lowerMAC.ConstantWaitConfig()
 		self.frameSynchronization = wifimac.convergence.FrameSynchronizationConfig()
 		self.beaconLQM = wifimac.pathselection.BeaconLinkQualityMeasurementConfig()
+		# end example
 
 		self.multipleUsedVariables = dict()
 		self.multipleUsedVariables['rtsctsThreshold'] = ['self', 'self.arq', 'self.rtscts']

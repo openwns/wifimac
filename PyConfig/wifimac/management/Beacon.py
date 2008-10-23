@@ -30,6 +30,7 @@ from wns.Sealed import Sealed
 
 import wifimac.Logger
 
+# begin example "wifimac.pyconfig.layer2.management.beacon.beaconconfig"
 class BeaconConfig(Sealed):
 	enabled = True
 	delay = 0.1
@@ -45,6 +46,7 @@ class BeaconConfig(Sealed):
 	def __init__(self, **kw):
 		self.scanFrequencies = []
 		wns.PyConfig.attrsetter(self, kw)
+# end example
 
 class Beacon(wns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.management.Beacon'
