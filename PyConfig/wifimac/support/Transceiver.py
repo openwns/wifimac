@@ -24,17 +24,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+from wns.Sealed import Sealed
+import wns.PyConfig
+from wns import dB, dBm
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+import wifimac.Layer2
+
+# begin example "wifimac.pyconfig.support.transceiver.Basic"
+class Basic(Sealed):
+    frequency = None
+    txPower = dBm(30)
+    position = None
+
+    layer2 = None
+
+    def __init__(self, frequency):
+        self.layer2 = wifimac.Layer2.Config(frequency)
+        self.frequency = frequency
+# end example
+
+# begin example "wifimac.pyconfig.support.transceiver.Mesh"
+class Mesh(Basic):
+    def __init__(self, frequency):
+        super(Mesh, self).__init__(frequency)
+        self.layer2.beacon.enabled = True
+# end example
+
+class Station(Basic):
+    def __init__(self, frequency, position, scanFrequencies, scanDuration):
+        super(Station, self).__init__(frequency)
+        self.position = position
+        self.layer2.beacon.enabled = False
+        self.layer2.beacon.scanFrequencies = scanFrequencies
+        self.layer2.beacon.scanDuration = scanDuration
+
+

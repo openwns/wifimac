@@ -24,17 +24,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+import wns.FUN
+import wns.PyConfig
+from wns.PyConfig import Sealed
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+import wifimac.Logger
+
+class ConstantWaitConfig(Sealed):
+    sifsDuration = 16E-6
+
+class ConstantWait(wns.FUN.FunctionalUnit):
+    __plugin__ = 'wifimac.lowerMAC.timing.ConstantWait'
+
+    logger = None
+    managerName = None
+    myConfig = None
+
+    def __init__(self,
+                 functionalUnitName,
+                 commandName,
+                 managerName,
+                 config,
+                 parentLogger = None,
+                 **kw):
+        super(ConstantWait, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
+        self.logger = wifimac.Logger.Logger(name = "ConstantWait", parent = parentLogger)
+        assert(config.__class__ == ConstantWaitConfig)
+        self.myConfig = config
+        self.managerName = managerName
+        wns.PyConfig.attrsetter(self, kw)

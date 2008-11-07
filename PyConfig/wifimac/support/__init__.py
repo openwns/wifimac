@@ -24,17 +24,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+from NodeCreator import NodeCreator
+from ChannelManagerPool import ChannelManagerPool
+
+from wns.PyConfig import Sealed
+
+class Node(Sealed):
+    position = None
+    transceivers = None
+
+    def __init__(self, position):
+        self.transceivers = []
+        self.position = position
+
+class idGenerator:
+	nextId = None
+	def __init__(self):
+		self.nextId = 0
+	def next(self):
+		self.nextId += 1
+		return self.nextId
+	def get(self, num):
+		bunch = []
+		for i in xrange(num):
+			bunch.append(self.next())
+		return bunch

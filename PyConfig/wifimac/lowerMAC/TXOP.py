@@ -24,17 +24,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+from wns.Sealed import Sealed
+import wns.FUN
+import wns.PyConfig
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+import wifimac.Logger
+
+class TXOPConfig(Sealed):
+    sifsDuration = 16E-6
+    expectedACKDuration = 44E-6
+    txopLimit = 0
+    singleReceiver = False
+
+class TXOP(wns.FUN.FunctionalUnit):
+
+    __plugin__ = 'wifimac.lowerMAC.TXOP'
+    """ Name in FU Factory """
+
+    logger = None
+
+    phyUserName = None
+    managerName = None
+    nextFrameHolderName = None
+
+    myConfig = None
+
+    def __init__(self, functionalUnitName, commandName, managerName, phyUserName, nextFrameHolderName, config, parentLogger = None, **kw):
+        super(TXOP, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
+        self.managerName = managerName
+        self.phyUserName = phyUserName
+        self.nextFrameHolderName = nextFrameHolderName
+        assert(config.__class__ == TXOPConfig)
+        self.myConfig = config
+        self.logger = wifimac.Logger.Logger(name = "TXOP", parent = parentLogger)
+        wns.PyConfig.attrsetter(self, kw)
+

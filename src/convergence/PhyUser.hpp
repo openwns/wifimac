@@ -1,0 +1,143 @@
+/******************************************************************************
+ * WiFiMac                                                                    *
+ * This file is part of openWNS (open Wireless Network Simulator)
+ * _____________________________________________________________________________
+ *
+ * Copyright (C) 2004-2007
+ * Chair of Communication Networks (ComNets)
+ * Kopernikusstr. 16, D-52074 Aachen, Germany
+ * phone: ++49-241-80-27910,
+ * fax: ++49-241-80-22242
+ * email: info@openwns.org
+ * www: http://www.openwns.org
+ * _____________________________________________________________________________
+ *
+ * openWNS is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License version 2 as published by the
+ * Free Software Foundation;
+ *
+ * openWNS is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ******************************************************************************/
+
+#ifndef WIFIMAC_CONVERGENCE_PHYUSER_HPP
+#define WIFIMAC_CONVERGENCE_PHYUSER_HPP
+
+#include <WIFIMAC/lowerMAC/Manager.hpp>
+#include <WIFIMAC/convergence/PhyUserCommand.hpp>
+#include <WIFIMAC/convergence/PhyModeProvider.hpp>
+#include <WIFIMAC/convergence/ITxStartEnd.hpp>
+
+#include <WNS/service/phy/ofdma/Handler.hpp>
+#include <WNS/service/phy/ofdma/Notification.hpp>
+#include <WNS/service/phy/ofdma/DataTransmission.hpp>
+
+#include <WNS/service/dll/Address.hpp>
+
+#include <WNS/pyconfig/View.hpp>
+#include <WNS/logger/Logger.hpp>
+#include <WNS/events/CanTimeout.hpp>
+
+#include <WNS/ldk/fu/Plain.hpp>
+
+namespace wifimac { namespace lowerMAC {
+        class Manager;
+}}
+
+namespace wifimac { namespace convergence {
+
+	/**
+	 * @brief Convergence FU to the OFDMA-Modul
+	 */
+	class PhyUser:
+		public wns::ldk::fu::Plain<PhyUser, PhyUserCommand>,
+		public wns::service::phy::ofdma::Handler,
+		public wns::events::CanTimeout,
+		public TxStartEndNotification
+	{
+
+	public:
+		PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
+		virtual ~PhyUser();
+
+		/** @brief Interface to lower layer wns::service::phy::ofdma::Handler */
+		virtual void onData(wns::osi::PDUPtr, wns::service::phy::power::PowerMeasurementPtr);
+
+		/** @brief Handling of the services */
+		virtual void setNotificationService(wns::service::Service* phy);
+		virtual wns::service::phy::ofdma::Notification* getNotificationService() const;
+		virtual void setDataTransmissionService(wns::service::Service* phy);
+		virtual wns::service::phy::ofdma::DataTransmission* getDataTransmissionService() const;
+
+		/** @brief Handling of PhyModes */
+		PhyModeProvider* getPhyModeProvider();
+
+		/** @brief Frequency tuning */
+		void setFrequency(double frequency);
+
+		/**
+		 * @brief Returns the duration of the PLCP Header, including the OFDM preamble
+		 *    and the symbol with the PHY-Protocol Information.
+		 */
+		wns::simulator::Time getPreambleDuration() const;
+
+		/** @brief Calculates the transmission duration for the given compound. */
+		wns::simulator::Time getPSDUDuration(const wns::ldk::CompoundPtr& compound) const;
+
+		wns::Ratio getExpectedPostSINRFactor(unsigned int nss, unsigned int numRx);
+
+	private:
+
+		// CompoundHandlerInterface
+		virtual void doSendData(const wns::ldk::CompoundPtr& sdu);
+		virtual void doOnData(const wns::ldk::CompoundPtr& compound);
+		virtual void onFUNCreated();
+		virtual bool doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
+		virtual void doWakeup();
+
+		// onTimeout realisation
+		virtual void onTimeout();
+
+		wns::pyconfig::View config;
+		wns::logger::Logger logger;
+
+		wns::service::phy::ofdma::Tune tune;
+		wns::service::phy::ofdma::DataTransmission* dataTransmission;
+		wns::service::phy::ofdma::Notification* notificationService;
+		PhyModeProvider phyModes;
+
+		const wns::simulator::Time preambleDuration;
+		const Bit service;
+		const Bit tail;
+		const std::string managerName;
+
+		const std::string txDurationProviderCommandName;
+		const wns::simulator::Time txrxTurnaroundDelay;
+
+        struct Friends
+        {
+            wifimac::lowerMAC::Manager* manager;
+        } friends;
+
+		enum PhyUserStatus
+		{
+			transmitting,
+			receiving,
+			txrxTurnaround
+		} phyUserStatus;
+
+		wns::ldk::CompoundPtr currentTxCompound;
+	};
+
+} // namespace convergence
+} // namespace wifimac
+
+#endif // NOT defined WIFIMAC_CONVERGENCE_PHYUSER_HPP
+
+

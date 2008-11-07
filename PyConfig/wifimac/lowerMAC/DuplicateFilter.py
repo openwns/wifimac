@@ -24,17 +24,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+import wns.FUN
+import wns.PyConfig
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+import wifimac.Logger
+
+
+class DuplicateFilter(wns.FUN.FunctionalUnit):
+    __plugin__ = 'wifimac.lowerMAC.DuplicateFilter'
+    """ Name in FU Factory """
+
+    logger = None
+
+    managerName = None
+    arqCommandName = None
+
+    def __init__(self,
+                 functionalUnitName,
+                 commandName,
+                 managerName,
+                 arqCommandName,
+                 parentLogger=None, **kw):
+        super(DuplicateFilter, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
+        self.logger = wifimac.Logger.Logger(name = "DupFilter", parent = parentLogger)
+	self.managerName = managerName
+        self.arqCommandName = arqCommandName
+        wns.PyConfig.attrsetter(self, kw)

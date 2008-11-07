@@ -24,17 +24,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+from wns.Sealed import Sealed
+import wns.FUN
+import wns.PyConfig
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+import wifimac.Logger
+
+class NextFrameGetter(wns.FUN.FunctionalUnit):
+    __plugin__ = 'wifimac.lowerMAC.NextFrameGetter'
+
+    def __init__(self, functionalUnitName, commandName, **kw):
+        super(NextFrameGetter, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
+        wns.PyConfig.attrsetter(self, kw)

@@ -24,17 +24,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+import wns.FUN
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+import wifimac.Logger
+
+class TxDurationSetter(wns.FUN.FunctionalUnit):
+	__plugin__ = 'wifimac.convergence.TxDurationSetter'
+
+	logger = None
+	phyUserName = None
+	managerName = None
+
+	def __init__(self, name, commandName, phyUserName, managerName, parentLogger = None):
+		super(TxDurationSetter, self).__init__(functionalUnitName = name, commandName = commandName)
+		self.phyUserName = phyUserName
+		self.managerName = managerName
+		self.logger = wifimac.Logger.Logger("TxTimeSetter", parent = parentLogger)
+

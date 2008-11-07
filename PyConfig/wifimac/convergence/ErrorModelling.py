@@ -24,17 +24,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+import wns.FUN
+import wns.PyConfig
+from wns.PyConfig import Sealed
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+import wifimac.Logger
+
+class ErrorModelling(wns.FUN.FunctionalUnit):
+	"""This class maps the cir to ser and calculates PER"""
+	name = 'ErrorModelling'
+	logger = None
+	phyUserCommandName = None
+	managerCommandName = None
+	cyclicPrefixReduction = 0.8
+	__plugin__ = 'wifimac.convergence.ErrorModelling'
+
+	def __init__(self,
+		     name,
+		     commandName,
+		     phyUserCommandName,
+		     managerCommandName,
+		     parentLogger = None, **kw):
+		super(ErrorModelling, self).__init__(functionalUnitName=name, commandName=commandName)
+		self.phyUserCommandName = phyUserCommandName
+		self.managerCommandName = managerCommandName
+		self.logger = wifimac.Logger.Logger("ErrorModelling", parent = parentLogger)
+		wns.PyConfig.attrsetter(self, kw)

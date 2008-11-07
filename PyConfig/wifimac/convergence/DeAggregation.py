@@ -24,17 +24,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+import wns.FUN
+import wifimac.Logger
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+class DeAggregation(wns.FUN.FunctionalUnit):
+	__plugin__ = 'wifimac.convergence.DeAggregation'
+	logger = None
+	phyUserName = None
+	managerName = None
+	aggregationCommandName = None
+
+	def __init__(self, name, commandName, phyUserName, managerName, aggregationCommandName, parentLogger = None):
+		super(DeAggregation, self).__init__(functionalUnitName = name, commandName = commandName)
+		self.phyUserName = phyUserName
+		self.managerName = managerName
+		self.aggregationCommandName = aggregationCommandName
+		self.logger = wifimac.Logger.Logger("DeAggregation", parent = parentLogger)

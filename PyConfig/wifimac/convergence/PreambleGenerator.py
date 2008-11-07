@@ -24,17 +24,25 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+import wns.FUN
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+import wifimac.Logger
+
+class PreambleGenerator(wns.FUN.FunctionalUnit):
+	logger = None
+	phyUserName = None
+	managerName = None
+	__plugin__ = 'wifimac.convergence.PreambleGenerator'
+
+	def __init__(self,
+		     name,
+		     commandName,
+		     phyUserName,
+		     managerName,
+		     parentLogger = None, **kw):
+		super(PreambleGenerator, self).__init__(functionalUnitName=name, commandName=commandName)
+		self.phyUserName = phyUserName
+		self.managerName = managerName
+		self.logger = wifimac.Logger.Logger("PreambleGenerator", parent = parentLogger)
+		wns.PyConfig.attrsetter(self, kw)
+

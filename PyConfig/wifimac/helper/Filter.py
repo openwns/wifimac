@@ -24,17 +24,29 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import os
-import CNBuildSupport
-from CNBuildSupport import CNBSEnvironment
-import wnsbase.RCS as RCS
+#
+# WiFiMac-specific filter for use by dll::CompoundSwitch
+#
 
-commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
-                            AUTODEPS       = ['wns', 'dll'],
-                            PROJMODULES    = ['BASE', 'CONVERGENCE', 'LOWERMAC', 'DRAFTN', 'HELPER', 'MANAGEMENT', 'PATHSELECTION', 'TEST'],
-                            LIBRARY        = True,
-                            SHORTCUTS      = True,
-                            FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
-                            )
-Return('commonEnv')
+import dll.CompoundSwitch
+
+class FrameType(dll.CompoundSwitch.Filter):
+    __plugin__ = "wifimac.helper.FilterFrameType"
+    commandName = None
+    fType = None
+
+    def __init__(self, fType, commandName, **kw):
+        super(FrameType, self).__init__('Type '+fType)
+        self.commandName = commandName
+        self.fType = fType
+
+class Size(dll.CompoundSwitch.Filter):
+    __plugin__ = "wifimac.helper.FilterSize"
+    maxSize = None
+    minSize = None
+
+    def __init__(self, minSize, maxSize, **kw):
+        super(Size, self).__init__('Size '+str(minSize)+"..."+str(maxSize))
+        self.maxSize = maxSize
+        self.minSize = minSize
+
