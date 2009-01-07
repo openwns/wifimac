@@ -52,7 +52,6 @@ srcFiles = [
     'src/lowerMAC/DuplicateFilter.cpp',
 
     'src/lowerMAC/timing/DCF.cpp',
-    'src/lowerMAC/timing/ConstantWait.cpp',
     'src/lowerMAC/timing/Backoff.cpp',
 
     'src/lowerMAC/rateAdaptationStrategies/ConstantLow.cpp',
@@ -131,7 +130,6 @@ hppFiles = [
     'src/lowerMAC/rateAdaptationStrategies/SINR.hpp',
     'src/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.hpp',
     'src/lowerMAC/timing/Backoff.hpp',
-    'src/lowerMAC/timing/ConstantWait.hpp',
     'src/lowerMAC/timing/DCF.hpp',
     'src/lowerMAC/timing/tests/BackoffTest.hpp',
     'src/management/Beacon.hpp',
@@ -176,7 +174,6 @@ pyconfigs = [
     'wifimac/helper/Keys.py',
     'wifimac/helper/Probes.py',
     'wifimac/helper/__init__.py',
-    'wifimac/lowerMAC/ConstantWait.py',
     'wifimac/lowerMAC/DCF.py',
     'wifimac/lowerMAC/DuplicateFilter.py',
     'wifimac/lowerMAC/Manager.py',

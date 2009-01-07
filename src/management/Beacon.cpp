@@ -36,24 +36,24 @@
 using namespace wifimac::management;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-	wifimac::management::Beacon,
-	wns::ldk::FunctionalUnit,
-	"wifimac.management.Beacon",
-	wns::ldk::FUNConfigCreator);
+    wifimac::management::Beacon,
+    wns::ldk::FunctionalUnit,
+    "wifimac.management.Beacon",
+    wns::ldk::FUNConfigCreator);
 
 Beacon::Beacon(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
-	wns::ldk::fu::Plain<Beacon, BeaconCommand>(fun),
-	config(config_),
-	logger(config.get("logger")),
+    wns::ldk::fu::Plain<Beacon, BeaconCommand>(fun),
+    config(config_),
+    logger(config.get("logger")),
     currentBeacon(),
-	phyUserCommandName(config.get<std::string>("phyUserCommandName")),
-	scanFrequencies(config.getSequence("myConfig.scanFrequencies")),
+    phyUserCommandName(config.get<std::string>("phyUserCommandName")),
+    scanFrequencies(config.getSequence("myConfig.scanFrequencies")),
     beaconPhyModeId(config.get<int>("myConfig.beaconPhyModeId")),
-	beaconRxStrength(),
-	bssFrequencies()
+    beaconRxStrength(),
+    bssFrequencies()
 {
-	friends.manager = NULL;
-	MESSAGE_SINGLE(NORMAL, this->logger, "created");
+    friends.manager = NULL;
+    MESSAGE_SINGLE(NORMAL, this->logger, "created");
 }
 
 Beacon::~Beacon()
@@ -95,39 +95,39 @@ void Beacon::processIncoming(const wns::ldk::CompoundPtr& compound)
 {
     assure(friends.manager->getFrameType(compound->getCommandPool()) == BEACON, "Received frame is not a beacon");
 
-	if (friends.manager->getTransmitterAddress(compound->getCommandPool()) == friends.manager->getMACAddress())
-	{
-		// Filter out own beacons
-		return;
-	}
+    if (friends.manager->getTransmitterAddress(compound->getCommandPool()) == friends.manager->getMACAddress())
+    {
+        // Filter out own beacons
+        return;
+    }
 
-	// store the received power in case of later association
-	if(friends.manager->getStationType() == dll::StationTypes::UT() and this->hasTimeoutSet())
-	{
-		wifimac::convergence::PhyUserCommand* puc =
-			getFUN()->getCommandReader(phyUserCommandName)->readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool());
-		beaconRxStrength[puc->local.rxPower + puc->local.interference] = friends.manager->getTransmitterAddress(compound->getCommandPool());
-		bssFrequencies[friends.manager->getTransmitterAddress(compound->getCommandPool())] = *freqIter;
-		MESSAGE_BEGIN(NORMAL, this->logger, m, "Received Beacon from ");
+    // store the received power in case of later association
+    if(friends.manager->getStationType() == dll::StationTypes::UT() and this->hasTimeoutSet())
+    {
+        wifimac::convergence::PhyUserCommand* puc =
+            getFUN()->getCommandReader(phyUserCommandName)->readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool());
+        beaconRxStrength[puc->local.rxPower + puc->local.interference] = friends.manager->getTransmitterAddress(compound->getCommandPool());
+        bssFrequencies[friends.manager->getTransmitterAddress(compound->getCommandPool())] = *freqIter;
+        MESSAGE_BEGIN(NORMAL, this->logger, m, "Received Beacon from ");
         m << friends.manager->getTransmitterAddress(compound->getCommandPool());
         m << " with " << (puc->local.rxPower + puc->local.interference);
         MESSAGE_END();
-	}
+    }
 
-	// announce the link to the observers
-	// TODO: This should be the task of the LinkQualityMeasurement
-	this->wns::Subject<ILinkNotification>::forEachObserver(OnLinkIndication(friends.manager->getMACAddress(),
+    // announce the link to the observers
+    // TODO: This should be the task of the LinkQualityMeasurement
+    this->wns::Subject<ILinkNotification>::forEachObserver(OnLinkIndication(friends.manager->getMACAddress(),
                                                                                     friends.manager->getTransmitterAddress(compound->getCommandPool())));
 }
 
 void Beacon::processOutgoing(const wns::ldk::CompoundPtr& /*compound*/)
 {
-	throw wns::Exception("Impossible to call processOutgoing in Beacon FU");
+    throw wns::Exception("Impossible to call processOutgoing in Beacon FU");
 }
 
 bool Beacon::hasCapacity() const
 {
-	return false;
+    return false;
 }
 
 const wns::ldk::CompoundPtr Beacon::hasSomethingToSend() const
@@ -155,67 +155,67 @@ Beacon::periodically()
 void
 Beacon::onTimeout()
 {
-	assure(friends.manager->getStationType() == dll::StationTypes::UT(), "Only STAs (UTs) can become associated");
+    assure(friends.manager->getStationType() == dll::StationTypes::UT(), "Only STAs (UTs) can become associated");
 
-	MESSAGE_SINGLE(NORMAL, this->logger, "Timeout for beacon scanning on frequency " << *freqIter);
-	++freqIter;
+    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout for beacon scanning on frequency " << *freqIter);
+    ++freqIter;
 
-	if(freqIter != scanFrequencies.end<double>())
-	{
-		// set the transceiver to the next frequency
-		MESSAGE_SINGLE(NORMAL, this->logger, "Set scanning frequency to " << *freqIter);
-		friends.manager->getPhyUser()->setFrequency(*freqIter);
-		// start next round of scanning for the best beacon for association
-		this->setTimeout(scanDuration);
+    if(freqIter != scanFrequencies.end<double>())
+    {
+        // set the transceiver to the next frequency
+        MESSAGE_SINGLE(NORMAL, this->logger, "Set scanning frequency to " << *freqIter);
+        friends.manager->getPhyUser()->setFrequency(*freqIter);
+        // start next round of scanning for the best beacon for association
+        this->setTimeout(scanDuration);
 
-		return;
-	}
+        return;
+    }
 
-	if(beaconRxStrength.empty())
-	{
-		MESSAGE_SINGLE(NORMAL, this->logger, "No beacons received, start scanning again");
-		freqIter = scanFrequencies.begin<double>();
-		friends.manager->getPhyUser()->setFrequency(*freqIter);
-		this->setTimeout(scanDuration);
-	}
-	else
-	{
-		{
-			MESSAGE_BEGIN(NORMAL, this->logger, m, "Start association, received beacons: ");
-			std::map<wns::Power, wns::service::dll::UnicastAddress>::const_reverse_iterator i = beaconRxStrength.rbegin();
-			while(i != beaconRxStrength.rend())
-			{
-				m << "\n   " << i->first << " from " << i->second << " on " << bssFrequencies[i->second] << "MHz";
-				i++;
-			}
-			MESSAGE_END();
-		}
+    if(beaconRxStrength.empty())
+    {
+        MESSAGE_SINGLE(NORMAL, this->logger, "No beacons received, start scanning again");
+        freqIter = scanFrequencies.begin<double>();
+        friends.manager->getPhyUser()->setFrequency(*freqIter);
+        this->setTimeout(scanDuration);
+    }
+    else
+    {
+        {
+            MESSAGE_BEGIN(NORMAL, this->logger, m, "Start association, received beacons: ");
+            std::map<wns::Power, wns::service::dll::UnicastAddress>::const_reverse_iterator i = beaconRxStrength.rbegin();
+            while(i != beaconRxStrength.rend())
+            {
+                m << "\n   " << i->first << " from " << i->second << " on " << bssFrequencies[i->second] << "MHz";
+                i++;
+            }
+            MESSAGE_END();
+        }
 
-		std::map<wns::Power, wns::service::dll::UnicastAddress>::const_reverse_iterator itr = beaconRxStrength.rbegin();
-		friends.manager->getPhyUser()->setFrequency(bssFrequencies[itr->second]);
-		friends.manager->associateWith(itr->second);
+        std::map<wns::Power, wns::service::dll::UnicastAddress>::const_reverse_iterator itr = beaconRxStrength.rbegin();
+        friends.manager->getPhyUser()->setFrequency(bssFrequencies[itr->second]);
+        friends.manager->associateWith(itr->second);
 
-		this->getFUN()->getLayer<wifimac::Layer2*>()->updateContext
-			("MAC.STAAssociatedToAP",
-			 getFUN()->getLayer<wifimac::Layer2*>()->getStationManager()->getStationByMAC(itr->second)->getID());
-	}
+        this->getFUN()->getLayer<wifimac::Layer2*>()->updateContext
+            ("MAC.STAAssociatedToAP",
+             getFUN()->getLayer<wifimac::Layer2*>()->getStationManager()->getStationByMAC(itr->second)->getID());
+    }
 }
 
 void
 Beacon::calculateSizes(const wns::ldk::CommandPool* /*commandPool*/, Bit& commandPoolSize, Bit& sduSize) const
 {
-	//No upper FUs, no upper sizes
-	//this->getFUN()->calculateSizes(commandPool, commandPoolSize, sduSize, this);
+    //No upper FUs, no upper sizes
+    //this->getFUN()->calculateSizes(commandPool, commandPoolSize, sduSize, this);
 
-	// todo: shift values to PyConfig
-	Bit managementMACHdrSize = 24*8;
-	Bit timestampSize = 8*8;
-	Bit beaconIntervalSize = 2*8;
-	Bit capabilityInformationSize = 2*8;
-	Bit ssidSize = 2*8;
-	Bit supportedRatesSize = 3*8;
-	Bit timSize = 6*8;
+    // todo: shift values to PyConfig
+    Bit managementMACHdrSize = 24*8;
+    Bit timestampSize = 8*8;
+    Bit beaconIntervalSize = 2*8;
+    Bit capabilityInformationSize = 2*8;
+    Bit ssidSize = 2*8;
+    Bit supportedRatesSize = 3*8;
+    Bit timSize = 6*8;
 
-	commandPoolSize = managementMACHdrSize + timestampSize + beaconIntervalSize + capabilityInformationSize + ssidSize + supportedRatesSize + timSize;
-	sduSize = 0;
+    commandPoolSize = managementMACHdrSize + timestampSize + beaconIntervalSize + capabilityInformationSize + ssidSize + supportedRatesSize + timSize;
+    sduSize = 0;
 } // calculateSizes

@@ -235,7 +235,6 @@ class Config(Sealed):
 	phyUser = None
 	unicastDCF = None
 	broadcastDCF = None
-	constantWait = None
 	arq = None
 	perMIB = None
 	ra = None
@@ -288,14 +287,13 @@ class Config(Sealed):
 		self.aggregation = wifimac.draftn.AggregationConfig()
 		self.blockACK = wifimac.draftn.BlockACKConfig()
 		self.blockUntilReply = wifimac.draftn.BlockUntilReplyConfig()
-		self.constantWait = wifimac.lowerMAC.ConstantWaitConfig()
 		self.frameSynchronization = wifimac.convergence.FrameSynchronizationConfig()
 		self.beaconLQM = wifimac.pathselection.BeaconLinkQualityMeasurementConfig()
 		# end example
 
 		self.multipleUsedVariables = dict()
 		self.multipleUsedVariables['rtsctsThreshold'] = ['self', 'self.arq', 'self.rtscts']
-		self.multipleUsedVariables['sifsDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockACK', 'self.blockUntilReply', 'self.constantWait', 'self.channelState', 'self.beaconLQM']
+		self.multipleUsedVariables['sifsDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockACK', 'self.blockUntilReply', 'self.channelState', 'self.beaconLQM']
 		self.multipleUsedVariables['expectedACKDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockACK', 'self.beaconLQM']
 		self.multipleUsedVariables['expectedCTSDuration'] = ['self', 'self.rtscts', 'self.channelState']
 		self.multipleUsedVariables['slotDuration'] =  ['self', 'self.unicastDCF', 'self.channelState', 'self.beaconLQM']

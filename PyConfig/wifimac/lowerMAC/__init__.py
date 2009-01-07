@@ -1,4 +1,3 @@
-from ConstantWait import *
 from DCF import *
 from Manager import *
 from NextFrameGetter import *
@@ -33,7 +32,7 @@ names['ackSwitch'] = 'ACKSwitch'
 names['nextFrame'] = 'nextFrameGetter'
 names['rtscts'] = 'RTSCTS'
 names['unicastDCF'] = 'UnicastDCF'
-names['constantWait'] = 'ConstantWait'
+names['sifsDelay'] = 'SIFSDelay'
 names['txop']  = 'TXOP'
 
 def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
@@ -234,12 +233,12 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
                            arqCommandName = names['arq'] + 'Command',
                            config = config.unicastDCF,
                            parentLogger = logger)
-    constantWait = ConstantWait(functionalUnitName = names['constantWait'] + str(transceiverAddress),
-                                commandName = names['constantWait'] + 'Command',
-                                managerName = names['manager'] + str(transceiverAddress),
-                                config = config.constantWait,
-                                parentLogger = logger)
-
+    sifsDelay = wns.ldk.Tools.ConstantDelay(delayDuration = config.sifsDuration,
+                                               functionalUnitName = names['sifsDelay'] + str(transceiverAddress),
+                                               commandName = names['sifsDelay'] + 'Command',
+                                               logName = names['sifsDelay'],
+                                               moduleName = 'WiFiMAC',
+                                               parentLogger = logger)
     #############
     # Dispatcher
     # Multiplexing everything for the backoff
@@ -280,15 +279,15 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
                                                   parentLogger = logger,
                                                   mustAccept = False)
                     # add FUs
-    ## for fu in [rtscts, unicastScheduler, constantWait, backoffDispatcher, SIFSDispatcher, rxFilterDispatcher, rtsSwitch, frameSwitch]:
-    for fu in [rtscts, unicastScheduler, constantWait, backoffDispatcher, SIFSDispatcher, rxFilterDispatcher, rtsSwitch, frameSwitch]:
+    ## for fu in [rtscts, unicastScheduler, sifsDelay, backoffDispatcher, SIFSDispatcher, rxFilterDispatcher, rtsSwitch, frameSwitch]:
+    for fu in [rtscts, unicastScheduler, sifsDelay, backoffDispatcher, SIFSDispatcher, rxFilterDispatcher, rtsSwitch, frameSwitch]:
             myFUN.add(fu)
 
     # connect simple FU as far as possible
     backoffDispatcher.connect(unicastScheduler)
-    SIFSDispatcher.connect(constantWait)
+    SIFSDispatcher.connect(sifsDelay)
     unicastScheduler.connect(rxFilterDispatcher)
-    constantWait.connect(rxFilterDispatcher)
+    sifsDelay.connect(rxFilterDispatcher)
 
 
     # connect switches
@@ -311,11 +310,12 @@ def __appendDraftNTimingBlock__(myFUN, bottomFU, config, names, transceiverAddre
                                             arqCommandName = names['arq'] + 'Command',
                                             config = config.unicastDCF,
                                             parentLogger = logger)
-    constantWait = ConstantWait(functionalUnitName = names['constantWait'] + str(transceiverAddress),
-                                                 commandName = names['constantWait'] + 'Command',
-                                                 managerName = names['manager'] + str(transceiverAddress),
-                                                 config = config.constantWait,
-                                                 parentLogger = logger)
+    sifsDelay = wns.ldk.Tools.ConstantDelay(delayDuration = config.sifsDuration,
+                                               functionalUnitName = names['sifsDelay'] + str(transceiverAddress),
+                                               commandName = names['sifsDelay'] + 'Command',
+                                               logName = names['sifsDelay'],
+                                               moduleName = 'WiFiMAC',
+                                               parentLogger = logger)
     #############
     # Dispatcher
     # Multiplexing everything for the backoff
@@ -350,14 +350,14 @@ def __appendDraftNTimingBlock__(myFUN, bottomFU, config, names, transceiverAddre
                                                     parentLogger = logger,
                                                     mustAccept = False)
     # add FUs
-    for fu in [unicastScheduler, constantWait, backoffDispatcher, SIFSDispatcher, rxFilterDispatcher, frameSwitch]:
+    for fu in [unicastScheduler, sifsDelay, backoffDispatcher, SIFSDispatcher, rxFilterDispatcher, frameSwitch]:
             myFUN.add(fu)
 
     # connect simple FU as far as possible
     backoffDispatcher.connect(unicastScheduler)
-    SIFSDispatcher.connect(constantWait)
+    SIFSDispatcher.connect(sifsDelay)
     unicastScheduler.connect(rxFilterDispatcher)
-    constantWait.connect(rxFilterDispatcher)
+    sifsDelay.connect(rxFilterDispatcher)
 
 
     # connect switches

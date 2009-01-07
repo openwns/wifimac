@@ -42,75 +42,75 @@
 
 namespace wifimac { namespace pathselection {
 
-	/**
+    /**
 	 * @brief Implementation of the MP's path selection using the virtual path
 	 *        selection service, i.e. with global information.
 	 *
 	 *        Essentially, all calls are relayed to TheVPSService::Instance().getVPS()->...
 	 */
-	class PathSelectionOverVPS :
+    class PathSelectionOverVPS :
         public IPathSelection,
-		public wns::ldk::ManagementService,
-		public dll::services::control::AssociationObserver
-	{
-	public:
-		PathSelectionOverVPS( wns::ldk::ManagementServiceRegistry*, const wns::pyconfig::View& config );
-		virtual ~PathSelectionOverVPS() {};
+        public wns::ldk::ManagementService,
+        public dll::services::control::AssociationObserver
+    {
+    public:
+        PathSelectionOverVPS( wns::ldk::ManagementServiceRegistry*, const wns::pyconfig::View& config );
+        virtual ~PathSelectionOverVPS() {};
 
-		/**
+        /**
 		 * @brief Implementation of the PathSelectionInterface
 		 */
-		virtual wns::service::dll::UnicastAddress
-		getNextHop(const wns::service::dll::UnicastAddress current,
-				   const wns::service::dll::UnicastAddress finalDestination);
-		virtual bool
-		isMeshPoint(const wns::service::dll::UnicastAddress address) const;
-		virtual bool
-		isPortal(const wns::service::dll::UnicastAddress address) const;
-		virtual wns::service::dll::UnicastAddress
-		getProxyFor(const wns::service::dll::UnicastAddress address);
-		virtual wns::service::dll::UnicastAddress
-		getPortalFor(const wns::service::dll::UnicastAddress address);
-		virtual void
-		registerProxy(const wns::service::dll::UnicastAddress server,
-					  const wns::service::dll::UnicastAddress client);
-		virtual void
-		registerMP(const wns::service::dll::UnicastAddress address);
-		virtual void
-		registerPortal(const wns::service::dll::UnicastAddress address,
-					   dll::APUpperConvergence* apUC);
+        virtual wns::service::dll::UnicastAddress
+        getNextHop(const wns::service::dll::UnicastAddress current,
+                   const wns::service::dll::UnicastAddress finalDestination);
+        virtual bool
+        isMeshPoint(const wns::service::dll::UnicastAddress address) const;
+        virtual bool
+        isPortal(const wns::service::dll::UnicastAddress address) const;
+        virtual wns::service::dll::UnicastAddress
+        getProxyFor(const wns::service::dll::UnicastAddress address);
+        virtual wns::service::dll::UnicastAddress
+        getPortalFor(const wns::service::dll::UnicastAddress address);
+        virtual void
+        registerProxy(const wns::service::dll::UnicastAddress server,
+                      const wns::service::dll::UnicastAddress client);
+        virtual void
+        registerMP(const wns::service::dll::UnicastAddress address);
+        virtual void
+        registerPortal(const wns::service::dll::UnicastAddress address,
+                       dll::APUpperConvergence* apUC);
 
-		
-		virtual void
-		deRegisterProxy(const wns::service::dll::UnicastAddress server,
-						const wns::service::dll::UnicastAddress client);
-		virtual void
-		createPeerLink(const wns::service::dll::UnicastAddress myself,
-					   const wns::service::dll::UnicastAddress peer,
-					   const Metric linkMetric = Metric(1));
-		virtual void
-		updatePeerLink(const wns::service::dll::UnicastAddress myself,
-					   const wns::service::dll::UnicastAddress peer,
-					   const Metric linkMetric = Metric(1));
-		virtual void
-		closePeerLink(const wns::service::dll::UnicastAddress myself,
-					  const wns::service::dll::UnicastAddress peer);
 
-	private:
-		void
-		onMSRCreated();
+        virtual void
+        deRegisterProxy(const wns::service::dll::UnicastAddress server,
+                        const wns::service::dll::UnicastAddress client);
+        virtual void
+        createPeerLink(const wns::service::dll::UnicastAddress myself,
+                       const wns::service::dll::UnicastAddress peer,
+                       const Metric linkMetric = Metric(1));
+        virtual void
+        updatePeerLink(const wns::service::dll::UnicastAddress myself,
+                       const wns::service::dll::UnicastAddress peer,
+                       const Metric linkMetric = Metric(1));
+        virtual void
+        closePeerLink(const wns::service::dll::UnicastAddress myself,
+                      const wns::service::dll::UnicastAddress peer);
 
-		/**
+    private:
+        void
+        onMSRCreated();
+
+        /**
 		 * @brief Implementation of dll::services::control::AssociationObserver
 		 */
-		void onAssociated(const wns::service::dll::UnicastAddress clientAdr,
-				  const wns::service::dll::UnicastAddress serverAdr);
-		void onDisassociated(const wns::service::dll::UnicastAddress clientAdr,
-				     const wns::service::dll::UnicastAddress serverAdr);
+        void onAssociated(const wns::service::dll::UnicastAddress clientAdr,
+                          const wns::service::dll::UnicastAddress serverAdr);
+        void onDisassociated(const wns::service::dll::UnicastAddress clientAdr,
+                             const wns::service::dll::UnicastAddress serverAdr);
 
-		wns::logger::Logger logger;
-		std::string upperConvergenceName;
-	};
+        wns::logger::Logger logger;
+        std::string upperConvergenceName;
+    };
 } // mac
 } // wifimac
 
