@@ -31,6 +31,9 @@ import wifimac.pathselection
 import wifimac.management
 import wifimac.FUNCreator
 
+# this needs to be done differently to support open vs. closed version
+import wifimac.futureCS
+
 import wifimac.helper.Probes
 
 import wns.FUN
@@ -111,6 +114,10 @@ class dllSTA(dll.Layer2.Layer2):
 		self.managementServices.append(wifimac.management.InformationBases.PER(serviceName = 'wifimac.perMIB.' + str(node.id),
 										     config = config.perMIB,
 										     parentLogger = self.logger))
+		self.managementServices.append(wifimac.futureCS.FutureCS(serviceName = 'wifimac.futureCS.' + str(node.id),
+									 channelStateName = wifimac.convergence.names['channelState'] + str(node.id),
+									 config = wifimac.futureCS.FutureCSConfig(),
+									 parentLogger = self.logger))
 
 class MeshLayer2(dll.Layer2.Layer2):
 	pathSelectionServiceName = None
