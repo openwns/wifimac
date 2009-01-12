@@ -24,16 +24,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.Node
-import wns.FUN
-import wns.PyConfig
-import wns.Probe
-from wns.PyConfig import Sealed
-from wns import dBm, dB, fromdB
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class MeshForwarding(wns.FUN.FunctionalUnit):
+class MeshForwarding(openwns.FUN.FunctionalUnit):
 	""" Forwarding based on association (STA <-> AP) and mesh-routing"""
 
 	__plugin__ = 'wifimac.pathselection.MeshForwarding'
@@ -48,9 +45,9 @@ class MeshForwarding(wns.FUN.FunctionalUnit):
 		self.logger = wifimac.Logger.Logger(name = "MeshForwarding", parent = parentLogger)
 		self.dot11MeshTTL = 15
 		self.pathSelectionServiceName = 'PATHSELECTIONOVERVPS'
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)
 
-class StationForwarding(wns.FUN.FunctionalUnit):
+class StationForwarding(openwns.FUN.FunctionalUnit):
 	""" Forwarding for STAs: Always to the associated AP"""
 
 	__plugin__ = 'wifimac.pathselection.StationForwarding'
@@ -61,4 +58,4 @@ class StationForwarding(wns.FUN.FunctionalUnit):
 		super(StationForwarding, self).__init__(functionalUnitName=functionalUnitName, commandName=commandName)
 		self.upperConvergenceName = upperConvergenceName
 		self.logger = wifimac.Logger.Logger(name = "STAForwarding", parent = parentLogger)
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)

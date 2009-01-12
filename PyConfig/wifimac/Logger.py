@@ -24,11 +24,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.Logger
+import openwns.logger
 
-class Logger(wns.Logger.Logger):
+class Logger(openwns.logger.Logger):
     """Logger for WiFiMac"""
 
     def __init__(self, name, parent = None):
         super(Logger, self).__init__("WiFiMac", name, True, parent)
-	wns.Logger.globalRegistry.addLogger("WiFiMac", self)
+        openwns.logger.globalRegistry.addLogger("WiFiMac", self)

@@ -24,19 +24,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from wns.Sealed import Sealed
-import wns.FUN
-import wns.PyConfig
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class TXOPConfig(Sealed):
+class TXOPConfig(object):
     sifsDuration = 16E-6
     expectedACKDuration = 44E-6
     txopLimit = 0
     singleReceiver = False
 
-class TXOP(wns.FUN.FunctionalUnit):
+class TXOP(openwns.FUN.FunctionalUnit):
 
     __plugin__ = 'wifimac.lowerMAC.TXOP'
     """ Name in FU Factory """
@@ -57,5 +57,5 @@ class TXOP(wns.FUN.FunctionalUnit):
         assert(config.__class__ == TXOPConfig)
         self.myConfig = config
         self.logger = wifimac.Logger.Logger(name = "TXOP", parent = parentLogger)
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)
 

@@ -24,15 +24,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.Probe
-from wns.PyConfig import Sealed
+import openwns.FUN
+import openwns.Probe
+import openwns.pyconfig
 
 import wifimac.Logger
 
-from wns import dBm
+from openwns import dBm
 
-class ChannelStateConfig(Sealed):
+class ChannelStateConfig(object):
 	useRawEnergyDetection = False
 	usePhyCarrierSense = True
 	usePhyPacketLength = True
@@ -52,7 +52,7 @@ class ChannelStateConfig(Sealed):
 	slotDuration = 9E-6
 	expectedCTSDuration = 44E-6
 
-class ChannelState(wns.Probe.Probe):
+class ChannelState(openwns.Probe.Probe):
 	__plugin__ = 'wifimac.convergence.ChannelState'
 
 	logger = None
@@ -82,6 +82,6 @@ class ChannelState(wns.Probe.Probe):
 		self.busyFractionProbeName = probePrefix + ".busy"
 		self.ownTxFractionProbeName = probePrefix + ".tx"
 
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)
 
 

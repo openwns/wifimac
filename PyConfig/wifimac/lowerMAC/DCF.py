@@ -24,13 +24,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
-from wns.PyConfig import Sealed
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class DCFConfig(Sealed):
+class DCFConfig(object):
     """ Constants for the medium access waiting times, see IEEE Std 802.11-2007 """
     slotDuration=9E-6
     """ PHY-dependant, see 9.2.10 """
@@ -45,7 +45,7 @@ class DCFConfig(Sealed):
         self.cwMin = cwMin
         self.cwMax = cwMax
 
-class DCF(wns.FUN.FunctionalUnit):
+class DCF(openwns.FUN.FunctionalUnit):
     """ The basic 802.11 Distributed Control Function (DCF),
         based on an exponential backoff
     """
@@ -69,4 +69,4 @@ class DCF(wns.FUN.FunctionalUnit):
         self.myConfig = config
         self.csName = csName
         self.arqCommandName = arqCommandName
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)

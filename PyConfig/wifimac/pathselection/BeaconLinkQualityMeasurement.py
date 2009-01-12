@@ -24,16 +24,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.Node
-import wns.FUN
-import wns.PyConfig
-import wns.Probe
-from wns.PyConfig import Sealed
-from wns import dBm, dB, fromdB
+
+import openwns.pyconfig
+import openwns.Probe
+
+from openwns import dBm
 
 import wifimac.Logger
 
-class BeaconLinkQualityMeasurementConfig(Sealed):
+class BeaconLinkQualityMeasurementConfig(object):
 	windowLength = 9.5
 	noiseLevel = dBm(-94)
 	meanFrameSize = 1500*8
@@ -45,10 +44,10 @@ class BeaconLinkQualityMeasurementConfig(Sealed):
 	maxMissedBeacons = 9
 
 	def __init__(self, **kw):
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)
 
 
-class BeaconLinkQualityMeasurement(wns.Probe.Probe):
+class BeaconLinkQualityMeasurement(openwns.Probe.Probe):
 	""" Measures the quality of existing links via the received beacons"""
 	__plugin__ = "wifimac.pathselection.BeaconLinkQualityMeasurement"
 
@@ -84,4 +83,4 @@ class BeaconLinkQualityMeasurement(wns.Probe.Probe):
 		assert(config.__class__ == BeaconLinkQualityMeasurementConfig)
 		self.myConfig = config
 
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)

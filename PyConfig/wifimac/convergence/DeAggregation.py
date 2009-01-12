@@ -24,10 +24,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
+import openwns.FUN
 import wifimac.Logger
 
-class DeAggregation(wns.FUN.FunctionalUnit):
+class DeAggregation(openwns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.convergence.DeAggregation'
 	logger = None
 	phyUserName = None

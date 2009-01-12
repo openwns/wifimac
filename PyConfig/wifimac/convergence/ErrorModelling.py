@@ -24,13 +24,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
-from wns.PyConfig import Sealed
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class ErrorModelling(wns.FUN.FunctionalUnit):
+class ErrorModelling(openwns.FUN.FunctionalUnit):
 	"""This class maps the cir to ser and calculates PER"""
 	name = 'ErrorModelling'
 	logger = None
@@ -49,4 +48,4 @@ class ErrorModelling(wns.FUN.FunctionalUnit):
 		self.phyUserCommandName = phyUserCommandName
 		self.managerCommandName = managerCommandName
 		self.logger = wifimac.Logger.Logger("ErrorModelling", parent = parentLogger)
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)

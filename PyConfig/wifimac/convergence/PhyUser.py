@@ -24,17 +24,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
-from wns.PyConfig import Sealed
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
 import wifimac.convergence.PhyMode
 
-from wns import dB, fromdB
+from openwns import dB, fromdB
 
-class PhyUserConfig(Sealed):
+class PhyUserConfig(object):
 	initFrequency = None
 
 	numPhyModes = 8
@@ -53,7 +53,7 @@ class PhyUserConfig(Sealed):
 		self.initFrequency = initFrequency
 		self.phyModes = wifimac.convergence.PhyMode.PhyModes
 
-class PhyUser(wns.FUN.FunctionalUnit):
+class PhyUser(openwns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.convergence.PhyUser'
 	"""Name in FunctionalUnitFactory"""
 
@@ -92,7 +92,7 @@ class PhyUser(wns.FUN.FunctionalUnit):
 		self.myConfig = config
 
 		phyModes = config.phyModes(self.logger)
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)
 
 		self.PhyModePreamble = phyModes.getPhyModePreamble() 
 		self.PhyMode0 = phyModes.getPhyMode0()

@@ -28,9 +28,7 @@
 from NodeCreator import NodeCreator
 from ChannelManagerPool import ChannelManagerPool
 
-from wns.PyConfig import Sealed
-
-class Node(Sealed):
+class Node(object):
     position = None
     transceivers = None
 

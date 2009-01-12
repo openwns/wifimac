@@ -24,9 +24,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.Node
-import wns.PyConfig
-from wns import dBm, dB
+
+import openwns.node
+import openwns.pyconfig
+from openwns import dBm, dB
 
 import ofdmaphy.Station
 
@@ -38,10 +39,10 @@ import ip.Component
 import ip
 from ip.AddressResolver import FixedAddressResolver, VirtualDHCPResolver
 
-import constanze.Node
+import constanze.node
 import rise.Mobility
 
-class Station(wns.Node.Node):
+class Station(openwns.node.Node):
 	load = None      # Load Generator
 	tl = None        # Transport Layer
 	nl = None        # Network Layer
@@ -79,7 +80,7 @@ class NodeCreator(object):
 
 		self.txPower = dBm(30)
 
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)
 
 	def createPhyLayer(self, managerName, propagationName, txPower, frequency, parentLogger):
 		receiver = ofdmaphy.Receiver.OFDMAReceiver(	propagation = self.propagation,
@@ -149,7 +150,7 @@ class NodeCreator(object):
 		# create Mobility component
 		newAP.mobility = rise.Mobility.Component(node = newAP,
                 	                                 name = "Mobility AP"+str(id),
-                        	                         mobility = rise.Mobility.No(wns.Position()))
+                        	                         mobility = rise.Mobility.No(openwns.Position()))
 		newAP.mobility.mobility.setCoords(config.position)
 
 		return newAP
@@ -185,7 +186,7 @@ class NodeCreator(object):
 
 		newMP.mobility = rise.Mobility.Component ( node = newMP,
 		                 			   name = "Mobility MP"+str ( id ),
-							   mobility = rise.Mobility.No ( wns.Position() ))
+							   mobility = rise.Mobility.No ( openwns.Position() ))
 		newMP.mobility.mobility.setCoords ( config.position )
 
 		return newMP
@@ -225,12 +226,12 @@ class NodeCreator(object):
 				_dllNotification = newSTA.dll.notification )
 
 		# create load generator
-		newSTA.load = constanze.Node.ConstanzeComponent ( newSTA, "constanze" )
+		newSTA.load = constanze.node.ConstanzeComponent ( newSTA, "constanze" )
 
 		# create mobility component
 		newSTA.mobility = rise.Mobility.Component ( node = newSTA,
 							    name = "Mobility STA"+str ( id ),
-							    mobility = rise.Mobility.No ( wns.Position() ))
+							    mobility = rise.Mobility.No ( openwns.Position() ))
 		newSTA.mobility.mobility.setCoords ( config.position )
 
 		return newSTA
@@ -257,6 +258,6 @@ class NodeCreator(object):
 		rang.nl.forwarding.config.isForwarding = True
 
 		# create load generator
-		rang.load = constanze.Node.ConstanzeComponent(rang, "constanze")
+		rang.load = constanze.node.ConstanzeComponent(rang, "constanze")
 
 		return rang

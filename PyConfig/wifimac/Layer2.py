@@ -33,9 +33,8 @@ import wifimac.FUNCreator
 
 import wifimac.helper.Probes
 
-import wns.FUN
-import wns.ldk
-from wns.PyConfig import Sealed
+import openwns.FUN
+import openwns.ldk
 
 import dll.Layer2
 import dll.UpperConvergence
@@ -53,7 +52,7 @@ class dllSTA(dll.Layer2.Layer2):
 		self.associations = []
 		self.stationType = "UT"
 		self.ring = 3
-		self.fun = wns.FUN.FUN()
+		self.fun = openwns.FUN.FUN()
 
 		################
 		# Upper MAC part
@@ -64,7 +63,7 @@ class dllSTA(dll.Layer2.Layer2):
 									parentLogger = self.logger,
 									moduleName = 'WiFiMAC')
 
-		packetProbe = wns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
+		packetProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
 							   prefix = "wifimac.e2e",
 							   commandName = "e2eDelayProbeCommand",
 							   parentLogger = self.logger,
@@ -79,7 +78,7 @@ class dllSTA(dll.Layer2.Layer2):
 							   commandName = self.upperConvergenceName)
 		upperConvergence.logger.moduleName = 'WiFiMAC'
 
-		self.fun = wns.FUN.FUN()
+		self.fun = openwns.FUN.FUN()
 		for fu in ([throughputProbe, packetProbe, forwarding, upperConvergence]):
 			self.fun.add(fu)
 
@@ -127,7 +126,7 @@ class MeshLayer2(dll.Layer2.Layer2):
 		self.manager = []
 		self.addresses = []
 
-		self.fun = wns.FUN.FUN()
+		self.fun = openwns.FUN.FUN()
 
 		################
 		# Upper MAC part
@@ -138,7 +137,7 @@ class MeshLayer2(dll.Layer2.Layer2):
 									     parentLogger = self.logger,
 									     moduleName = 'WiFiMAC')
 
-		packetProbe = wns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
+		packetProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
 							   prefix = "wifimac.e2e",
 							   commandName = "e2eDelayProbeCommand",
 							   parentLogger = self.logger,
@@ -229,7 +228,7 @@ class dllMP(MeshLayer2):
 		upperConvergence.connect(self.throughputProbe)
 
 # begin example "wifimac.pyconfig.layer2.config.start"
-class Config(Sealed):
+class Config(object):
 	beacon = None
 	channelState = None
 	phyUser = None

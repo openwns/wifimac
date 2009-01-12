@@ -24,16 +24,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
-from wns.PyConfig import Sealed
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class ConstantWaitConfig(Sealed):
+class ConstantWaitConfig(object):
     sifsDuration = 16E-6
 
-class ConstantWait(wns.FUN.FunctionalUnit):
+class ConstantWait(openwns.FUN.FunctionalUnit):
     __plugin__ = 'wifimac.lowerMAC.timing.ConstantWait'
 
     logger = None
@@ -52,4 +52,4 @@ class ConstantWait(wns.FUN.FunctionalUnit):
         assert(config.__class__ == ConstantWaitConfig)
         self.myConfig = config
         self.managerName = managerName
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)

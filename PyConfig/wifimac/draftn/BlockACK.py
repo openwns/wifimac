@@ -24,14 +24,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from wns.Sealed import Sealed
-import wns.FUN
-import wns.PyConfig
-import wns.ARQ
+
+import openwns.FUN
+import openwns.pyconfig
+import openwns.ARQ
 
 import wifimac.Logger
 
-class BlockACKConfig(Sealed):
+class BlockACKConfig(object):
 
     sifsDuration = 16E-6
     preambleProcessingDelay = 21E-6
@@ -59,7 +59,7 @@ class BlockACKConfig(Sealed):
     b) non-impatient: Send BAreq only if maxOnAir is exploited.
     Impatient means lower waiting time for the BA, but higher overhead for non-saturated, non-error-prone links
     """
-class BlockACK(wns.Probe.Probe):
+class BlockACK(openwns.Probe.Probe):
 
     __plugin__ = 'wifimac.lowerMAC.BlockACK'
     """ Name in FU Factory """
@@ -87,5 +87,5 @@ class BlockACK(wns.Probe.Probe):
         assert(config.__class__ == BlockACKConfig)
         self.myConfig = config
         self.numTxAttemptsProbeName = probePrefix + '.numTxAttempts'
-        self.arqStatusCollector = wns.ARQ.NoStatusCollection(self.logger)
-        wns.PyConfig.attrsetter(self, kw)
+        self.arqStatusCollector = openwns.ARQ.NoStatusCollection(self.logger)
+        openwns.pyconfig.attrsetter(self, kw)

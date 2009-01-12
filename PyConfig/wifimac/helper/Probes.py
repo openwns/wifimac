@@ -24,13 +24,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.Probe
+import openwns.Probe
 
 ################################
 # Special Probes for the WiFiMAC
 ################################
 
-class WindowProbeBus(wns.Probe.WindowProbeBus):
+class WindowProbeBus(openwns.Probe.WindowProbeBus):
     """ Special WiFiMAC Window-Probe which allows for
          * Filtering by the context MAC.WindowProbeHopCount
          * Sorting by all contexts which are defined in the manager
@@ -48,7 +48,7 @@ class WindowProbeBus(wns.Probe.WindowProbeBus):
     forwardingCommandName = None
 
     def __init__(self, name, prefix, commandName, forwardingCommandName, windowSize = 1.0, sampleInterval = None, parentLogger = None, moduleName = 'WiFiMAC', **kw):
-        super(wns.Probe.WindowProbeBus, self).__init__(name, prefix, commandName, windowSize, sampleInterval, parentLogger, moduleName, **kw)
+        super(openwns.Probe.WindowProbeBus, self).__init__(name, prefix, commandName, windowSize, sampleInterval, parentLogger, moduleName, **kw)
         self.forwardingCommandName = forwardingCommandName
 
         self.incomingHopCountedBitThroughputProbeName = prefix + ".window.incoming.bitThroughput.hop"

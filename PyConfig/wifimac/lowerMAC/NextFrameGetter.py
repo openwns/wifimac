@@ -24,15 +24,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from wns.Sealed import Sealed
-import wns.FUN
-import wns.PyConfig
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class NextFrameGetter(wns.FUN.FunctionalUnit):
+class NextFrameGetter(openwns.FUN.FunctionalUnit):
     __plugin__ = 'wifimac.lowerMAC.NextFrameGetter'
 
     def __init__(self, functionalUnitName, commandName, **kw):
         super(NextFrameGetter, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)

@@ -24,9 +24,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.Module
+import openwns.module
 
-class WiFiMac(wns.Module.Module):
+class WiFiMac(openwns.module.Module):
     """ WiFiMac Module Configuration
 
     Needed in order to load this module by WNS."""

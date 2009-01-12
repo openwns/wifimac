@@ -24,16 +24,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.Node
-import wns.FUN
-import wns.PyConfig
-import wns.Probe
-from wns.PyConfig import Sealed
-from wns import dBm, dB, fromdB
+
+import openwns.node
+import openwns.pyconfig
+import openwns.Probe
 
 import wifimac.Logger
 
-class Service(Sealed):
+class Service(object):
 	nameInServiceFactory  = None
 	serviceName = None
 
@@ -46,7 +44,7 @@ class PathSelectionOverVPS(Service):
         	self.serviceName = serviceName
         	self.upperConvergenceName = upperConvergenceName
         	self.logger = wifimac.Logger.Logger(name = 'PS-VPS', parent = parentLogger)
-        	wns.PyConfig.attrsetter(self, kw)
+        	openwns.pyconfig.attrsetter(self, kw)
 
 
 class Knowledge(object):
@@ -75,7 +73,7 @@ class Knowledge(object):
 	def size(self):
 		return(len(self.costs))
 
-class VirtualPS(wns.Node.Component):
+class VirtualPS(openwns.node.Component):
 	""" The virtual path selection service hold a global knowledge about the network
 	    toplogy; it is feed and accessed by the PathSelectionOverVPS Compound in each
 	    pathselection-enabled node"""
@@ -92,7 +90,7 @@ class VirtualPS(wns.Node.Component):
 		self.preKnowledge = Knowledge(preKnowledgeAlpha, numNodes)
 		self.logger = wifimac.Logger.Logger(name="VPS", parent=parentLogger)
 
-class VirtualPSServer(wns.Node.Node):
+class VirtualPSServer(openwns.node.Node):
 	vps = None
 	def __init__(self, name, numNodes):
 		super(VirtualPSServer, self).__init__(name)

@@ -24,14 +24,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
-from wns.Sealed import Sealed
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
 # begin example "wifimac.pyconfig.layer2.management.beacon.beaconconfig"
-class BeaconConfig(Sealed):
+class BeaconConfig(object):
 	enabled = True
 	delay = 0.1
 	""" Initial start delay"""
@@ -45,10 +45,10 @@ class BeaconConfig(Sealed):
 
 	def __init__(self, **kw):
 		self.scanFrequencies = []
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)
 # end example
 
-class Beacon(wns.FUN.FunctionalUnit):
+class Beacon(openwns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.management.Beacon'
 
 	logger = None
@@ -63,4 +63,4 @@ class Beacon(wns.FUN.FunctionalUnit):
 		self.phyUserCommandName = phyUserCommandName
 		assert(config.__class__ == BeaconConfig)
 		self.myConfig = config
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)

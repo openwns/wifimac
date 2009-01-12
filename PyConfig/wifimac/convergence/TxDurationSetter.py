@@ -24,11 +24,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
+import openwns.FUN
 
 import wifimac.Logger
 
-class TxDurationSetter(wns.FUN.FunctionalUnit):
+class TxDurationSetter(openwns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.convergence.TxDurationSetter'
 
 	logger = None
