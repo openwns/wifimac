@@ -7,7 +7,7 @@ import wifimac.management
 from wns.PyConfig import Sealed
 
 
-class FUNCreator(Sealed):
+class Basic(Sealed):
 	logger = None
 
 	transceiverAddress = None
@@ -41,3 +41,11 @@ class FUNCreator(Sealed):
 
 	def createManagement(self, config, myFUN):
 		return(wifimac.management.getFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
+
+class DraftN(Basic):
+	def createLowerMAC(self, config, myFUN):
+		return(wifimac.draftn.getLowerMACFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
+	def createConvergence(self, config, myFUN):
+                return(wifimac.draftn.getConvergenceFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
+
+

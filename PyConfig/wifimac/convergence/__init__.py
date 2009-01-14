@@ -19,6 +19,27 @@ names['txDuration'] = 'TxDuration'
 names['errorModelling'] = 'ErrorModelling'
 
 def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
+    FUs = __upperPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
+
+    FUs.append(TxDurationSetter(name = names['txDuration'] + str(transceiverAddress),
+                                commandName = names['txDuration'] + 'Command',
+                                phyUserName = names['phyUser'] + str(transceiverAddress),
+                                managerName = names['manager'] + str(transceiverAddress),
+                                parentLogger = logger))
+
+    FUs.extend(__lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs))
+
+    # add created FUs to FUN
+    for fu in FUs:
+        myFUN.add(fu)
+
+    # connect FUs with each other
+    for num in xrange(0, len(FUs)-1):
+        FUs[num].connect(FUs[num+1])
+
+    return([FUs[0], FUs[-1]])
+
+def __upperPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = []
     FUs.append(wns.Multiplexer.Dispatcher(commandName = 'planeDispatcherCommand',
                                           functionalUnitName = 'planeDispatcher' + str(transceiverAddress),
@@ -31,19 +52,10 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                                  phyUserName = names['phyUser'] + str(transceiverAddress),
                                  managerName = names['manager'] + str(transceiverAddress),
                                  parentLogger = logger))
-    if(config.mode == 'basic'):
-        FUs.append(TxDurationSetter(name = names['txDuration'] + str(transceiverAddress),
-                                    commandName = names['txDuration'] + 'Command',
-                                    phyUserName = names['phyUser'] + str(transceiverAddress),
-                                    managerName = names['manager'] + str(transceiverAddress),
-                                    parentLogger = logger))
-    if(config.mode == 'DraftN'):
-        FUs.append(DeAggregation(name = names['deAggregation'] + str(transceiverAddress),
-                                 commandName = names['txDuration'] + 'Command',
-                                 phyUserName = names['phyUser'] + str(transceiverAddress),
-                                 managerName = names['manager'] + str(transceiverAddress),
-                                 aggregationCommandName = 'AggregationCommand',
-                                 parentLogger = logger))
+    return FUs
+
+def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
+    FUs = []
     FUs.append(ChannelState(name = names['channelState'] + str(transceiverAddress),
                             commandName = names['channelState'] + 'Command',
                             managerName = names['manager'] + str(transceiverAddress),
@@ -83,13 +95,4 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                        txDurationProviderCommandName = names['txDuration'] + 'Command',
                        config = config.phyUser,
                        parentLogger = logger))
-
-    # add created FUs to FUN
-    for fu in FUs:
-        myFUN.add(fu)
-
-    # connect FUs with each other
-    for num in xrange(0, len(FUs)-1):
-        FUs[num].connect(FUs[num+1])
-
-    return([FUs[0], FUs[-1]])
+    return FUs

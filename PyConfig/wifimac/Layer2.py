@@ -29,7 +29,7 @@ import wifimac.draftn
 import wifimac.lowerMAC
 import wifimac.pathselection
 import wifimac.management
-import wifimac.FUNCreator
+import wifimac.FUNModes
 
 # this needs to be done differently to support open vs. closed version
 import wifimac.futureCS
@@ -88,13 +88,13 @@ class dllSTA(dll.Layer2.Layer2):
 
 		################
 		# Lower MAC part
-		fuc = wifimac.FUNCreator.FUNCreator(logger = self.logger,
-						    transceiverAddress = node.id,
-						    upperConvergenceName = self.upperConvergenceName)
+		funTemplate = config.funTemplate(logger = self.logger,
+						 transceiverAddress = node.id,
+						 upperConvergenceName = self.upperConvergenceName)
 
-		[managementTop, managementBottom] = fuc.createManagement(config, self.fun)
-		[convergenceTop, convergenceBottom] = fuc.createConvergence(config, self.fun)
-		[lowerMACTop, lowerMACBottom] = fuc.createLowerMAC(config, self.fun)
+		[managementTop, managementBottom] = funTemplate.createManagement(config, self.fun)
+		[convergenceTop, convergenceBottom] = funTemplate.createConvergence(config, self.fun)
+		[lowerMACTop, lowerMACBottom] = funTemplate.createLowerMAC(config, self.fun)
 		self.manager = lowerMACTop
 
 		###################################
@@ -110,14 +110,14 @@ class dllSTA(dll.Layer2.Layer2):
 		# Services
 		self.controlServices.append(dll.Services.Association(parent = self.logger))
 		self.managementServices.append(wifimac.management.InformationBases.SINR(serviceName = 'wifimac.sinrMIB.' + str(node.id),
-										      parentLogger = self.logger))
+											parentLogger = self.logger))
 		self.managementServices.append(wifimac.management.InformationBases.PER(serviceName = 'wifimac.perMIB.' + str(node.id),
-										     config = config.perMIB,
-										     parentLogger = self.logger))
-		self.managementServices.append(wifimac.futureCS.FutureCS(serviceName = 'wifimac.futureCS.' + str(node.id),
-									 channelStateName = wifimac.convergence.names['channelState'] + str(node.id),
-									 config = wifimac.futureCS.FutureCSConfig(),
-									 parentLogger = self.logger))
+										       config = config.perMIB,
+										       parentLogger = self.logger))
+		#self.managementServices.append(wifimac.futureCS.FutureCS(serviceName = 'wifimac.futureCS.' + str(node.id),
+		#							 channelStateName = wifimac.convergence.names['channelState'] + str(node.id),
+		#							 config = wifimac.futureCS.FutureCSConfig(),
+		#							 parentLogger = self.logger))
 
 class MeshLayer2(dll.Layer2.Layer2):
 	pathSelectionServiceName = None
@@ -173,14 +173,14 @@ class MeshLayer2(dll.Layer2.Layer2):
 
 		################
 		# Lower MAC Part
-		fuc = wifimac.FUNCreator.FUNCreator(logger = logger,
-				transceiverAddress = address,
-				upperConvergenceName = self.upperConvergenceName)
+		funTemplate = config.funTemplate(logger = logger,
+						 transceiverAddress = address,
+						 upperConvergenceName = self.upperConvergenceName)
 
-		[managementTop, managementBottom] = fuc.createManagement(config, self.fun)
-		[lowerMACTop, lowerMACBottom] = fuc.createLowerMAC(config, self.fun)
+		[managementTop, managementBottom] = funTemplate.createManagement(config, self.fun)
+		[lowerMACTop, lowerMACBottom] = funTemplate.createLowerMAC(config, self.fun)
 		self.manager.append(lowerMACTop)
-		[convergenceTop, convergenceBottom] = fuc.createConvergence(config, self.fun)
+		[convergenceTop, convergenceBottom] = funTemplate.createConvergence(config, self.fun)
 
 		# connect FU chains with each other
 		lowerMACBottom.connect(convergenceTop)
@@ -263,7 +263,7 @@ class Config(Sealed):
 
 	maxFrameSize = 65538*8
 
-	mode = 'basic'
+	funTemplate = None
 	# end example
 
 	# begin example "wifimac.pyconfig.layer2.config.multiusevariables"
@@ -298,6 +298,8 @@ class Config(Sealed):
 		self.beaconLQM = wifimac.pathselection.BeaconLinkQualityMeasurementConfig()
 		# end example
 
+		self.funTemplate = wifimac.FUNModes.Basic
+
 		self.multipleUsedVariables = dict()
 		self.multipleUsedVariables['rtsctsThreshold'] = ['self', 'self.arq', 'self.rtscts']
 		self.multipleUsedVariables['sifsDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockACK', 'self.blockUntilReply', 'self.channelState', 'self.beaconLQM']
@@ -312,13 +314,8 @@ class Config(Sealed):
 		self.preambleProcessingDelay = 21E-6
 		self.expectedCTSDuration = 44E-6
 		self.slotDuration = 9E-6
-
-		if(self.mode == 'basic'):
-			# value for normal ACK
-			self.expectedACKDuration = 44E-6
-		else:
-			# value for compressed (no frame fragments) BlockACK
-			self.expectedACKDuration = 68E-6
+		# value for normal ACK -- change e.g. for BlockACK
+		self.expectedACKDuration = 44E-6
 
 	def __setattr__(self, name, val):
 		# special setattr for multiple used variables: Enable propagation of single setting to required FUs

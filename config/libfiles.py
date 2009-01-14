@@ -149,7 +149,7 @@ hppFiles = [
     'src/pathselection/VirtualPathSelection.hpp',
 ]
 pyconfigs = [
-    'wifimac/FUNCreator.py',
+    'wifimac/FUNModes.py',
     'wifimac/Layer2.py',
     'wifimac/Logger.py',
     'wifimac/WiFiMac.py',

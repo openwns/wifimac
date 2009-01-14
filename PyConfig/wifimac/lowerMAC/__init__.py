@@ -7,7 +7,6 @@ from StopAndWaitARQ import *
 from TXOP import *
 from DuplicateFilter import *
 
-import wifimac.draftn
 import wifimac.helper.Keys
 import wifimac.helper.Filter
 
@@ -36,6 +35,74 @@ names['sifsDelay'] = 'SIFSDelay'
 names['txop']  = 'TXOP'
 
 def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
+    FUs = __getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
+
+    FUs.append(DuplicateFilter(functionalUnitName = names['DuplicateFilter'] + str(transceiverAddress),
+                               commandName =  names['DuplicateFilter'] + 'Command',
+                               managerName = names['manager'] + str(transceiverAddress),
+                               arqCommandName = names['arq'] + 'Command',
+                               parentLogger = logger))
+
+    ra = RateAdaptation(functionalUnitName = names['ra'] + str(transceiverAddress),
+                        commandName = names['ra'] + 'Command',
+                        phyUserName = names['phyUser'] + str(transceiverAddress),
+                        managerName = names['manager'] + str(transceiverAddress),
+                        arqName = names['arq'] + str(transceiverAddress),
+                        sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
+                        perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                        config = config.ra,
+                        parentLogger = logger)
+
+    nextFrame = NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
+                                                 commandName = names['nextFrame'] + 'Command')
+
+    arq = StopAndWaitARQ(fuName = names['arq'] + str(transceiverAddress),
+                         commandName = names['arq'] + 'Command',
+                         managerName = names['manager'] + str(transceiverAddress),
+                         csName = names['channelState'] + str(transceiverAddress),
+                         rxStartName = names['frameSynchronization'] + str(transceiverAddress),
+                         txStartEndName = names['phyUser'] + str(transceiverAddress),
+                         perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                         probePrefix = 'wifimac.linkQuality',
+                         config = config.arq,
+                         parentLogger = logger,
+                         localIDs = probeLocalIDs)
+
+    txop = TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
+                                 commandName = names['txop'] + 'Command',
+                                 managerName = names['manager'] +  str(transceiverAddress),
+                                 phyUserName =  names['phyUser'] + str(transceiverAddress),
+                                 nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
+                                 config = config.txop,
+                                 parentLogger = logger)
+
+    ## connect the common part for all FUs
+    # add created FUs to FUN
+    FUs.extend([arq, ra, nextFrame, txop])
+
+    for fu in FUs:
+            myFUN.add(fu)
+
+    # connect FUs with each other
+    for num in xrange(0, len(FUs)-1):
+            FUs[num].connect(FUs[num+1])
+
+    bottomFU = None
+    bottomFU = __appendBasicTimingBlock__(myFUN, txop, config, names, transceiverAddress, logger, probeLocalIDs)
+
+    # Final FU: FlowGate -> Filter all frames not addressed to me
+    gate = wns.FlowSeparator.FlowGate(fuName = names['rxFilter'] + str(transceiverAddress),
+                                      commandName = names['rxFilter'] + 'Command',
+                                      keyBuilder = wifimac.helper.Keys.LinkByTransmitter,
+                                      parentLogger = logger)
+    gate.logger.moduleName = 'WiFiMAC'
+    myFUN.add(gate)
+    bottomFU.connect(gate)
+
+    return([FUs[0], gate])
+
+
+def __getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = []
     FUs.append(Manager(functionalUnitName = names['manager'] + str(transceiverAddress),
                        commandName = names['manager'] + 'Command',
@@ -45,7 +112,6 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                        upperConvergenceCommandName = names['upperConvergence'],
                        config = config.manager,
                        parentLogger = logger))
-
     # overhead for regular msdu
     FUs.append(wns.ldk.Tools.Overhead(functionalUnitName = names['overhead'] + str(transceiverAddress),
                                       commandName = names['overhead'] + 'Command',
@@ -64,153 +130,8 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                                    size = config.bufferSize,
                                    localIDs = probeLocalIDs,
                                    probingEnabled = False))
-
-    if(config.mode == 'basic'):
-            FUs.append(DuplicateFilter(functionalUnitName = names['DuplicateFilter'] + str(transceiverAddress),
-                                       commandName =  names['DuplicateFilter'] + 'Command',
-                                       managerName = names['manager'] + str(transceiverAddress),
-                                       arqCommandName = names['arq'] + 'Command',
-                                       parentLogger = logger))
-    if(config.mode == 'DraftN'):
-            FUs.append(wifimac.draftn.BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
-                                               commandName = names['arq'] + 'Command',
-                                               managerName = names['manager'] + str(transceiverAddress),
-                                               rxStartEndName = names['frameSynchronization'] + str(transceiverAddress),
-                                               txStartEndName = names['phyUser'] + str(transceiverAddress),
-                                               perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
-                                               probePrefix = 'wifimac.linkQuality',
-                                               config = config.blockACK,
-                                               parentLogger = logger,
-                                               localIDs = probeLocalIDs))
-            ackSwitch = dll.CompoundSwitch.CompoundSwitch(functionalUnitName = names['ackSwitch'] + str(transceiverAddress),
-                                                          commandName = names['ackSwitch'] + 'Command',
-                                                          logName = 'ACKSwitch',
-                                                          moduleName = 'WiFiMAC',
-                                                          parentLogger = logger,
-                                                          mustAccept = False)
-            agg = wifimac.draftn.Aggregation(functionalUnitName = names['aggregation'] + str(transceiverAddress),
-                                             commandName = names['aggregation'] + 'Command',
-                                             managerName = names['manager'] + str(transceiverAddress),
-                                             config = config.aggregation,
-                                             parentLogger = logger)
-
-    ra = RateAdaptation(functionalUnitName = names['ra'] + str(transceiverAddress),
-                        commandName = names['ra'] + 'Command',
-                        phyUserName = names['phyUser'] + str(transceiverAddress),
-                        managerName = names['manager'] + str(transceiverAddress),
-                        arqName = names['arq'] + str(transceiverAddress),
-                        sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
-                        perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
-                        config = config.ra,
-                        parentLogger = logger)
-
-    nextFrame = NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
-                                                 commandName = names['nextFrame'] + 'Command')
-
-    if(config.mode == 'basic'):
-            arq = StopAndWaitARQ(fuName = names['arq'] + str(transceiverAddress),
-                                 commandName = names['arq'] + 'Command',
-                                 managerName = names['manager'] + str(transceiverAddress),
-                                 csName = names['channelState'] + str(transceiverAddress),
-                                 rxStartName = names['frameSynchronization'] + str(transceiverAddress),
-                                 txStartEndName = names['phyUser'] + str(transceiverAddress),
-                                 perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
-                                 probePrefix = 'wifimac.linkQuality',
-                                 config = config.arq,
-                                 parentLogger = logger,
-                                 localIDs = probeLocalIDs)
-
-    txop = TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
-                                 commandName = names['txop'] + 'Command',
-                                 managerName = names['manager'] +  str(transceiverAddress),
-                                 phyUserName =  names['phyUser'] + str(transceiverAddress),
-                                 nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
-                                 config = config.txop,
-                                 parentLogger = logger)
-
-    if(config.mode == 'DraftN'):
-            rtscts = RTSCTS(functionalUnitName = names['rtscts'] + str(transceiverAddress),
-                            commandName = names['rtscts'] + 'Command',
-                            managerName = names['manager'] + str(transceiverAddress),
-                            phyUserName = names['phyUser'] + str(transceiverAddress),
-                            arqName = names['arq'] + str(transceiverAddress),
-                            navName = names['channelState'] + str(transceiverAddress),
-                            rxStartName = names['frameSynchronization'] + str(transceiverAddress),
-                            txStartEndName = names['phyUser'] + str(transceiverAddress),
-                            config = config.rtscts,
-                            parentLogger = logger)
-            raACK = RateAdaptation(functionalUnitName = names['ra'] + 'ACK'+ str(transceiverAddress),
-                                   commandName = names['ra'] + 'ACK' +'Command',
-                                   phyUserName = names['phyUser'] + str(transceiverAddress),
-                                   managerName = names['manager'] + str(transceiverAddress),
-                                   arqName = names['arq'] + str(transceiverAddress),
-                                   sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
-                                   perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
-                                   config = config.ra,
-                                   parentLogger = logger)
-
-            ackMux = wns.Multiplexer.Dispatcher(commandName = 'ackMuxCommand',
-                                                functionalUnitName = 'ackMux' + str(transceiverAddress),
-                                                opcodeSize = 0,
-                                                parentLogger = logger,
-                                                logName = 'ackMux',
-                                                moduleName = 'WiFiMAC')
-
-            block = wifimac.draftn.BlockUntilReply(fuName = names['blockUntilReply'] + str(transceiverAddress),
-                                                   commandName = names['blockUntilReply'] + 'Command',
-                                                   managerName = names['manager'] +  str(transceiverAddress),
-                                                   rxStartEndName = names['frameSynchronization'] + str(transceiverAddress),
-                                                   txStartEndName = names['deAggregation'] + str(transceiverAddress),
-                                                   config = config.blockUntilReply,
-                                                   parentLogger = logger)
-
-    ## connect the common part for all FUs
-    # add created FUs to FUN
-    if(config.mode == 'basic'):
-            #FUs.extend([ra, nextFrame, arq, txop])
-            FUs.extend([arq, ra, nextFrame, txop])
-            #
-    for fu in FUs:
-            myFUN.add(fu)
-
-    # connect FUs with each other
-    for num in xrange(0, len(FUs)-1):
-            FUs[num].connect(FUs[num+1])
-
-    # DraftN requires special structure to send (Block)ACKs via a different way
-    if(config.mode == 'DraftN'):
-            for fu in [ackSwitch, agg, ra, raACK, nextFrame, txop, rtscts, ackMux, block]:
-                    myFUN.add(fu)
-
-    # DraftN requires special handling so that the acks are not send through the aggregation path
-    if(config.mode == 'DraftN'):
-            ackSwitch.connectOnDataFU(FUs[-1], dll.CompoundSwitch.FilterAll('All'))
-            ackSwitch.connectSendDataFU(raACK, wifimac.helper.Filter.FrameType('ACK', names['manager'] + 'Command'))
-            ackSwitch.connectSendDataFU(agg, dll.CompoundSwitch.FilterAll('All'))
-            agg.connect(ra)
-            ra.connect(nextFrame)
-            nextFrame.connect(txop)
-            txop.connect(rtscts)
-            rtscts.connect(ackMux)
-            raACK.connect(ackMux)
-            ackMux.connect(block)
-
-    bottomFU = None
-    if(config.mode == 'basic'):
-            bottomFU = __appendBasicTimingBlock__(myFUN, txop, config, names, transceiverAddress, logger, probeLocalIDs)
-    if(config.mode == 'DraftN'):
-            bottomFU = __appendDraftNTimingBlock__(myFUN, block, config, names, transceiverAddress, logger, probeLocalIDs)
-
-    # Final FU: FlowGate -> Filter all frames not addressed to me
-    gate = wns.FlowSeparator.FlowGate(fuName = names['rxFilter'] + str(transceiverAddress),
-                                      commandName = names['rxFilter'] + 'Command',
-                                      keyBuilder = wifimac.helper.Keys.LinkByTransmitter,
-                                      parentLogger = logger)
-    gate.logger.moduleName = 'WiFiMAC'
-    myFUN.add(gate)
-    bottomFU.connect(gate)
-
-    return([FUs[0], gate])
+    return FUs
+    
 
 def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddress, logger, probeLocalIDs):
     ########################################
@@ -303,67 +224,3 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
 
     return(rxFilterDispatcher)
 
-def __appendDraftNTimingBlock__(myFUN, bottomFU, config, names, transceiverAddress, logger, probeLocalIDs):
-    unicastScheduler = DCF(fuName = names['unicastDCF'] + str(transceiverAddress),
-                                            commandName = names['unicastDCF'] + 'Command',
-                                            csName = names['channelState'] + str(transceiverAddress),
-                                            arqCommandName = names['arq'] + 'Command',
-                                            config = config.unicastDCF,
-                                            parentLogger = logger)
-    sifsDelay = wns.ldk.Tools.ConstantDelay(delayDuration = config.sifsDuration,
-                                               functionalUnitName = names['sifsDelay'] + str(transceiverAddress),
-                                               commandName = names['sifsDelay'] + 'Command',
-                                               logName = names['sifsDelay'],
-                                               moduleName = 'WiFiMAC',
-                                               parentLogger = logger)
-    #############
-    # Dispatcher
-    # Multiplexing everything for the backoff
-    backoffDispatcher = wns.Multiplexer.Dispatcher(commandName = 'BODispatcherCommand',
-                                                   functionalUnitName = 'BODispatcher' + str(transceiverAddress),
-                                                   opcodeSize = 0,
-                                                   parentLogger = logger,
-                                                   logName = 'boDispatcher',
-                                                   moduleName = 'WiFiMAC')
-
-    # Multiplexing everything for the SIFS delay
-    SIFSDispatcher = wns.Multiplexer.Dispatcher(commandName = 'SIFSDispatcherCommand',
-                                                functionalUnitName = 'SIFSDispatcher' + str(transceiverAddress),
-                                                opcodeSize = 0,
-                                                parentLogger = logger,
-                                                logName = 'SIFSDispatcher',
-                                                moduleName = 'WiFiMAC')
-    # RxFilter multiplexer
-    rxFilterDispatcher = wns.Multiplexer.Dispatcher(commandName = 'RxFilterDispatcherCommand',
-                                                    functionalUnitName = 'RxDispatcher' + str(transceiverAddress),
-                                                    opcodeSize = 0,
-                                                    parentLogger = logger,
-                                                    logName = 'RxFilterDispatcher',
-                                                    moduleName = 'WiFiMAC')
-
-    ##########
-    # Switches
-    frameSwitch = dll.CompoundSwitch.CompoundSwitch(functionalUnitName = 'FrameSwitch' + str(transceiverAddress),
-                                                    commandName = 'FrameSwitch' + 'Command',
-                                                    logName = 'FrameSwitch',
-                                                    moduleName = 'WiFiMAC',
-                                                    parentLogger = logger,
-                                                    mustAccept = False)
-    # add FUs
-    for fu in [unicastScheduler, sifsDelay, backoffDispatcher, SIFSDispatcher, rxFilterDispatcher, frameSwitch]:
-            myFUN.add(fu)
-
-    # connect simple FU as far as possible
-    backoffDispatcher.connect(unicastScheduler)
-    SIFSDispatcher.connect(sifsDelay)
-    unicastScheduler.connect(rxFilterDispatcher)
-    sifsDelay.connect(rxFilterDispatcher)
-
-
-    # connect switches
-    frameSwitch.connectOnDataFU(bottomFU, dll.CompoundSwitch.FilterAll('All'))
-    frameSwitch.connectSendDataFU(SIFSDispatcher, wifimac.helper.Filter.FrameType('ACK', names['manager'] + 'Command'))
-    frameSwitch.connectSendDataFU(SIFSDispatcher, wifimac.helper.Filter.FrameType('DATA_TXOP', names['manager'] + 'Command'))
-    frameSwitch.connectSendDataFU(backoffDispatcher, wifimac.helper.Filter.FrameType('DATA', names['manager'] + 'Command'))
-
-    return(rxFilterDispatcher)

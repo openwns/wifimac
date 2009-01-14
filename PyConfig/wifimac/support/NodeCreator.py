@@ -59,7 +59,6 @@ class Station(wns.Node.Node):
 class NodeCreator(object):
 	__slots__ = (
 	'propagation',  # rise propagation object (pathloss, shadowing, fading... for node type pairs)
-	
 	'txPower'
 	)
 
