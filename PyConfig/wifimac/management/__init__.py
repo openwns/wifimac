@@ -22,7 +22,7 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                                             beaconInterval = FUs[-1].myConfig.period,
                                             phyUserCommandName = names['phyUser'] + 'Command',
                                             probePrefix = 'wifimac.linkQuality',
-                                            sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
+                                            sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
                                             config = config.beaconLQM,
                                             parentLogger = logger,
                                             localIDs = probeLocalIDs))

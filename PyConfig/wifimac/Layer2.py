@@ -109,11 +109,8 @@ class dllSTA(dll.Layer2.Layer2):
 		##########
 		# Services
 		self.controlServices.append(dll.Services.Association(parent = self.logger))
-		self.managementServices.append(wifimac.management.InformationBases.SINR(serviceName = 'wifimac.sinrMIB.' + str(node.id),
-											parentLogger = self.logger))
-		self.managementServices.append(wifimac.management.InformationBases.PER(serviceName = 'wifimac.perMIB.' + str(node.id),
-										       config = config.perMIB,
-										       parentLogger = self.logger))
+
+		self.managementServices.extend(funTemplate.createManagementServices(config))
 		#self.managementServices.append(wifimac.futureCS.FutureCS(serviceName = 'wifimac.futureCS.' + str(node.id),
 		#							 channelStateName = wifimac.convergence.names['channelState'] + str(node.id),
 		#							 config = wifimac.futureCS.FutureCSConfig(),
@@ -187,9 +184,9 @@ class MeshLayer2(dll.Layer2.Layer2):
 		managementBottom.connect(convergenceTop)
 
 		self.switch.connectSendDataFU(lowerMACTop, dll.CompoundSwitch.FilterMACAddress(name = 'Adr'+str(address),
-												filterMACAddress = address,
-												filterTarget = False,
-												upperConvergenceCommandName = self.upperConvergenceName))
+											       filterMACAddress = address,
+											       filterTarget = False,
+											       upperConvergenceCommandName = self.upperConvergenceName))
 
 		self.manager[-1].setMACAddress(address)
 		self.manager[-1].setPhyDataTransmission(phyDataTransmission)
@@ -197,11 +194,7 @@ class MeshLayer2(dll.Layer2.Layer2):
 		self.manager[-1].setPhyCarrierSense(phyCarrierSense)
 		self.addresses.append(address)
 
-		self.managementServices.append(wifimac.management.InformationBases.SINR(serviceName = 'wifimac.sinrMIB.'+str(address),
-											parentLogger = self.logger))
-		self.managementServices.append(wifimac.management.InformationBases.PER(serviceName = 'wifimac.perMIB.' + str(address),
-										       config = config.perMIB,
-										       parentLogger = self.logger))
+		self.managementServices.extend(funTemplate.createManagementServices(config))
 
 	def setPathSelectionService(self, name):
 		self.pathSelectionServiceName = name
@@ -314,7 +307,7 @@ class Config(Sealed):
 		self.preambleProcessingDelay = 21E-6
 		self.expectedCTSDuration = 44E-6
 		self.slotDuration = 9E-6
-		# value for normal ACK -- change e.g. for BlockACK
+		# value for normal ACK -- change e.g. for BlockACK to 68E-6
 		self.expectedACKDuration = 44E-6
 
 	def __setattr__(self, name, val):

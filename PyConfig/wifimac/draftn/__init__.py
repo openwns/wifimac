@@ -22,7 +22,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                         managerName = names['manager'] + str(transceiverAddress),
                         rxStartEndName = names['frameSynchronization'] + str(transceiverAddress),
                         txStartEndName = names['phyUser'] + str(transceiverAddress),
-                        perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                        perMIBServiceName = names['perMIB'] + str(transceiverAddress),
                         probePrefix = 'wifimac.linkQuality',
                         config = config.blockACK,
                         parentLogger = logger,
@@ -44,8 +44,8 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                          phyUserName = names['phyUser'] + str(transceiverAddress),
                                          managerName = names['manager'] + str(transceiverAddress),
                                          arqName = names['arq'] + str(transceiverAddress),
-                                         sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
-                                         perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                                         sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
+                                         perMIBServiceName = names['perMIB'] + str(transceiverAddress),
                                          config = config.ra,
                                          parentLogger = logger)
 
@@ -75,8 +75,8 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                             phyUserName = names['phyUser'] + str(transceiverAddress),
                                             managerName = names['manager'] + str(transceiverAddress),
                                             arqName = names['arq'] + str(transceiverAddress),
-                                            sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
-                                            perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                                            sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
+                                            perMIBServiceName = names['perMIB'] + str(transceiverAddress),
                                             config = config.ra,
                                             parentLogger = logger)
 

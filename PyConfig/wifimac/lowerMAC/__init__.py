@@ -48,8 +48,8 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                         phyUserName = names['phyUser'] + str(transceiverAddress),
                         managerName = names['manager'] + str(transceiverAddress),
                         arqName = names['arq'] + str(transceiverAddress),
-                        sinrMIBServiceName = 'wifimac.sinrMIB.' + str(transceiverAddress),
-                        perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                        sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
+                        perMIBServiceName = names['perMIB'] + str(transceiverAddress),
                         config = config.ra,
                         parentLogger = logger)
 
@@ -62,7 +62,7 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                          csName = names['channelState'] + str(transceiverAddress),
                          rxStartName = names['frameSynchronization'] + str(transceiverAddress),
                          txStartEndName = names['phyUser'] + str(transceiverAddress),
-                         perMIBServiceName = 'wifimac.perMIB.' + str(transceiverAddress),
+                         perMIBServiceName = names['perMIB'] + str(transceiverAddress),
                          probePrefix = 'wifimac.linkQuality',
                          config = config.arq,
                          parentLogger = logger,

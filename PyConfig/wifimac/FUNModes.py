@@ -27,6 +27,8 @@ class Basic(Sealed):
 
 		self.names = dict()
 		self.names['upperConvergence'] = upperConvergenceName
+		self.names['sinrMIB'] = 'sinrMIB'
+		self.names['perMIB'] = 'perMIB'
                 self.names.update(wifimac.convergence.names)
 		self.names.update(wifimac.pathselection.names)
 		self.names.update(wifimac.management.names)
@@ -41,6 +43,15 @@ class Basic(Sealed):
 
 	def createManagement(self, config, myFUN):
 		return(wifimac.management.getFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
+
+	def createManagementServices(self, config):
+		myServices = []
+		myServices.append(wifimac.management.InformationBases.SINR(serviceName = self.names['sinrMIB'] + str(self.transceiverAddress),
+									   parentLogger = self.logger))
+		myServices.append(wifimac.management.InformationBases.PER(serviceName = self.names['perMIB'] + str(self.transceiverAddress),
+									  config = config.perMIB,
+									  parentLogger = self.logger))
+		return(myServices)
 
 class DraftN(Basic):
 	def createLowerMAC(self, config, myFUN):
