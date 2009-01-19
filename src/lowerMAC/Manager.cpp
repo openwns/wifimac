@@ -52,7 +52,8 @@ Manager::Manager(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config) :
     sifsDuration(config.get<wns::simulator::Time>("myConfig.sifsDuration")),
     myMACAddress_(config.get<wns::service::dll::UnicastAddress>("myMACAddress")),
     ucName_(config_.get<std::string>("upperConvergenceCommandName")),
-    numAntennas(config_.get<int>("myConfig.numAntennas"))
+    numAntennas(config_.get<int>("myConfig.numAntennas")),
+    associatedTo()
 {
     MESSAGE_SINGLE(NORMAL, logger_, "created");
     friends.phyUser = NULL;
@@ -165,6 +166,14 @@ Manager::associateWith(wns::service::dll::UnicastAddress svrAddress)
 	this->getFUN()->getLayer<dll::Layer2*>()->getControlService<dll::services::control::Association>("ASSOCIATION")
 		->associate(this->myMACAddress_, svrAddress);
 
+    this->associatedTo = svrAddress;
+
+}
+
+wns::service::dll::UnicastAddress
+Manager::getAssociatedTo() const
+{
+    return this->associatedTo;
 }
 
 wns::ldk::CommandPool*

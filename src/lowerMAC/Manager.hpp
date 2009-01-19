@@ -129,6 +129,9 @@ namespace wifimac { namespace lowerMAC {
         void
         associateWith(wns::service::dll::UnicastAddress svrAddress);
 
+        wns::service::dll::UnicastAddress
+        getAssociatedTo() const;
+
         wns::ldk::CommandPool*
         createReply(const wns::ldk::CommandPool* original) const;
 
@@ -194,6 +197,8 @@ namespace wifimac { namespace lowerMAC {
         const std::string ucName_;
 
         const unsigned int numAntennas;
+
+        wns::service::dll::UnicastAddress associatedTo;
 
         struct Friends
         {
