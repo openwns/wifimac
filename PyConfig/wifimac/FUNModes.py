@@ -4,8 +4,7 @@ import wifimac.lowerMAC
 import wifimac.pathselection
 import wifimac.management
 
-from wns.PyConfig import Sealed
-
+from openwns.pyconfig import Sealed
 
 class Basic(Sealed):
 	logger = None

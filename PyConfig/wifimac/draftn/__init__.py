@@ -33,9 +33,9 @@ import wifimac.lowerMAC
 import wifimac.convergence
 
 import dll.CompoundSwitch
-import wns.Multiplexer
-import wns.FlowSeparator
-import wns.ldk
+import openwns.Multiplexer
+import openwns.FlowSeparator
+import openwns.ldk
 
 names = dict()
 names['aggregation'] = 'Aggregation'
@@ -107,7 +107,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                             config = config.ra,
                                             parentLogger = logger)
 
-    ackMux = wns.Multiplexer.Dispatcher(commandName = 'ackMuxCommand',
+    ackMux = openwns.Multiplexer.Dispatcher(commandName = 'ackMuxCommand',
                                         functionalUnitName = 'ackMux' + str(transceiverAddress),
                                         opcodeSize = 0,
                                         parentLogger = logger,
@@ -147,7 +147,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
     bottomFU = __appendDraftNTimingBlock__(myFUN, block, config, names, transceiverAddress, logger, probeLocalIDs)
 
     # Final FU: FlowGate -> Filter all frames not addressed to me
-    gate = wns.FlowSeparator.FlowGate(fuName = names['rxFilter'] + str(transceiverAddress),
+    gate = openwns.FlowSeparator.FlowGate(fuName = names['rxFilter'] + str(transceiverAddress),
                                       commandName = names['rxFilter'] + 'Command',
                                       keyBuilder = wifimac.helper.Keys.LinkByTransmitter,
                                       parentLogger = logger)
@@ -164,7 +164,7 @@ def __appendDraftNTimingBlock__(myFUN, bottomFU, config, names, transceiverAddre
                                             arqCommandName = names['arq'] + 'Command',
                                             config = config.unicastDCF,
                                             parentLogger = logger)
-    sifsDelay = wns.ldk.Tools.ConstantDelay(delayDuration = config.sifsDuration,
+    sifsDelay = openwns.ldk.Tools.ConstantDelay(delayDuration = config.sifsDuration,
                                                functionalUnitName = names['sifsDelay'] + str(transceiverAddress),
                                                commandName = names['sifsDelay'] + 'Command',
                                                logName = names['sifsDelay'],
@@ -173,7 +173,7 @@ def __appendDraftNTimingBlock__(myFUN, bottomFU, config, names, transceiverAddre
     #############
     # Dispatcher
     # Multiplexing everything for the backoff
-    backoffDispatcher = wns.Multiplexer.Dispatcher(commandName = 'BODispatcherCommand',
+    backoffDispatcher = openwns.Multiplexer.Dispatcher(commandName = 'BODispatcherCommand',
                                                    functionalUnitName = 'BODispatcher' + str(transceiverAddress),
                                                    opcodeSize = 0,
                                                    parentLogger = logger,
@@ -181,14 +181,14 @@ def __appendDraftNTimingBlock__(myFUN, bottomFU, config, names, transceiverAddre
                                                    moduleName = 'WiFiMAC')
 
     # Multiplexing everything for the SIFS delay
-    SIFSDispatcher = wns.Multiplexer.Dispatcher(commandName = 'SIFSDispatcherCommand',
+    SIFSDispatcher = openwns.Multiplexer.Dispatcher(commandName = 'SIFSDispatcherCommand',
                                                 functionalUnitName = 'SIFSDispatcher' + str(transceiverAddress),
                                                 opcodeSize = 0,
                                                 parentLogger = logger,
                                                 logName = 'SIFSDispatcher',
                                                 moduleName = 'WiFiMAC')
     # RxFilter multiplexer
-    rxFilterDispatcher = wns.Multiplexer.Dispatcher(commandName = 'RxFilterDispatcherCommand',
+    rxFilterDispatcher = openwns.Multiplexer.Dispatcher(commandName = 'RxFilterDispatcherCommand',
                                                     functionalUnitName = 'RxDispatcher' + str(transceiverAddress),
                                                     opcodeSize = 0,
                                                     parentLogger = logger,

@@ -140,18 +140,18 @@ def __getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocal
                        config = config.manager,
                        parentLogger = logger))
     # overhead for regular msdu
-    FUs.append(wns.ldk.Tools.Overhead(functionalUnitName = names['overhead'] + str(transceiverAddress),
+    FUs.append(openwns.ldk.Tools.Overhead(functionalUnitName = names['overhead'] + str(transceiverAddress),
                                       commandName = names['overhead'] + 'Command',
                                       overhead = config.headerBits + config.crcBits))
 
-    FUs.append(wns.Probe.WindowProbeBus(name = "wifimac.tx" + str(transceiverAddress) + ".upper",
+    FUs.append(openwns.Probe.WindowProbeBus(name = "wifimac.tx" + str(transceiverAddress) + ".upper",
                                         prefix = "wifimac.txUpper",
                                         commandName = 'wifimac.txUpperProbeCommand',
                                         parentLogger = logger,
                                         moduleName = 'WiFiMAC',
                                         localIDs = probeLocalIDs))
 
-    FUs.append(wns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
+    FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
                                    commandName = names['buffer'] + 'Command',
                                    sizeUnit = config.bufferSizeUnit,
                                    size = config.bufferSize,

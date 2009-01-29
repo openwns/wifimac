@@ -31,13 +31,11 @@ import wifimac.pathselection
 import wifimac.management
 import wifimac.FUNModes
 
-# this needs to be done differently to support open vs. closed version
-import wifimac.futureCS
-
 import wifimac.helper.Probes
 
 import openwns.FUN
 import openwns.ldk
+from openwns.pyconfig import Sealed
 
 import dll.Layer2
 import dll.UpperConvergence
@@ -110,10 +108,6 @@ class dllSTA(dll.Layer2.Layer2):
 		self.controlServices.append(dll.Services.Association(parent = self.logger))
 
 		self.managementServices.extend(funTemplate.createManagementServices(config))
-		#self.managementServices.append(wifimac.futureCS.FutureCS(serviceName = 'wifimac.futureCS.' + str(node.id),
-		#							 channelStateName = wifimac.convergence.names['channelState'] + str(node.id),
-		#							 config = wifimac.futureCS.FutureCSConfig(),
-		#							 parentLogger = self.logger))
 
 class MeshLayer2(dll.Layer2.Layer2):
 	pathSelectionServiceName = None
@@ -228,7 +222,7 @@ class dllMP(MeshLayer2):
 		upperConvergence.connect(self.throughputProbe)
 
 # begin example "wifimac.pyconfig.layer2.config.start"
-class Config(object):
+class Config(Sealed):
 	beacon = None
 	channelState = None
 	phyUser = None
