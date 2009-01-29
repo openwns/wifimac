@@ -24,14 +24,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from wns.Sealed import Sealed
-import wns.PyConfig
-from wns import dB, dBm
+
+import openwns.pyconfig
+from openwns import dBm, dB
 
 import wifimac.Layer2
 
 # begin example "wifimac.pyconfig.support.transceiver.Basic"
-class Basic(Sealed):
+class Basic(object):
     frequency = None
     txPower = dBm(30)
     position = None

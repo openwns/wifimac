@@ -24,7 +24,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.WNS
+import openwns
 import wifimac.WiFiMac
 
-wns.WNS.WNS.modules.wifimac = WiFiMac.WiFiMac()
+openwns.simulator.OpenWNS.modules.wifimac = WiFiMac.WiFiMac()

@@ -6,8 +6,8 @@ from FrameSynchronization import *
 from ErrorModelling import *
 from DeAggregation import *
 
-import wns.Multiplexer
-import wns.CRC
+import openwns.Multiplexer
+import openwns.CRC
 
 names = dict()
 names['phyUser'] = 'PhyUser'
@@ -41,7 +41,7 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
 
 def __upperPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = []
-    FUs.append(wns.Multiplexer.Dispatcher(commandName = 'planeDispatcherCommand',
+    FUs.append(openwns.Multiplexer.Dispatcher(commandName = 'planeDispatcherCommand',
                                           functionalUnitName = 'planeDispatcher' + str(transceiverAddress),
                                           opcodeSize = 0,
                                           parentLogger = logger,
@@ -77,7 +77,7 @@ def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalID
                                     config = config.frameSynchronization,
                                     parentLogger=logger,
                                     localIDs = probeLocalIDs))
-    FUs.append(wns.CRC.CRC(functionalUnitName = names['crc'] + str(transceiverAddress),
+    FUs.append(openwns.CRC.CRC(functionalUnitName = names['crc'] + str(transceiverAddress),
                            commandName = names['crc'] + 'Command',
                            PERProvider = names['errorModelling'] + str(transceiverAddress),
                            CRCsize = 0,

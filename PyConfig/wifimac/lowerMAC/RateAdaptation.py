@@ -24,21 +24,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
-from wns.PyConfig import Sealed
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class RateAdaptationConfig(Sealed):
+class RateAdaptationConfig(object):
     raStrategy = 'ConstantLow'
     raForACKFrames = False
     ackFramesRateId = 0
 
     def __init__(self, **kw):
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)
 
-class RateAdaptation(wns.FUN.FunctionalUnit):
+class RateAdaptation(openwns.FUN.FunctionalUnit):
     __plugin__ = 'wifimac.lowerMAC.RateAdaptation'
 
     logger = None
@@ -63,10 +63,10 @@ class RateAdaptation(wns.FUN.FunctionalUnit):
         super(RateAdaptation, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
         self.logger = wifimac.Logger.Logger(name = "RateAdaptation", parent = parentLogger)
         self.phyUserName = phyUserName
-	self.managerName = managerName
+        self.managerName = managerName
         self.arqName = arqName
         self.sinrMIBServiceName = sinrMIBServiceName
         self.perMIBServiceName = perMIBServiceName
         assert(config.__class__ == RateAdaptationConfig)
         self.myConfig = config
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)

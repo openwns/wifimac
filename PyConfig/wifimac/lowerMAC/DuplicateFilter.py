@@ -24,13 +24,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
 
-class DuplicateFilter(wns.FUN.FunctionalUnit):
+class DuplicateFilter(openwns.FUN.FunctionalUnit):
     __plugin__ = 'wifimac.lowerMAC.DuplicateFilter'
     """ Name in FU Factory """
 
@@ -47,6 +48,6 @@ class DuplicateFilter(wns.FUN.FunctionalUnit):
                  parentLogger=None, **kw):
         super(DuplicateFilter, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
         self.logger = wifimac.Logger.Logger(name = "DupFilter", parent = parentLogger)
-	self.managerName = managerName
+        self.managerName = managerName
         self.arqCommandName = arqCommandName
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)

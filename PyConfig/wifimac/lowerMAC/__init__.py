@@ -1,3 +1,30 @@
+###############################################################################
+# This file is part of openWNS (open Wireless Network Simulator)
+# _____________________________________________________________________________
+#
+# Copyright (C) 2004-2008
+# Chair of Communication Networks (ComNets)
+# Kopernikusstr. 16, D-52074 Aachen, Germany
+# phone: ++49-241-80-27910,
+# fax: ++49-241-80-22242
+# email: info@openwns.org
+# www: http://www.openwns.org
+# _____________________________________________________________________________
+#
+# openWNS is free software; you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# openWNS is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
 from DCF import *
 from Manager import *
 from NextFrameGetter import *
@@ -12,11 +39,11 @@ import wifimac.helper.Filter
 
 import dll.CompoundSwitch
 
-import wns.Buffer
-import wns.FlowSeparator
-import wns.Multiplexer
-import wns.ldk
-import wns.Probe
+import openwns.Buffer
+import openwns.FlowSeparator
+import openwns.Multiplexer
+import openwns.ldk
+import openwns.Probe
 
 names = dict()
 names['manager'] = 'Manager'
@@ -91,7 +118,7 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     bottomFU = __appendBasicTimingBlock__(myFUN, txop, config, names, transceiverAddress, logger, probeLocalIDs)
 
     # Final FU: FlowGate -> Filter all frames not addressed to me
-    gate = wns.FlowSeparator.FlowGate(fuName = names['rxFilter'] + str(transceiverAddress),
+    gate = openwns.FlowSeparator.FlowGate(fuName = names['rxFilter'] + str(transceiverAddress),
                                       commandName = names['rxFilter'] + 'Command',
                                       keyBuilder = wifimac.helper.Keys.LinkByTransmitter,
                                       parentLogger = logger)
@@ -131,7 +158,6 @@ def __getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocal
                                    localIDs = probeLocalIDs,
                                    probingEnabled = False))
     return FUs
-    
 
 def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddress, logger, probeLocalIDs):
     ########################################
@@ -154,7 +180,7 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
                            arqCommandName = names['arq'] + 'Command',
                            config = config.unicastDCF,
                            parentLogger = logger)
-    sifsDelay = wns.ldk.Tools.ConstantDelay(delayDuration = config.sifsDuration,
+    sifsDelay = openwns.ldk.Tools.ConstantDelay(delayDuration = config.sifsDuration,
                                                functionalUnitName = names['sifsDelay'] + str(transceiverAddress),
                                                commandName = names['sifsDelay'] + 'Command',
                                                logName = names['sifsDelay'],
@@ -163,7 +189,7 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
     #############
     # Dispatcher
     # Multiplexing everything for the backoff
-    backoffDispatcher = wns.Multiplexer.Dispatcher(commandName = 'BODispatcherCommand',
+    backoffDispatcher = openwns.Multiplexer.Dispatcher(commandName = 'BODispatcherCommand',
                                                    functionalUnitName = 'BODispatcher' + str(transceiverAddress),
                                                    opcodeSize = 0,
                                                    parentLogger = logger,
@@ -171,14 +197,14 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
                                                    moduleName = 'WiFiMAC')
 
     # Multiplexing everything for the SIFS delay
-    SIFSDispatcher = wns.Multiplexer.Dispatcher(commandName = 'SIFSDispatcherCommand',
+    SIFSDispatcher = openwns.Multiplexer.Dispatcher(commandName = 'SIFSDispatcherCommand',
                                                 functionalUnitName = 'SIFSDispatcher' + str(transceiverAddress),
                                                 opcodeSize = 0,
                                                 parentLogger = logger,
                                                 logName = 'SIFSDispatcher',
                                                 moduleName = 'WiFiMAC')
     # RxFilter multiplexer
-    rxFilterDispatcher = wns.Multiplexer.Dispatcher(commandName = 'RxFilterDispatcherCommand',
+    rxFilterDispatcher = openwns.Multiplexer.Dispatcher(commandName = 'RxFilterDispatcherCommand',
                                                     functionalUnitName = 'RxDispatcher' + str(transceiverAddress),
                                                     opcodeSize = 0,
                                                     parentLogger = logger,

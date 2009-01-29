@@ -24,11 +24,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
+import openwns.FUN
 
 import wifimac.Logger
 
-class PreambleGenerator(wns.FUN.FunctionalUnit):
+class PreambleGenerator(openwns.FUN.FunctionalUnit):
 	logger = None
 	phyUserName = None
 	managerName = None
@@ -44,5 +44,5 @@ class PreambleGenerator(wns.FUN.FunctionalUnit):
 		self.phyUserName = phyUserName
 		self.managerName = managerName
 		self.logger = wifimac.Logger.Logger("PreambleGenerator", parent = parentLogger)
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)
 

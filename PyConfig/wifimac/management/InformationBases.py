@@ -24,15 +24,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.Node
-import wns.FUN
-import wns.PyConfig
-import wns.Probe
-from wns.PyConfig import Sealed
+
+import openwns.node
+import openwns.FUN
+import openwns.pyconfig
+import openwns.Probe
 
 import wifimac.Logger
 
-class Service(Sealed):
+class Service(object):
 	nameInServiceFactory  = None
 	serviceName = None
 
@@ -45,15 +45,16 @@ class SINR(Service):
         	self.serviceName = serviceName
 		self.windowSize = windowSize
         	self.logger = wifimac.Logger.Logger(name = 'SINR-MIB', parent = parentLogger)
-        	wns.PyConfig.attrsetter(self, kw)
+        	openwns.pyconfig.attrsetter(self, kw)
 
-class PERConfig(Sealed):
+class PERConfig(object):
 		windowSize = 1.0
 		minSamples = 10
 		frameSizeThreshold = 10*8
 
 		def __init__(self, **kw):
-			wns.PyConfig.attrsetter(self, kw)
+			openwns.pyconfig.attrsetter(self, kw)
+            
 class PER(Service):
 	logger = None
 	myConfig = None
@@ -64,7 +65,7 @@ class PER(Service):
 		assert(config.__class__ == PERConfig)
 		self.myConfig = config
 		self.logger = wifimac.Logger.Logger(name = 'PER-MIB', parent = parentLogger)
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)
 
 class CIBDefaultValues(object):
 	readOutActive = None
@@ -86,7 +87,7 @@ class CIBDefaultValues(object):
 	def size(self):
 		return(len(self.entries))
 
-class VirtualCIB(wns.Node.Component):
+class VirtualCIB(openwns.node.Component):
 	nameInComponentFactory = "wifimac.management.VirtualCapabilityInformationBase"
 
 	logger = None
@@ -97,7 +98,7 @@ class VirtualCIB(wns.Node.Component):
 		self.defaultValues = CIBDefaultValues()
 		self.logger = wifimac.Logger.Logger(name="VCIB", parent=parentLogger)
 
-class VirtualCababilityInformationService(wns.Node.Node):
+class VirtualCababilityInformationService(openwns.node.Node):
 	vcib = None
 	def __init__(self, name):
 		super(VirtualCababilityInformationService, self).__init__(name)

@@ -24,14 +24,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from wns.Sealed import Sealed
-import wns.FUN
-import wns.PyConfig
-import wns.Concatenation
+
+import openwns.FUN
+import openwns.pyconfig
+import openwns.Concatenation
 
 import wifimac.Logger
 
-class AggregationConfig(Sealed):
+class AggregationConfig(object):
     maxSize = 65535*8
     """ Maximum size in Bits of aggregated frame """
     maxEntries = 10
@@ -58,7 +58,7 @@ class AggregationConfig(Sealed):
     With impatience, BAreq might be transmitted separately from the rest!
     """
 
-class Aggregation(wns.Concatenation.Concatenation):
+class Aggregation(openwns.Concatenation.Concatenation):
 
     __plugin__ = 'wifimac.lowerMAC.Aggregation'
     """ Name in FU Factory """
@@ -83,4 +83,4 @@ class Aggregation(wns.Concatenation.Concatenation):
         self.entryPaddingBoundary = self.myConfig.entryPaddingBoundary
         self.countPCISizeOfEntries = self.myConfig.countPCISizeOfEntries
         
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)

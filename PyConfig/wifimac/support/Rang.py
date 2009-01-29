@@ -25,8 +25,8 @@
 #
 ###############################################################################
 
-import wns.Node
 import dll.Layer2
+import openwns.node
 
 class RANG( dll.Layer2.Layer2 ):
 	dllDataTransmissions = None
@@ -39,5 +39,5 @@ class RANG( dll.Layer2.Layer2 ):
 		self.dllNotifications = []
 
 	def addAP(self, ap):
-		self.dllDataTransmissions.append(wns.Node.FQSN(ap, ap.dll.dataTransmission))
-		self.dllNotifications.append(wns.Node.FQSN(ap, ap.dll.notification))
+		self.dllDataTransmissions.append(openwns.node.FQSN(ap, ap.dll.dataTransmission))
+		self.dllNotifications.append(openwns.node.FQSN(ap, ap.dll.notification))

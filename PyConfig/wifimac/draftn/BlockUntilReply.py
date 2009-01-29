@@ -24,17 +24,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
-from wns.PyConfig import Sealed
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class BlockUntilReplyConfig(Sealed):
+class BlockUntilReplyConfig(object):
     sifsDuration = 16E-6
     preambleProcessingDelay = 21E-6
 
-class BlockUntilReply(wns.FUN.FunctionalUnit):
+class BlockUntilReply(openwns.FUN.FunctionalUnit):
     __plugin__ = "wifimac.lowerMAC.BlockUntilReply"
 
     logger = None

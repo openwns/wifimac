@@ -24,13 +24,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from wns.Sealed import Sealed
-import wns.FUN
-import wns.PyConfig
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class StopAndWaitARQConfig(Sealed):
+class StopAndWaitARQConfig(object):
 
     shortRetryLimit = 7
     """ rety limit of frames <= RTSThreshold """
@@ -44,7 +44,7 @@ class StopAndWaitARQConfig(Sealed):
     expectedACKDuration = 44E-6
     preambleProcessingDelay = 21E-6
 
-    statusCollector = wns.ARQ.StatusCollectorTwoSizesWindowed
+    statusCollector = openwns.ARQ.StatusCollectorTwoSizesWindowed
     windowSize = 1.0
     minSamples = 10
     insufficientSamplesReturn = -1.0
@@ -53,7 +53,7 @@ class StopAndWaitARQConfig(Sealed):
     bitsPerIFrame = 0
     bitsPerRRFrame = 10*8
 
-class StopAndWaitARQ(wns.Probe.Probe):
+class StopAndWaitARQ(openwns.Probe.Probe):
     """ Special version of StopAndWait for CSMACAMAC, includes StatusCollection via
         TwoSizesWindowed by default
     """
@@ -112,9 +112,9 @@ class StopAndWaitARQ(wns.Probe.Probe):
         self.bitsPerIFrame = config.bitsPerIFrame
         self.bitsPerRRFrame = config.bitsPerRRFrame
         self.arqStatusCollector = config.statusCollector(self.logger)
-	self.arqStatusCollector.setParams(windowSize = config.windowSize,
-					  minSamples = config.minSamples,
-					  insufficientSamplesReturn = config.insufficientSamplesReturn,
-					  frameSizeThreshold = config.frameSizeThreshold)
+        self.arqStatusCollector.setParams(windowSize = config.windowSize,
+            minSamples = config.minSamples,
+            insufficientSamplesReturn = config.insufficientSamplesReturn,
+            frameSizeThreshold = config.frameSizeThreshold)
         self.numTxAttemptsProbeName = probePrefix + '.numTxAttempts'
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)

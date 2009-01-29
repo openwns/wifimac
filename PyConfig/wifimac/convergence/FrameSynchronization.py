@@ -24,16 +24,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
-from wns.PyConfig import Sealed
+import openwns.FUN
 
 import wifimac.Logger
 
 
-from wns import dB, fromdB
+from openwns import dB, fromdB
 
-class FrameSynchronizationConfig(Sealed):
+class FrameSynchronizationConfig(object):
 	# idle Capture Threshold, >= dB(0) for OFDM
 	idleCapture = dB(0)
 	# SenderLastClear Capture Threshold, >= idleCapture
@@ -43,7 +41,7 @@ class FrameSynchronizationConfig(Sealed):
 	# Below this threshold, no preamble will even be detected
 	detectionThreshold = dB(-5)
 
-class FrameSynchronization(wns.Probe.Probe):
+class FrameSynchronization(openwns.Probe.Probe):
 	""" This FU is responsible for passing only correctly received preambles and frames, i.e.
 	    * With no CRC error as set by the crc, and
 	    * With a valid preamble in case of a frame/psdu
@@ -95,5 +93,5 @@ class FrameSynchronization(wns.Probe.Probe):
 
 		self.sinrMIBServiceName = sinrMIBServiceName
 
-	        wns.PyConfig.attrsetter(self, kw)
+	        openwns.pyconfig.attrsetter(self, kw)
 

@@ -24,13 +24,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from wns.Sealed import Sealed
-import wns.FUN
-import wns.PyConfig
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class RTSCTSConfig(Sealed):
+class RTSCTSConfig(object):
     sifsDuration = 16E-6
     expectedACKDuration = 44E-6
     expectedCTSDuration = 44E-6
@@ -42,7 +42,7 @@ class RTSCTSConfig(Sealed):
     rtsctsThreshold = 800e6*8
     rtsctsOnTxopData = False
 
-class RTSCTS(wns.FUN.FunctionalUnit):
+class RTSCTS(openwns.FUN.FunctionalUnit):
 
     __plugin__ = 'wifimac.lowerMAC.RTSCTS'
     """ Name in FU Factory """
@@ -69,4 +69,4 @@ class RTSCTS(wns.FUN.FunctionalUnit):
         assert(config.__class__ == RTSCTSConfig)
         self.myConfig = config
         self.logger = wifimac.Logger.Logger(name = "RTSCTS", parent = parentLogger)
-        wns.PyConfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)

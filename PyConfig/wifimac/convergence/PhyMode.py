@@ -24,12 +24,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-from wns import dBm, dB, fromdB
-from wns.PyConfig import Sealed
+from openwns import dBm, dB, fromdB
 
 import wifimac.Logger
 
-class PhyMode(Sealed):
+class PhyMode(object):
 	dataBitsPerSymbol = None
 	modulation = None
 	codingRate = None
@@ -47,7 +46,7 @@ class PhyMode(Sealed):
 		self.minSINR = minSINR
 		self.logger = wifimac.Logger.Logger(modulation+codingRate, parentLogger) 
 
-class PhyModes(Sealed):
+class PhyModes(object):
 	numPhyModes = None
 	logger = None
 	

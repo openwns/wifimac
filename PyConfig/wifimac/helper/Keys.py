@@ -28,17 +28,15 @@
 # WiFiMac-specific keys for use by wns::ldk::FlowSeparator 
 #
 
-from wns.PyConfig import Sealed
-
-class No(Sealed):
+class No(object):
     __plugin__ = 'wifimac.noKey'
 
-class TransmitterReceiver(Sealed):
+class TransmitterReceiver(object):
     __plugin__ = 'wifimac.TransmitterReceiver'
 
-class LinkByReceiver(Sealed):
+class LinkByReceiver(object):
     __plugin__ = 'wifimac.LinkByReceiver'
 
-class LinkByTransmitter(Sealed):
+class LinkByTransmitter(object):
     __plugin__ = 'wifimac.LinkByTransmitter'
 

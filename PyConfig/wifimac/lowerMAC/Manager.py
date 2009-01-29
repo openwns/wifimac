@@ -24,18 +24,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import wns.FUN
-import wns.PyConfig
-from wns.PyConfig import Sealed
+
+import openwns.FUN
+import openwns.pyconfig
 
 import wifimac.Logger
 
-class ManagerConfig(Sealed):
+class ManagerConfig(object):
 	sifsDuration = 16E-6
 	expectedACKDuration = 44E-6
 	numAntennas = 1
 
-class Manager(wns.FUN.FunctionalUnit):
+class Manager(openwns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.lowerMAC.Manager'
 
 	logger = None
@@ -70,7 +70,7 @@ class Manager(wns.FUN.FunctionalUnit):
 		assert(config.__class__ == ManagerConfig)
 		self.myConfig = config
 
-		wns.PyConfig.attrsetter(self, kw)
+		openwns.pyconfig.attrsetter(self, kw)
 
 	def setMACAddress(self, address):
 		if self.myMACAddress is not None: raise AssertionError, "Do you really want to re-set the MACAddress?"
