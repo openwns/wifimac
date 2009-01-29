@@ -36,12 +36,12 @@
 
 namespace wifimac { namespace lowerMAC {
 
-	class Aggregation:
-		public wns::ldk::concatenation::Concatenation,
+    class Aggregation:
+        public wns::ldk::concatenation::Concatenation,
         public wns::events::CanTimeout
-	{
-	public:
-		Aggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
+    {
+    public:
+        Aggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
 
         void processOutgoing(const wns::ldk::CompoundPtr& compound);
         const wns::ldk::CompoundPtr hasSomethingToSend() const;
@@ -59,11 +59,11 @@ namespace wifimac { namespace lowerMAC {
         bool sendNow;
         wns::service::dll::UnicastAddress currentReceiver;
 
-		struct Friends
-		{
+        struct Friends
+        {
             wifimac::lowerMAC::Manager* manager;
-		} friends;
-	};
+        } friends;
+    };
 
 
 } // mac

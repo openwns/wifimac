@@ -131,3 +131,10 @@ RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver, size_t nu
     }
     return(pm);
 }
+wifimac::convergence::PhyMode
+RateAdaptation::getPhyMode(const wns::ldk::CompoundPtr& compound)
+{
+    wns::service::dll::UnicastAddress receiver = friends.manager->getReceiverAddress(compound->getCommandPool());
+    size_t numTransmissions = friends.arq->getTransmissionCounter(compound);
+    return(this->getPhyMode(receiver, numTransmissions));
+}

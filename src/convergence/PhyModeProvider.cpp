@@ -109,7 +109,7 @@ int PhyModeProvider::getPhyModeId(wns::Ratio sinr) const
 {
     if(this->getMinSINR() > sinr)
     {
-        return(-1);
+        return(this->getLowestId());
     }
     int optId = this->getLowestId();
 

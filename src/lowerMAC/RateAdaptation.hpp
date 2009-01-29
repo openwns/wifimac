@@ -40,6 +40,9 @@ namespace wifimac { namespace lowerMAC {
         wifimac::convergence::PhyMode
         getPhyMode(wns::service::dll::UnicastAddress receiver, size_t numTransmissions);
 
+        wifimac::convergence::PhyMode
+        getPhyMode(const wns::ldk::CompoundPtr& compound);
+
     private:
         void
         onFUNCreated();
