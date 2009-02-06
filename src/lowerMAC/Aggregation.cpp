@@ -28,16 +28,26 @@
 
 #include <WIFIMAC/lowerMAC/Aggregation.hpp>
 
+#include <WNS/probe/bus/ContextProvider.hpp>
+#include <WNS/probe/bus/utils.hpp>
+
 using namespace wifimac::lowerMAC;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-	wifimac::lowerMAC::Aggregation,
-	wns::ldk::FunctionalUnit,
-	"wifimac.lowerMAC.Aggregation",
-	wns::ldk::FUNConfigCreator);
+    wifimac::lowerMAC::Aggregation,
+    wns::ldk::FunctionalUnit,
+    "wifimac.lowerMAC.Aggregation",
+    wns::ldk::FUNConfigCreator);
+
+STATIC_FACTORY_REGISTER_WITH_CREATOR(
+    wifimac::lowerMAC::Aggregation,
+    wns::ldk::probe::Probe,
+    "wifimac.lowerMAC.Aggregation",
+    wns::ldk::FUNConfigCreator);
 
 Aggregation::Aggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     wns::ldk::concatenation::Concatenation(fun, config_),
+    wns::ldk::probe::Probe(),
 
     managerName(config_.get<std::string>("managerName")),
     impatientTransmission(config_.get<bool>("myConfig.impatientTransmission")),
@@ -45,15 +55,27 @@ Aggregation::Aggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& con
     sendNow(false),
     currentReceiver()
 {
-	MESSAGE_SINGLE(NORMAL, logger, "created");
+    MESSAGE_SINGLE(NORMAL, logger, "created");
 
     friends.manager = NULL;
+
+    // read the localIDs from the config
+    wns::probe::bus::ContextProviderCollection registry(&fun->getLayer()->getContextProviderCollection());
+    for(int ii = 0; ii < config_.len("localIDs.keys()"); ++ii)
+    {
+        std::string key = config_.get<std::string>("localIDs.keys()",ii);
+        unsigned int value  = config_.get<unsigned int>("localIDs.values()",ii);
+        registry.addProvider(wns::probe::bus::contextprovider::Constant(key, value));
+        MESSAGE_SINGLE(VERBOSE, logger, "Using Local IDName '"<<key<<"' with value: "<<value);
+    }
+
+    aggregationSizeFrames = wns::probe::bus::collector(registry, config_, "aggregationSizeFramesProbeName");
 }
 
 
 void Aggregation::onFUNCreated()
 {
-	MESSAGE_SINGLE(NORMAL, logger, "onFUNCreated() started");
+    MESSAGE_SINGLE(NORMAL, logger, "onFUNCreated() started");
 
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
 }
@@ -165,5 +187,8 @@ Aggregation::getSomethingToSend()
     {
         cancelTimeout();
     }
+
+    aggregationSizeFrames->put(it, getCommand(it->getCommandPool())->peer.compounds.size());
+
     return(it);
 }

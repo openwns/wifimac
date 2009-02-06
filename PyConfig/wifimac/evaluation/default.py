@@ -166,7 +166,7 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
                                                  formats = ['MatlabReadableSparse']))
 
             
-        for sourceName in ['wifimac.linkQuality.numTxAttempts']:
+        for sourceName in ['wifimac.linkQuality.numTxAttempts', 'wifimac.aggregation.sizeFrames']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.getLeafs().appendChildren(SettlingTimeGuard(settlingTime))
             #node.getLeafs().appendChildren(Logger())
@@ -178,7 +178,6 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
             maxAdr = max(apAdrs + mpAdrs + staAdrs)
             node.getLeafs().appendChildren(Table(axis1 = 'MAC.CompoundSourceAddress', minValue1 = minAdr, maxValue1 = maxAdr+1, resolution1 = maxAdr+1-minAdr,
                                                  axis2 = 'MAC.CompoundTargetAddress', minValue2 = minAdr, maxValue2 = maxAdr+1, resolution2 = maxAdr+1-minAdr,
-                                                 axis3 = 'MAC.CompoundMCS', minValue3 = 1, maxValue3 = 9, resolution3 = 8,
                                                  values = ['mean', 'trials', 'variance'],
                                                  formats = ['MatlabReadableSparse']))
 

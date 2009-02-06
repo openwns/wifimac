@@ -33,12 +33,15 @@
 
 #include <WNS/ldk/concatenation/Concatenation.hpp>
 #include <WNS/events/CanTimeout.hpp>
+#include <WNS/ldk/probe/Probe.hpp>
+#include <WNS/probe/bus/ContextCollector.hpp>
 
 namespace wifimac { namespace lowerMAC {
 
     class Aggregation:
         public wns::ldk::concatenation::Concatenation,
-        public wns::events::CanTimeout
+        public wns::events::CanTimeout,
+        public wns::ldk::probe::Probe
     {
     public:
         Aggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
@@ -58,6 +61,8 @@ namespace wifimac { namespace lowerMAC {
         const wns::simulator::Time maxDelay;
         bool sendNow;
         wns::service::dll::UnicastAddress currentReceiver;
+
+        wns::probe::bus::ContextCollectorPtr aggregationSizeFrames;
 
         struct Friends
         {

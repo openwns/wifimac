@@ -64,7 +64,9 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                       commandName = names['aggregation'] + 'Command',
                       managerName = names['manager'] + str(transceiverAddress),
                       config = config.aggregation,
-                      parentLogger = logger)
+                      probePrefix = 'wifimac.aggregation',
+                      parentLogger = logger,
+                      localIDs = probeLocalIDs)
 
     ra = wifimac.lowerMAC.RateAdaptation(functionalUnitName = names['ra'] + str(transceiverAddress),
                                          commandName = names['ra'] + 'Command',

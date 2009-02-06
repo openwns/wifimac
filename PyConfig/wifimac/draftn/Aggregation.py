@@ -27,7 +27,7 @@
 
 import openwns.FUN
 import openwns.pyconfig
-import openwns.Concatenation
+import openwns.Probe
 
 import wifimac.Logger
 
@@ -58,21 +58,25 @@ class AggregationConfig(object):
     With impatience, BAreq might be transmitted separately from the rest!
     """
 
-class Aggregation(openwns.Concatenation.Concatenation):
+class Aggregation(openwns.Probe.Probe):
 
     __plugin__ = 'wifimac.lowerMAC.Aggregation'
     """ Name in FU Factory """
 
     myConfig = None
     managerName = None
+    aggregationSizeFramesProbeName = None
 
-    def __init__(self, functionalUnitName, commandName, managerName, config, parentLogger = None, **kw):
-        super(Aggregation, self).__init__(maxSize = config.maxSize, maxEntries = config.maxEntries,
-                                          functionalUnitName = functionalUnitName, commandName = commandName,
-                                          parentLogger = parentLogger, logName = "Aggregation", moduleName = "WiFiMAC")
+    def __init__(self, functionalUnitName, commandName, managerName, probePrefix, config, parentLogger = None, **kw):
+        super(Aggregation, self).__init__(name = functionalUnitName,
+                                          commandName = commandName)
+
         self.managerName = managerName
         assert(config.__class__ == AggregationConfig)
         self.myConfig = config
+
+        self.logger = wifimac.Logger.Logger(name = "Aggregation", parent = parentLogger)
+        self.aggregationSizeFramesProbeName = probePrefix + ".sizeFrames"
 
         # parent class does not support the myConfig, so set variables here
         self.maxSize = self.myConfig.maxSize
