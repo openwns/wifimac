@@ -95,7 +95,7 @@ namespace wifimac {
         class TransmissionQueue
         {
         public:
-            TransmissionQueue(BlockACK* parent_, size_t maxOnAir_, wns::service::dll::UnicastAddress adr_);
+            TransmissionQueue(BlockACK* parent_, size_t maxOnAir_, wns::service::dll::UnicastAddress adr_, BlockACKCommand::SequenceNumber sn_);
             ~TransmissionQueue();
 
             void processOutgoing(const wns::ldk::CompoundPtr& compound);
@@ -109,7 +109,9 @@ namespace wifimac {
                 { return txQueue.size(); }
             const Bit sizeInBit() const;
             const bool waitsForACK() const;
-
+	    const BlockACKCommand::SequenceNumber getNextSN() const
+		{ return nextSN; }
+	
         private:
             const BlockACK* parent;
             const size_t maxOnAir;
@@ -145,6 +147,8 @@ namespace wifimac {
             std::set<BlockACKCommand::SequenceNumber> rxSNs;
             wns::ldk::CompoundPtr blockACK;
         };
+
+	typedef wns::container::Registry<wns::service::dll::UnicastAddress, BlockACKCommand::SequenceNumber> AddrSNMap;
 
         class BlockACK:
             public wns::ldk::arq::ARQ,
@@ -209,8 +213,9 @@ namespace wifimac {
             const std::string managerName;
             const std::string rxStartEndName;
             const std::string txStartEndName;
+            const std::string sendBufferName;
             const std::string perMIBServiceName;
-
+            wns::ldk::DelayedInterface *sendBuffer;
             /// Duration of the Short InterFrame Space
             const wns::simulator::Time sifsDuration;
             /// Expected duration of BlockACK
@@ -233,33 +238,27 @@ namespace wifimac {
             /// transmit as BAreq as early as possible without reaching maxOnAir
             const bool impatientBAreqTransmission;
 
-            /**
-             * @brief Round-robin accessible storage of receiving link peers
-             *
-             * The blockACK has one transmission queue for each link. For a fair
-             * activation of each link, a first approach is a non-preemtive
-             * round-robin strategy:
-             * Each transmission queue is allowed to transmit its packets in a row
-             * until (a) no more waiting packets exist or (b) it concludes the
-             * sending by a BlockACKrequest.
-             * This is ensured by (1) remembering the current receiver and (2) by
-             * pausing the rr iteration until BAreq is send or the waitingSize is zero
-             **/
-            wns::RoundRobin<wns::service::dll::UnicastAddress> receivers;
-            /// Remember current receiver
+            /// current transmission receiver
             mutable wns::service::dll::UnicastAddress currentReceiver;
-            /// Stop receiver round robin in hasData() until data is send
-            mutable bool pauseRoundRobin;
+
             /// Storage of outgoing, non-ack'ed frames
-            wns::container::Registry<wns::service::dll::UnicastAddress, TransmissionQueue*> txQueues;
+            TransmissionQueue *txQueue;
+
+            /// temporary storage of first compound for the next transmission block with different receiver
+	    wns::ldk::CompoundPtr nextFirstCompound;
+
+	    // address of the receiver for the next transmission round after the current one has been transmitted successfully
+            wns::service::dll::UnicastAddress nextReceiver;
+	
             /// Storage of incoming, non-ordered frames
             wns::container::Registry<wns::service::dll::UnicastAddress, ReceptionQueue*> rxQueues;
 
             /// indication that ACK must be transmitted
             wns::service::dll::UnicastAddress hasACKfor;
 
-            /// Store the address of the last receiver, required for the onTimeout
-            wns::service::dll::UnicastAddress lastTransmissionTo;
+	    /// mapping from unicast addresses to compound transmission SNs
+	    /// for each link (receiver), the first SN of the next transmission round is stored
+	    AddrSNMap nextTransmissionSN;
 
             /**
              * @brief BlockACK state can be

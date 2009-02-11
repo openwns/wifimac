@@ -30,7 +30,6 @@ import wifimac.lowerMAC
 import wifimac.pathselection
 import wifimac.management
 import wifimac.FUNModes
-
 import wifimac.helper.Probes
 
 import openwns.FUN
@@ -239,7 +238,6 @@ class Config(Sealed):
 	frameSynchronization = None
 	beaconLQM = None
 	# end example
-
 	# begin example "wifimac.pyconfig.layer2.config.variables"
 	bufferSize = 10*1000*8
 	bufferSizeUnit = 'Bit'

@@ -36,7 +36,6 @@ from DuplicateFilter import *
 
 import wifimac.helper.Keys
 import wifimac.helper.Filter
-
 import dll.CompoundSwitch
 
 import openwns.Buffer
@@ -63,6 +62,13 @@ names['txop']  = 'TXOP'
 
 def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = __getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
+
+    FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
+                                   commandName = names['buffer'] + 'Command',
+                                   sizeUnit = config.bufferSizeUnit,
+                                   size = config.bufferSize,
+                                   localIDs = probeLocalIDs,
+                                   probingEnabled = False))
 
     FUs.append(DuplicateFilter(functionalUnitName = names['DuplicateFilter'] + str(transceiverAddress),
                                commandName =  names['DuplicateFilter'] + 'Command',
@@ -151,12 +157,6 @@ def __getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocal
                                         moduleName = 'WiFiMAC',
                                         localIDs = probeLocalIDs))
 
-    FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
-                                   commandName = names['buffer'] + 'Command',
-                                   sizeUnit = config.bufferSizeUnit,
-                                   size = config.bufferSize,
-                                   localIDs = probeLocalIDs,
-                                   probingEnabled = False))
     return FUs
 
 def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddress, logger, probeLocalIDs):

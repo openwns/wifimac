@@ -40,9 +40,17 @@ import openwns.ldk
 names = dict()
 names['aggregation'] = 'Aggregation'
 names['blockUntilReply'] = 'BlockUntilReply'
+names['buffer'] = 'Buffer'
 
 def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs =  wifimac.lowerMAC.__getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
+
+    FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
+                                   commandName = names['buffer'] + 'Command',
+                                   sizeUnit = config.bufferSizeUnit,
+                                   size = config.bufferSize,
+                                   localIDs = probeLocalIDs,
+                                   probingEnabled = False))
 
     FUs.append(BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
                         commandName = names['arq'] + 'Command',
@@ -50,6 +58,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                         rxStartEndName = names['frameSynchronization'] + str(transceiverAddress),
                         txStartEndName = names['phyUser'] + str(transceiverAddress),
                         perMIBServiceName = names['perMIB'] + str(transceiverAddress),
+			sendBufferName = names['buffer'] + str(transceiverAddress),
                         probePrefix = 'wifimac.linkQuality',
                         config = config.blockACK,
                         parentLogger = logger,
