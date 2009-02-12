@@ -52,29 +52,34 @@ ChannelState::ChannelState(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& c
 
     config(config_),
     logger(config.get("logger")),
+
+    // thresholds
     rawEnergyThreshold(config.get<wns::Power>("myConfig.rawEnergyThreshold")),
     phyCarrierSenseThreshold(config.get<wns::Power>("myConfig.phyCarrierSenseThreshold")),
+
+    // rememberinf lastCS
     lastCS(idle),
+    latestNAV(0),
+
+    // FU and command names, durations
     managerName(config.get<std::string>("managerName")),
     phyUserCommandName(config.get<std::string>("phyUserCommandName")),
     rtsctsCommandName(config.get<std::string>("rtsctsCommandName")),
     txStartEndName(config.get<std::string>("txStartEndName")),
     rxStartEndName(config.get<std::string>("rxStartEndName")),
-    channelBusyFraction(),
-    channelBusyFractionProbeHolder(config.get<wns::simulator::Time>("myConfig.windowSize"), true),
-    txFraction(),
-    txFractionProbeHolder(config.get<wns::simulator::Time>("myConfig.windowSize"), true),
-    lastChangeToBusy(0),
-    sampleInterval(config.get<wns::simulator::Time>("myConfig.sampleInterval")),
-    latestNAV(0),
+
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
     preambleProcessingDelay(config_.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
     expectedCTSDuration(config_.get<wns::simulator::Time>("myConfig.expectedCTSDuration")),
-    slotDuration(config_.get<wns::simulator::Time>("myConfig.slotDuration"))
-{
-    assure(sampleInterval <= config.get<simTimeType>("myConfig.windowSize"),
-           "sampleInterval length must be shorter or equal to windowSize");
+    slotDuration(config_.get<wns::simulator::Time>("myConfig.slotDuration")),
 
+    // probing the channel busy fraction
+    channelBusyFractionProbe(),
+    channelBusyFractionMeasurementPeriod(config.get<wns::simulator::Time>("myConfig.channelBusyFractionMeasurementPeriod")),
+    channelBusyTime(0),
+    channelBusySlotStart(0),
+    channelBusyLastChangeToBusy(0)
+{
     // configure the active indicators
     activeIndicators.rawEnergyDetection = config.get<bool>("myConfig.useRawEnergyDetection");
     activeIndicators.phyCarrierSense = config.get<bool>("myConfig.usePhyCarrierSense");
@@ -108,9 +113,8 @@ ChannelState::ChannelState(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& c
         localContext.addProvider(wns::probe::bus::contextprovider::Constant(key, value));
         MESSAGE_SINGLE(VERBOSE, logger, "Using Local IDName '"<<key<<"' with value: "<<value);
     }
-    this->channelBusyFraction = wns::probe::bus::collector(localContext, config, "busyFractionProbeName");
-    this->txFraction = wns::probe::bus::collector(localContext, config, "ownTxFractionProbeName");
-    this->startPeriodicTimeout(sampleInterval, config.get<simTimeType>("myConfig.windowSize"));
+    this->channelBusyFractionProbe = wns::probe::bus::collector(localContext, config, "busyFractionProbeName");
+    this->startPeriodicTimeout(this->channelBusyFractionMeasurementPeriod);
 
     friends.manager = NULL;
 }
@@ -272,21 +276,19 @@ void ChannelState::onTimeout()
 
 void ChannelState::periodically()
 {
-    if(getCurrentChannelState() == busy)
+    // pre-tick: compute busy of the current slot
+    if(this->getCurrentChannelState() == busy)
     {
-        // store duration of current busy interval into probe
-        assure(wns::simulator::getEventScheduler()->getTime() >= lastChangeToBusy,
-               "lastChangeToBusy is in the future");
-        assure((wns::simulator::getEventScheduler()->getTime() - lastChangeToBusy) <= sampleInterval,
-               "Busy duration is larger than sampleInterval");
-        this->channelBusyFractionProbeHolder.put(wns::simulator::getEventScheduler()->getTime() - lastChangeToBusy);
-        lastChangeToBusy = wns::simulator::getEventScheduler()->getTime();
+        this->probeChannelIdle();
+        this->probeChannelBusy();
     }
-    assure(this->channelBusyFractionProbeHolder.getPerSecond() <= 1,
-           "ChannelBusyFraction is larger than 1 per second");
-    this->channelBusyFraction->put(this->channelBusyFractionProbeHolder.getPerSecond());
+    double busyFraction = this->channelBusyTime / this->channelBusyFractionMeasurementPeriod;
 
-    this->txFraction->put(this->txFractionProbeHolder.getPerSecond());
+    // tick -> put probe
+    this->channelBusyFractionProbe->put(busyFraction);
+
+    this->channelBusySlotStart = wns::simulator::getEventScheduler()->getTime();
+    this->channelBusyTime = 0.0;
 }
 
 void ChannelState::onRSSChange(wns::Power newRSS)
@@ -351,16 +353,34 @@ void ChannelState::checkNewCS()
 
         if(newCS == busy)
         {
-            lastChangeToBusy = wns::simulator::getEventScheduler()->getTime();
+            this->probeChannelBusy();
         }
         else
         {
-            // store duration of busy into probe
-            assure(wns::simulator::getEventScheduler()->getTime() >= lastChangeToBusy,
-                   "lastChangeToBusy is in the future");
-            assure((wns::simulator::getEventScheduler()->getTime() - lastChangeToBusy) <= sampleInterval,
-                   "Busy duration is larger than sampleInterval");
-            this->channelBusyFractionProbeHolder.put(wns::simulator::getEventScheduler()->getTime() - lastChangeToBusy);
+            this->probeChannelIdle();
         }
     }
+}
+
+void ChannelState::probeChannelBusy()
+{
+    this->channelBusyLastChangeToBusy = wns::simulator::getEventScheduler()->getTime();
+}
+
+void ChannelState::probeChannelIdle()
+{
+    if(this->channelBusyLastChangeToBusy > this->channelBusySlotStart)
+    {
+        // latest change to channel busy occured during this slot
+        this->channelBusyTime += wns::simulator::getEventScheduler()->getTime()
+            - this->channelBusyLastChangeToBusy;
+    }
+    else
+    {
+        // lastest change to busy occured before this slot
+        this->channelBusyTime += wns::simulator::getEventScheduler()->getTime()
+            - this->channelBusySlotStart;
+    }
+    assure(this->channelBusyTime <= this->channelBusyFractionMeasurementPeriod+1e9,
+           "busyTime must be leq than measurementPeriod");
 }

@@ -99,7 +99,7 @@ class StationTypeToAddressTable(ITreeNodeGenerator):
                 yield treeNode
 
 
-def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, staAdrs, maxHopCount, performanceProbes, networkProbes):
+def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, staAdrs, maxHopCount, performanceProbes=True, networkProbes=False, draftNProbes=False):
 
     if(performanceProbes):
         # packet delay probe
@@ -108,7 +108,6 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
         node = openwns.evaluation.createSourceNode(sim, 'wifimac.e2e.packet.incoming.delay')
         node.appendChildren(SettlingTimeGuard(settlingTime))
         n = node.getLeafs().appendChildren(Enumerated(by = 'MAC.StationType', keys = [1,3], names = ['ul', 'dl'], format = '%s'))
-
         node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100))
         #node.getLeafs().appendChildren(Moments())
         #node.getLeafs().appendChildren(DLRE(mode='g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001, maxRoundingError = 0.001))
@@ -119,8 +118,8 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
         #n.getLeafs().appendChildren(DLRE(mode='g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001, maxRoundingError = 0.001))
 
     if(networkProbes):
+        # Table probe for bit throughput, separated by nodeId
         for sourceName in ['wifimac.e2e.window.incoming.bitThroughput.hop', 'wifimac.e2e.window.aggregated.bitThroughput.hop']:
-            # Table probe for bit throughput, separated by nodeId
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))
             node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [3]))
@@ -130,50 +129,42 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
                                                  values = ['mean', 'trials'],
                                                  formats = ['MatlabReadableSparse']))
 
-    ######################################
-    # Transceiver-based (lower-MAC) probes
-    ######################################
     if(networkProbes):
-        # Evaluation of link qualities
-##         for sourceName in ['wifimac.linkQuality.receivedPower', 'wifimac.linkQuality.peerMeasurement', 'wifimac.linkQuality.linkCost']:
-##             node = openwns.evaluation.createSourceNode(sim, sourceName)
-##             node.appendChildren(SettlingTimeGuard(settlingTime))
-##             node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [1, 2]))            # filter only mesh nodes
-##             node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundIsUnicast', ifIn = [0]))         # filter only broadcast messages
-##             node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundSourceAddress', ifIn = apAdrs + mpAdrs))
-##             node.getLeafs().appendChildren(Accept(by = 'MAC.TransceiverAddress', ifIn = apAdrs + mpAdrs))
-##             minAdr = min(apAdrs + mpAdrs)
-##             maxAdr = max(apAdrs + mpAdrs)
-##             node.getLeafs().appendChildren(Table(axis1 = 'MAC.CompoundSourceAddress', minValue1 = minAdr, maxValue1 = maxAdr+1, resolution1 = maxAdr+1-minAdr,
-##                                                  axis2 = 'MAC.TransceiverAddress', minValue2 = minAdr, maxValue2 = maxAdr+1, resolution2 = maxAdr+1-minAdr,
-##                                                  values = ['mean', 'trials', 'variance'],
-##                                                  formats = ['MatlabReadableSparse']))
-
+        #  * Unicast & received by me
+        #  * Table with source | target | MCS
         for sourceName in ['wifimac.linkQuality.msduSuccessRate', 'wifimac.linkQuality.sinr']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))
-            #node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [1, 2]))
             node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundIsForMe', ifIn = [1]))
             node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundIsUnicast', ifIn = [1]))
-            #node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundSourceAddress', ifIn = apAdrs + mpAdrs))
-            #node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundTargetAddress', ifIn = apAdrs + mpAdrs))
+            # limit to aps/mps on demand
+            # node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [1, 2]))
+            # node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundSourceAddress', ifIn = apAdrs + mpAdrs))
+            # node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundTargetAddress', ifIn = apAdrs + mpAdrs))
             minAdr = min(apAdrs + mpAdrs + staAdrs)
             maxAdr = max(apAdrs + mpAdrs + staAdrs)
             node.getLeafs().appendChildren(Table(axis1 = 'MAC.CompoundSourceAddress', minValue1 = minAdr, maxValue1 = maxAdr+1, resolution1 = maxAdr+1-minAdr,
                                                  axis2 = 'MAC.CompoundTargetAddress', minValue2 = minAdr, maxValue2 = maxAdr+1, resolution2 = maxAdr+1-minAdr,
                                                  axis3 = 'MAC.CompoundMCS', minValue3 = 1, maxValue3 = 9, resolution3 = 8,
+                                                 axis4 = 'MAC.CompoundSpatialStreams', minValue4 = 1, maxValue4 = 4, resolution4 = 3,
                                                  values = ['mean', 'trials', 'variance'],
                                                  formats = ['MatlabReadableSparse']))
 
-            
-        for sourceName in ['wifimac.linkQuality.numTxAttempts', 'wifimac.aggregation.sizeFrames']:
+        # * Unicast & transmitted by me
+        # * MCS is not yet set --> table with source | target
+        probeNames = ['wifimac.linkQuality.numTxAttempts']
+        if draftNProbes:
+            # only for draftN probe evaluation
+            probeNames.append('wifimac.aggregation.sizeFrames')
+        for sourceName in probeNames:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.getLeafs().appendChildren(SettlingTimeGuard(settlingTime))
             #node.getLeafs().appendChildren(Logger())
-            #node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [1, 2]))
             node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundIsUnicast', ifIn = [1]))
-            #node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundSourceAddress', ifIn = apAdrs + mpAdrs))
-            #node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundTargetAddress', ifIn = apAdrs + mpAdrs))
+            # limit to APs/MPs on demand
+            # node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [1, 2]))
+            # node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundSourceAddress', ifIn = apAdrs + mpAdrs))
+            # node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundTargetAddress', ifIn = apAdrs + mpAdrs))
             minAdr = min(apAdrs + mpAdrs + staAdrs)
             maxAdr = max(apAdrs + mpAdrs + staAdrs)
             node.getLeafs().appendChildren(Table(axis1 = 'MAC.CompoundSourceAddress', minValue1 = minAdr, maxValue1 = maxAdr+1, resolution1 = maxAdr+1-minAdr,
@@ -181,13 +172,16 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
                                                  values = ['mean', 'trials', 'variance'],
                                                  formats = ['MatlabReadableSparse']))
 
-        for sourceName in ['wifimac.txUpper.window.outgoing.bitThroughput', 'wifimac.channelState.busy', 'wifimac.channelState.tx']:
+        # * Probes that are not packet related --> no source or target to test on!
+        # * Table with Transceiver Address
+        for sourceName in ['wifimac.txUpper.window.outgoing.bitThroughput', 'wifimac.channelState.busy']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))
-            node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [1, 2]))
-            node.getLeafs().appendChildren(Accept(by = 'MAC.TransceiverAddress', ifIn = apAdrs + mpAdrs))
-            minAdr = min(apAdrs + mpAdrs)
-            maxAdr = max(apAdrs + mpAdrs)
+            # limit to APs/MPs on demand
+            # node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [1, 2]))
+            # node.getLeafs().appendChildren(Accept(by = 'MAC.TransceiverAddress', ifIn = apAdrs + mpAdrs))
+            minAdr = min(apAdrs + mpAdrs + staAdrs)
+            maxAdr = max(apAdrs + mpAdrs + staAdrs)
             node.getLeafs().appendChildren(Table(axis1 = 'MAC.TransceiverAddress', minValue1 = minAdr, maxValue1 = maxAdr+1, resolution1 = maxAdr+1-minAdr,
                                                  values = ['mean', 'trials', 'variance'],
                                                  formats = ['MatlabReadableSparse']))

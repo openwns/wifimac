@@ -44,8 +44,7 @@ class ChannelStateConfig(object):
 	phyCarrierSenseThreshold = dBm(-82)
 
 	""" To probe the channel busy fraction """
-	windowSize = 1.0
-	sampleInterval = 1.0
+	channelBusyFractionMeasurementPeriod = 0.5
 
 	sifsDuration = 16E-6
 	preambleProcessingDelay = 21E-6
@@ -67,7 +66,6 @@ class ChannelState(openwns.Probe.Probe):
 
 	""" To probe the channel busy fraction """
 	busyFractionProbeName = None
-	ownTxFractionProbeName = None
 
 	def __init__(self, name, commandName, managerName, phyUserCommandName, rtsctsCommandName, txStartEndName, rxStartEndName, probePrefix, config, parentLogger = None, **kw):
 		super(ChannelState, self).__init__(name=name, commandName=commandName)
@@ -80,7 +78,6 @@ class ChannelState(openwns.Probe.Probe):
 		self.txStartEndName = txStartEndName
 		self.rxStartEndName = rxStartEndName
 		self.busyFractionProbeName = probePrefix + ".busy"
-		self.ownTxFractionProbeName = probePrefix + ".tx"
 
 		openwns.pyconfig.attrsetter(self, kw)
 

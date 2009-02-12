@@ -129,6 +129,10 @@ namespace wifimac { namespace convergence {
 
         bool isRTS(const wns::ldk::CompoundPtr& compound) const;
 
+        /** @brief Small function for channel busy fraction probing */
+        void probeChannelBusy();
+        void probeChannelIdle();
+
         wns::pyconfig::View config;
         wns::logger::Logger logger;
 
@@ -185,6 +189,8 @@ namespace wifimac { namespace convergence {
 		 */
         CS lastCS;
 
+        wns::simulator::Time latestNAV;
+
         wifimac::FrameType lastCommandOut;
 
         const std::string managerName;
@@ -194,21 +200,21 @@ namespace wifimac { namespace convergence {
         const std::string rxStartEndName;
 
         /**
-		 * @brief Probing information
-		 */
-        wns::probe::bus::ContextCollectorPtr channelBusyFraction;
-        wns::SlidingWindow channelBusyFractionProbeHolder;
-        wns::probe::bus::ContextCollectorPtr txFraction;
-        wns::SlidingWindow txFractionProbeHolder;
-        wns::simulator::Time lastChangeToBusy;
-        wns::simulator::Time sampleInterval;
-
-        wns::simulator::Time latestNAV;
-
+         * @brief Frame/IFS durations
+         */
         const wns::simulator::Time sifsDuration;
         const wns::simulator::Time preambleProcessingDelay;
         const wns::simulator::Time expectedCTSDuration;
         const wns::simulator::Time slotDuration;
+
+        /**
+         * @brief Probe the channel busy fraction
+         */
+        wns::probe::bus::ContextCollectorPtr channelBusyFractionProbe;
+        wns::simulator::Time channelBusyFractionMeasurementPeriod;
+        wns::simulator::Time channelBusyTime;
+        wns::simulator::Time channelBusySlotStart;
+        wns::simulator::Time channelBusyLastChangeToBusy;
     };
 
 

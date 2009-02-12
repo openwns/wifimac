@@ -328,31 +328,63 @@ namespace wifimac { namespace helper { namespace contextprovider {
 	 *
 	 * The information is read from the phyUserCommand
 	 */
-	class ModulationCodingScheme :
-			virtual public CommandInformationContext
-	{
-	public:
-		ModulationCodingScheme(wns::ldk::fun::FUN* fun, std::string managerCommandName):
-			CommandInformationContext(fun, managerCommandName, "MAC.CompoundMCS")
-			{}
+    class ModulationCodingScheme :
+        virtual public CommandInformationContext
+    {
+    public:
+        ModulationCodingScheme(wns::ldk::fun::FUN* fun, std::string managerCommandName):
+            CommandInformationContext(fun, managerCommandName, "MAC.CompoundMCS")
+            {}
 
-		virtual
-		~ModulationCodingScheme() {}
+        virtual
+        ~ModulationCodingScheme() {}
 
     private:
-		virtual void
-		doVisit(wns::probe::bus::IContext& c, const wns::ldk::CompoundPtr& compound) const
-		{
+        virtual void
+        doVisit(wns::probe::bus::IContext& c, const wns::ldk::CompoundPtr& compound) const
+            {
             assure(compound, "Received NULL CompoundPtr");
 
-			if(commandReader->commandIsActivated(compound->getCommandPool()) == true)
-			{
-				wifimac::convergence::PhyMode mcs = commandReader->readCommand<wifimac::lowerMAC::ManagerCommand>
-					(compound->getCommandPool())->getPhyMode();
-    				c.insertInt(this->key, mcs.getIndex());
-			}
-		}
-	};
+            if(commandReader->commandIsActivated(compound->getCommandPool()) == true)
+            {
+                wifimac::convergence::PhyMode mcs = commandReader->readCommand<wifimac::lowerMAC::ManagerCommand>
+                    (compound->getCommandPool())->getPhyMode();
+                c.insertInt(this->key, mcs.getIndex());
+            }
+        }
+    };
+
+    /**
+	 * @brief Context provider for a given compound: Filters by the number of
+     *    spatial streams with which the compound was send (will be send)
+	 *
+	 * The information is read from the phyUserCommand
+	 */
+    class SpatialStreams :
+        virtual public CommandInformationContext
+    {
+    public:
+        SpatialStreams(wns::ldk::fun::FUN* fun, std::string managerCommandName):
+            CommandInformationContext(fun, managerCommandName, "MAC.CompoundSpatialStreams")
+            {}
+
+        virtual
+        ~SpatialStreams() {}
+
+    private:
+        virtual void
+        doVisit(wns::probe::bus::IContext& c, const wns::ldk::CompoundPtr& compound) const
+            {
+            assure(compound, "Received NULL CompoundPtr");
+
+            if(commandReader->commandIsActivated(compound->getCommandPool()) == true)
+            {
+                wifimac::convergence::PhyMode mcs = commandReader->readCommand<wifimac::lowerMAC::ManagerCommand>
+                    (compound->getCommandPool())->getPhyMode();
+                c.insertInt(this->key, mcs.getNumberOfSpatialStreams());
+            }
+        }
+    };
 }}}
 
 #endif //WIFIMAC_HELPER_CONTEXTPROVIDER_COMMANDINFORMATION_HPP
