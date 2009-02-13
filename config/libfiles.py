@@ -62,6 +62,7 @@ srcFiles = [
     'src/convergence/DeAggregation.cpp',
     'src/lowerMAC/BlockUntilReply.cpp',
     'src/lowerMAC/Aggregation.cpp',
+    'src/lowerMAC/MultiBuffer.cpp',
     'src/lowerMAC/BlockACK.cpp',
     'src/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.cpp',
 
@@ -114,6 +115,7 @@ hppFiles = [
     'src/helper/ThroughputProbe.hpp',
     'src/helper/contextprovider/CommandInformation.hpp',
     'src/lowerMAC/Aggregation.hpp',
+    'src/lowerMAC/MultiBuffer.hpp',
     'src/lowerMAC/BlockACK.hpp',
     'src/lowerMAC/BlockUntilReply.hpp',
     'src/lowerMAC/DuplicateFilter.hpp',
@@ -164,6 +166,7 @@ pyconfigs = [
     'wifimac/convergence/TxDurationSetter.py',
     'wifimac/convergence/__init__.py',
     'wifimac/draftn/Aggregation.py',
+    'wifimac/draftn/MultiBuffer.py',
     'wifimac/draftn/BlockACK.py',
     'wifimac/draftn/BlockUntilReply.py',
     'wifimac/draftn/__init__.py',

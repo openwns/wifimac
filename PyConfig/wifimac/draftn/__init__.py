@@ -28,7 +28,7 @@
 from BlockUntilReply import *
 from BlockACK import *
 from Aggregation import *
-
+from MultiBuffer import *
 import wifimac.lowerMAC
 import wifimac.convergence
 
@@ -40,12 +40,22 @@ import openwns.ldk
 names = dict()
 names['aggregation'] = 'Aggregation'
 names['blockUntilReply'] = 'BlockUntilReply'
-names['buffer'] = 'Buffer'
 
 def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs =  wifimac.lowerMAC.__getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
-    FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
+    if (config.useMultiSendBuffer == True):
+     names['buffer'] = 'MultiBuffer'
+     FUs.append(MultiBuffer( functionalUnitName = names['buffer'] + str(transceiverAddress),
+                                                commandName = 'queueCommand',
+                                                sizeUnit = config.bufferSizeUnit,
+                                                size = config.bufferSize,
+                                                selector = config.queueSelector,
+                                                parentLogger = logger))
+
+    else:
+     names['buffer'] = 'Buffer'
+     FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
                                    commandName = names['buffer'] + 'Command',
                                    sizeUnit = config.bufferSizeUnit,
                                    size = config.bufferSize,

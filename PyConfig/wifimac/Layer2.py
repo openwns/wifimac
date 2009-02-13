@@ -242,6 +242,8 @@ class Config(Sealed):
 	bufferSize = 10*1000*8
 	bufferSizeUnit = 'Bit'
 
+	queueSelector= 'ConstantRRSelector'
+	useMultiSendBuffer = True
 	headerBits = 30*8
 	crcBits = 4*8
 
