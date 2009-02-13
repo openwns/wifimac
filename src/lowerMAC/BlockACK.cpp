@@ -166,7 +166,7 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
 	if (txQueue == NULL) {
 		if (!nextTransmissionSN.knows(receiver))
 			nextTransmissionSN.insert(receiver,0);
-		txQueue = new TransmissionQueue(this,this->maxOnAir, receiver, nextTransmissionSN.find(receiver));
+		txQueue = new TransmissionQueue(this,this->maxOnAir, receiver, nextTransmissionSN.find(receiver),perMIB);
 	}
 	currentReceiver = receiver;
 	MESSAGE_SINGLE(NORMAL, this->logger,"First frame in a (possible) row  processed for receiver: " << currentReceiver << " with SN: 0");
@@ -180,6 +180,8 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
 void
 BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
 {
+    uint32_t i;
+
     wns::service::dll::UnicastAddress transmitter = friends.manager->getTransmitterAddress(compound->getCommandPool());
     if(getCommand(compound->getCommandPool())->isACK())
     {
@@ -194,22 +196,24 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
             cancelTimeout();
         }
         this->baState = idle;
-        this->perMIB->onSuccessfullTransmission(transmitter);
         txQueue->processIncomingACK(getCommand(compound->getCommandPool())->peer.ackSNs);
-	if (txQueue->waitingSize() != 0) 
-	// either not all compounds of current send block have been transmitted successfully or
-	// compounds for the same receiver arrived while the current send block retransmitted 
-	// unsuccessfully sent compounds
+	if (txQueue->waitingSize() != 0)
+	{ 
+		// either not all compounds of current send block have been transmitted successfully or
+		// compounds for the same receiver arrived while the current send block retransmitted 
+		// unsuccessfully sent compounds
 		return;
+	}
 	if (nextReceiver != currentReceiver)
-	{// txQueue is empty and there is a compound for a different receiver waiting, temporarily stored
-	 // store the current SN of the txQueue for current receiver and prepare transmission queue for next send block
-	 // using the temporarily stored compound as head and the next SN to be used for this link
+	{
+		// txQueue is empty and there is a compound for a different receiver waiting, temporarily stored
+	 	// store the current SN of the txQueue for current receiver and prepare transmission queue for next send block
+	 	// using the temporarily stored compound as head and the next SN to be used for this link
 		nextTransmissionSN.update(currentReceiver,txQueue->getNextSN());
 		delete txQueue;
 		if (!nextTransmissionSN.knows(nextReceiver))
 			nextTransmissionSN.insert(nextReceiver,0);
-		txQueue = new TransmissionQueue(this,this->maxOnAir, nextReceiver, nextTransmissionSN.find(nextReceiver));
+		txQueue = new TransmissionQueue(this,this->maxOnAir, nextReceiver, nextTransmissionSN.find(nextReceiver),perMIB);
 		MESSAGE_SINGLE(NORMAL, this->logger,"First frame in a (possible) row  processed for receiver: " << nextReceiver << " with StartSN: " << nextTransmissionSN.find(nextReceiver));
 		txQueue->processOutgoing(nextFirstCompound);
 		nextFirstCompound = wns::ldk::CompoundPtr();
@@ -325,7 +329,6 @@ BlockACK::onTimeout()
 
     MESSAGE_SINGLE(NORMAL, this->logger, "Timeout -> failed transmission to " << currentReceiver)
 
-    this->perMIB->onFailedTransmission(this->currentReceiver);
     txQueue->missingACK();
     this->baState = idle;
     this->tryToSend();
@@ -426,7 +429,8 @@ BlockACK::copyTransmissionCounter(const wns::ldk::CompoundPtr& src, const wns::l
 
 
 
-TransmissionQueue::TransmissionQueue(BlockACK* parent_, size_t maxOnAir_, wns::service::dll::UnicastAddress adr_, BlockACKCommand::SequenceNumber sn_) :
+TransmissionQueue::TransmissionQueue(BlockACK* parent_, size_t maxOnAir_, wns::service::dll::UnicastAddress adr_, 
+					BlockACKCommand::SequenceNumber sn_,  wifimac::management::PERInformationBase* perMIB_) :
     parent(parent_),
     maxOnAir(maxOnAir_),
     adr(adr_),
@@ -435,7 +439,8 @@ TransmissionQueue::TransmissionQueue(BlockACK* parent_, size_t maxOnAir_, wns::s
     nextSN(sn_),
     baREQ(),
     waitForACK(false),
-    baReqRequired(false)
+    baReqRequired(false),
+    perMIB(perMIB_)
 {
     MESSAGE_SINGLE(NORMAL, parent->logger, "TxQ" << adr << " created");
 
@@ -594,6 +599,7 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
                 m << " -> reached max transmissions, drop";
                 MESSAGE_END();
                 parent->numTxAttemptsProbe->put(onAirIt->first, parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
+		perMIB->onFailedTransmission(adr);
             }
             else
             {
@@ -601,6 +607,7 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
                  m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
                  m << " -> retransmit";
                  MESSAGE_END();
+		perMIB->onFailedTransmission(adr);
 
                 if(insertBack)
                 {
@@ -620,6 +627,7 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
             MESSAGE_END();
             snIt++;
 
+            perMIB->onSuccessfullTransmission(adr);
             parent->numTxAttemptsProbe->put(onAirIt->first, parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
         }
     }

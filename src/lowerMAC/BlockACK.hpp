@@ -95,7 +95,8 @@ namespace wifimac {
         class TransmissionQueue
         {
         public:
-            TransmissionQueue(BlockACK* parent_, size_t maxOnAir_, wns::service::dll::UnicastAddress adr_, BlockACKCommand::SequenceNumber sn_);
+            TransmissionQueue(BlockACK* parent_, size_t maxOnAir_, wns::service::dll::UnicastAddress adr_, 
+				BlockACKCommand::SequenceNumber sn_, wifimac::management::PERInformationBase* perMIB_);
             ~TransmissionQueue();
 
             void processOutgoing(const wns::ldk::CompoundPtr& compound);
@@ -113,6 +114,7 @@ namespace wifimac {
 		{ return nextSN; }
 	
         private:
+	    wifimac::management::PERInformationBase* perMIB;
             const BlockACK* parent;
             const size_t maxOnAir;
             const wns::service::dll::UnicastAddress adr;
