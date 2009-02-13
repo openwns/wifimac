@@ -47,12 +47,18 @@
 
 namespace wifimac { namespace management {
 
-	class BeaconCommand :
-		public wns::ldk::EmptyCommand
-	{
-	};
+    class BeaconCommand :
+        public wns::ldk::Command
+    {
+    public:
+        struct {} local;
+        struct {
+            std::string bssId;
+        } peer;
+        struct {} magic;
+    };
 
-	/**
+    /**
 	 * @brief Beacon transmission and reception
 	 *
 	 * The periodical beacon transmission and reception is required for several functions
@@ -118,25 +124,32 @@ namespace wifimac { namespace management {
 		/**
 		 * @brief How long shall a STA scan for beacons before it associates to one?
 		 */
-		wns::simulator::Time scanDuration;
-		wns::pyconfig::Sequence scanFrequencies;
-		wns::pyconfig::Sequence::iterator<double> freqIter;
+        wns::simulator::Time scanDuration;
+        wns::pyconfig::Sequence scanFrequencies;
+        wns::pyconfig::Sequence::iterator<double> freqIter;
 
         const int beaconPhyModeId;
 
-		/**
+
+        /**
+         * @brief APs transmit beacons to bssId, STAs only associate to APs with
+         *   'their' bssId
+         */
+        const std::string bssId;
+
+        /**
 		 * @brief Remember the reception strength of received beacons
 		 */
-		typedef std::map<wns::Power, wns::service::dll::UnicastAddress> power2adrMap;
-		power2adrMap beaconRxStrength;
-		typedef std::map<wns::service::dll::UnicastAddress, double> adr2frequencyMap;
-		adr2frequencyMap bssFrequencies;
+        typedef std::map<wns::Power, wns::service::dll::UnicastAddress> power2adrMap;
+        power2adrMap beaconRxStrength;
+        typedef std::map<wns::service::dll::UnicastAddress, double> adr2frequencyMap;
+        adr2frequencyMap bssFrequencies;
 
-		struct Friends
-		{
-			wifimac::lowerMAC::Manager* manager;
-		} friends;
-	};
+        struct Friends
+        {
+            wifimac::lowerMAC::Manager* manager;
+        } friends;
+    };
 
 
 } // mac

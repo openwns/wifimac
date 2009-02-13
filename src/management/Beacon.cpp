@@ -49,6 +49,7 @@ Beacon::Beacon(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     phyUserCommandName(config.get<std::string>("phyUserCommandName")),
     scanFrequencies(config.getSequence("myConfig.scanFrequencies")),
     beaconPhyModeId(config.get<int>("myConfig.beaconPhyModeId")),
+    bssId(config.get<std::string>("myConfig.bssId")),
     beaconRxStrength(),
     bssFrequencies()
 {
@@ -104,14 +105,27 @@ void Beacon::processIncoming(const wns::ldk::CompoundPtr& compound)
     // store the received power in case of later association
     if(friends.manager->getStationType() == dll::StationTypes::UT() and this->hasTimeoutSet())
     {
-        wifimac::convergence::PhyUserCommand* puc =
-            getFUN()->getCommandReader(phyUserCommandName)->readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool());
-        beaconRxStrength[puc->local.rxPower + puc->local.interference] = friends.manager->getTransmitterAddress(compound->getCommandPool());
-        bssFrequencies[friends.manager->getTransmitterAddress(compound->getCommandPool())] = *freqIter;
-        MESSAGE_BEGIN(NORMAL, this->logger, m, "Received Beacon from ");
-        m << friends.manager->getTransmitterAddress(compound->getCommandPool());
-        m << " with " << (puc->local.rxPower + puc->local.interference);
-        MESSAGE_END();
+
+        // to strings are equal if compare returns 0
+        if(this->bssId.compare(getCommand(compound->getCommandPool())->peer.bssId) == 0)
+        {
+            wifimac::convergence::PhyUserCommand* puc =
+                getFUN()->getCommandReader(phyUserCommandName)->readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool());
+            beaconRxStrength[puc->local.rxPower + puc->local.interference] = friends.manager->getTransmitterAddress(compound->getCommandPool());
+            bssFrequencies[friends.manager->getTransmitterAddress(compound->getCommandPool())] = *freqIter;
+            MESSAGE_BEGIN(NORMAL, this->logger, m, "Received Beacon from ");
+            m << friends.manager->getTransmitterAddress(compound->getCommandPool());
+            m << " with " << (puc->local.rxPower + puc->local.interference);
+            MESSAGE_END();
+        }
+        else
+        {
+            MESSAGE_BEGIN(NORMAL, this->logger, m, "Received beacon with bssId");
+            m << getCommand(compound->getCommandPool())->peer.bssId;
+            m << " only associate to bssId ";
+            m << this->bssId;
+            MESSAGE_END();
+        }
     }
 
     // announce the link to the observers
@@ -147,8 +161,8 @@ Beacon::periodically()
 {
     this->currentBeacon = friends.manager->createCompound(friends.manager->getMACAddress(), wns::service::dll::UnicastAddress(), BEACON, 0.0);
     friends.manager->setPhyMode(this->currentBeacon->getCommandPool(), beaconPhyModeId);
-    this->activateCommand(this->currentBeacon->getCommandPool());
-
+    BeaconCommand* bc = this->activateCommand(this->currentBeacon->getCommandPool());
+    bc->peer.bssId = this->bssId;
     tryToSend();
 }
 

@@ -42,6 +42,10 @@ class BeaconConfig(object):
 	scanFrequencies = None
 	""" freqencies to scan for beacons """
 	beaconPhyModeId = 0
+	""" PhyModeId with which the beacon is transmitted --> default the lowest for most robustness"""
+	bssId = 'ComNetsWLAN'
+	""" for APs: bssId set in the beacon; for STAs: Only associate to bssIds with this name """
+
 
 	def __init__(self, **kw):
 		self.scanFrequencies = []
