@@ -97,6 +97,7 @@ BlockACK::~BlockACK()
     if (txQueue != NULL)
     {
        delete txQueue;
+       txQueue = NULL;
     }
 }
 
@@ -163,7 +164,7 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
     else
     {
       // processed compound will be sent to a different receiver thus it is not
-      // added to current compound block but temporarily stored the compound
+      // added to current compound block but temporarily stored. The compound
       // will become the first compound of the next transmission block
       MESSAGE_SINGLE(NORMAL, this->logger, "First frame to " << receiver << " -> current queue finished, temporarily store compound");
       nextFirstCompound = compound;
@@ -178,10 +179,13 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
             {
                 nextTransmissionSN.insert(receiver,0);
             }
-            txQueue = new TransmissionQueue(this,this->maxOnAir, receiver, nextTransmissionSN.find(receiver),perMIB);
+            txQueue = new TransmissionQueue(this, this->maxOnAir, receiver, nextTransmissionSN.find(receiver), perMIB);
         }
         currentReceiver = receiver;
-        MESSAGE_SINGLE(NORMAL, this->logger,"First frame in a (possible) row  processed for receiver: " << currentReceiver << " with SN: 0");
+        MESSAGE_BEGIN(NORMAL, this->logger, m, "First frame in a (possible) row");
+        m << " processed for receiver: " << currentReceiver;
+        m << " with SN: " << nextTransmissionSN.find(receiver);
+        MESSAGE_END();
         txQueue->processOutgoing(nextFirstCompound);
         nextFirstCompound = wns::ldk::CompoundPtr();
     }
@@ -210,28 +214,32 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
         }
         this->baState = idle;
         txQueue->processIncomingACK(getCommand(compound->getCommandPool())->peer.ackSNs);
-        if (txQueue->waitingSize() != 0)
+        if ((txQueue->waitingSize()+txQueue->onAirSize()) != 0)
         {
-            // either not all compounds of current send block have been
+            // either not all compounds of the current send block have been
             // transmitted successfully or compounds for the same receiver
             // arrived while the current send block retransmitted unsuccessfully
             // sent compounds
             return;
         }
+
+        // txQueue is empty -> store SN and delete it
+        nextTransmissionSN.update(currentReceiver,txQueue->getNextSN());
+        delete txQueue;
+        txQueue = NULL;
+
         if (nextReceiver != currentReceiver)
         {
-            // txQueue is empty and there is a compound for a different receiver
-            // waiting, temporarily stored store the current SN of the txQueue
-            // for current receiver and prepare transmission queue for next send
-            // block using the temporarily stored compound as head and the next
-            // SN to be used for this link
-            nextTransmissionSN.update(currentReceiver,txQueue->getNextSN());
-            delete txQueue;
+            // there is a compound for a different receiver waiting, temporarily
+            // stored. Store the current SN of the txQueue for current receiver
+            // and prepare transmission queue for next send block using the
+            // temporarily stored compound as head and the next SN to be used
+            // for this link
             if (!nextTransmissionSN.knows(nextReceiver))
             {
                 nextTransmissionSN.insert(nextReceiver,0);
             }
-            txQueue = new TransmissionQueue(this,this->maxOnAir, nextReceiver, nextTransmissionSN.find(nextReceiver),perMIB);
+            txQueue = new TransmissionQueue(this,this->maxOnAir, nextReceiver, nextTransmissionSN.find(nextReceiver), perMIB);
             MESSAGE_BEGIN(NORMAL, this->logger, m, "First frame in a (possible) row  processed for receiver: ");
             m << nextReceiver;
             m << " with StartSN: " << nextTransmissionSN.find(nextReceiver);
@@ -240,6 +248,15 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
             txQueue->processOutgoing(nextFirstCompound);
             nextFirstCompound = wns::ldk::CompoundPtr();
             currentReceiver = nextReceiver;
+        }
+        else
+        {
+            // no compound is waiting -> no current receiver
+            assure(nextFirstCompound == wns::ldk::CompoundPtr(),
+                   "nextReceiver is equal to currentReceiver, but a compound is stored");
+            currentReceiver = wns::service::dll::UnicastAddress();
+            nextReceiver = wns::service::dll::UnicastAddress();
+            MESSAGE_SINGLE(NORMAL, this->logger, "No more waiting frames -> delete txQueue");
         }
         return;
     }
