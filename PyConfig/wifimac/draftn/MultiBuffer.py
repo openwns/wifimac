@@ -31,6 +31,12 @@ import openwns.pyconfig
 import wifimac.Logger
 
 
+class MultiBufferConfig(object):
+    impatient = True
+    sendSize = 10
+    timeout = 0
+    queueSelector = 'ConstantRRSelector'
+
 class MultiBuffer(openwns.FUN.FunctionalUnit):
 
     __plugin__ = 'wifimac.lowerMAC.MultiBuffer'
@@ -38,13 +44,12 @@ class MultiBuffer(openwns.FUN.FunctionalUnit):
 
     size = None
     sizeUnit = None
-    sendSize = 10
-    queueSelector = None
 
-    def __init__(self, functionalUnitName, commandName, parentLogger, size, sizeUnit, selector, **kw):
+    def __init__(self, functionalUnitName, commandName, config, parentLogger, size, sizeUnit, selector, **kw):
         super(MultiBuffer, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
         self.logger = wifimac.Logger.Logger(name = "MultiBuffer", parent = parentLogger)
         openwns.pyconfig.attrsetter(self, kw)
 	self.size = size
 	self.sizeUnit = sizeUnit
-	self.queueSelector = selector
+	assert(config.__class__ == MultiBufferConfig)
+	self.myConfig = config

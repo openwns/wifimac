@@ -48,6 +48,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
      names['buffer'] = 'MultiBuffer'
      FUs.append(MultiBuffer( functionalUnitName = names['buffer'] + str(transceiverAddress),
                                                 commandName = 'queueCommand',
+						config = config.multiBuffer,
                                                 sizeUnit = config.bufferSizeUnit,
                                                 size = config.bufferSize,
                                                 selector = config.queueSelector,
