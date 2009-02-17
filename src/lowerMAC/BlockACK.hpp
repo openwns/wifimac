@@ -90,13 +90,17 @@ namespace wifimac {
         };
 
         class BlockACK;
+
         typedef std::pair<wns::ldk::CompoundPtr, Bit> CompoundPtrWithSize;
 
         class TransmissionQueue
         {
         public:
-            TransmissionQueue(BlockACK* parent_, size_t maxOnAir_, wns::service::dll::UnicastAddress adr_, 
-				BlockACKCommand::SequenceNumber sn_, wifimac::management::PERInformationBase* perMIB_);
+            TransmissionQueue(BlockACK* parent_,
+                              size_t maxOnAir_,
+                              wns::service::dll::UnicastAddress adr_,
+                              BlockACKCommand::SequenceNumber sn_,
+                              wifimac::management::PERInformationBase* perMIB_);
             ~TransmissionQueue();
 
             void processOutgoing(const wns::ldk::CompoundPtr& compound);
@@ -106,15 +110,19 @@ namespace wifimac {
             void missingACK();
             const size_t onAirSize() const
                 { return onAirQueue.size(); }
+
             const size_t waitingSize() const
                 { return txQueue.size(); }
+
             const Bit sizeInBit() const;
+
             const bool waitsForACK() const;
-	    const BlockACKCommand::SequenceNumber getNextSN() const
-		{ return nextSN; }
-	
+
+            const BlockACKCommand::SequenceNumber getNextSN() const
+                { return nextSN; }
+
         private:
-	    wifimac::management::PERInformationBase* perMIB;
+            wifimac::management::PERInformationBase* perMIB;
             const BlockACK* parent;
             const size_t maxOnAir;
             const wns::service::dll::UnicastAddress adr;
@@ -129,7 +137,9 @@ namespace wifimac {
         class ReceptionQueue
         {
         public:
-            ReceptionQueue(BlockACK* parent_, BlockACKCommand::SequenceNumber firstSN_, wns::service::dll::UnicastAddress adr_ );
+            ReceptionQueue(BlockACK* parent_,
+                           BlockACKCommand::SequenceNumber firstSN_,
+                           wns::service::dll::UnicastAddress adr_);
             ~ReceptionQueue();
 
             void processIncomingData(const wns::ldk::CompoundPtr& compound);
@@ -150,7 +160,7 @@ namespace wifimac {
             wns::ldk::CompoundPtr blockACK;
         };
 
-	typedef wns::container::Registry<wns::service::dll::UnicastAddress, BlockACKCommand::SequenceNumber> AddrSNMap;
+        typedef wns::container::Registry<wns::service::dll::UnicastAddress, BlockACKCommand::SequenceNumber> AddrSNMap;
 
         class BlockACK:
             public wns::ldk::arq::ARQ,
@@ -246,21 +256,24 @@ namespace wifimac {
             /// Storage of outgoing, non-ack'ed frames
             TransmissionQueue *txQueue;
 
-            /// temporary storage of first compound for the next transmission block with different receiver
-	    wns::ldk::CompoundPtr nextFirstCompound;
+            /// temporary storage of first compound for the next transmission
+            /// block with different receiver
+            wns::ldk::CompoundPtr nextFirstCompound;
 
-	    // address of the receiver for the next transmission round after the current one has been transmitted successfully
+            // address of the receiver for the next transmission round after the
+            // current one has been transmitted successfully
             wns::service::dll::UnicastAddress nextReceiver;
-	
+
             /// Storage of incoming, non-ordered frames
             wns::container::Registry<wns::service::dll::UnicastAddress, ReceptionQueue*> rxQueues;
 
             /// indication that ACK must be transmitted
             wns::service::dll::UnicastAddress hasACKfor;
 
-	    /// mapping from unicast addresses to compound transmission SNs
-	    /// for each link (receiver), the first SN of the next transmission round is stored
-	    AddrSNMap nextTransmissionSN;
+            /// mapping from unicast addresses to compound transmission SNs for
+            /// each link (receiver), the first SN of the next transmission
+            /// round is stored
+            AddrSNMap nextTransmissionSN;
 
             /**
              * @brief BlockACK state can be
