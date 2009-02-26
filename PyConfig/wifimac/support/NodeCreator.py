@@ -82,13 +82,13 @@ class NodeCreator(object):
 		openwns.pyconfig.attrsetter(self, kw)
 
 	def createPhyLayer(self, managerName, propagationName, txPower, frequency, parentLogger):
-		receiver = ofdmaphy.Receiver.OFDMAReceiver(	propagation = self.propagation,
-								propagationCharacteristicName = propagationName,
-								receiverNoiseFigure = dB(5),
-								parentLogger = parentLogger )
-		transmitter = rise.Transmitter.Transmitter( 	propagation = self.propagation,
-								propagationCharacteristicName = propagationName,
-								parentLogger = parentLogger )
+		receiver = ofdmaphy.Receiver.OFDMAReceiver(propagation = self.propagation,
+							   propagationCharacteristicName = propagationName,
+							   receiverNoiseFigure = dB(5),
+							   parentLogger = parentLogger )
+		transmitter = rise.Transmitter.Transmitter(propagation = self.propagation,
+							   propagationCharacteristicName = propagationName,
+							   parentLogger = parentLogger )
 
 		phy = ofdmaphy.Station.OFDMAStation([receiver], [transmitter], parentLogger = parentLogger)
 		phy.txFrequency = frequency

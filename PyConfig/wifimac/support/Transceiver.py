@@ -58,4 +58,20 @@ class Station(Basic):
         self.layer2.beacon.scanFrequencies = scanFrequencies
         self.layer2.beacon.scanDuration = scanDuration
 
+class DraftN(Basic):
+    def __init__(self, frequency, numAntennas, maxAggregation):
+        super(DraftN, self).__init__(frequency)
+        self.layer2.funTemplate = wifimac.FUNModes.DraftN
+        self.layer2.expectedACKDuration = 68E-6
+        self.layer2.ra.raStrategy = 'SINRwithMIMO'
+        self.layer2.txop.txopLimit = 0.0
+        self.layer2.manager.numAntennas = numAntennas
+        self.layer2.bufferSize = 50
+        self.layer2.bufferSizeUnit = 'PDU'
+        self.layer2.multiBuffer.impatient = True
+        self.layer2.multiBuffer.sendSize = maxAggregation
+        self.layer2.blockACK.capacity = 50
+        self.layer2.blockACK.capacityUnit = 'PDU'
+        
+        
 

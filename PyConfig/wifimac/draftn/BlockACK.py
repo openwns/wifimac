@@ -39,8 +39,10 @@ class BlockACKConfig(object):
     expectedACKDuration = 68E-6
     """ expected ACK duration for a BA is higher than the legacy ACK"""
 
-    capacity = 100e3*8
-    """ total storage size for BlockACK FU: Bits queued for transmissions + waiting for ACK + rx-reordering """
+    sizeUnit = 'PDU'
+    """ size unit for all size calculations (e.g. capacity, maxOnAir)"""
+    capacity = 100
+    """ total storage size for BlockACK FU: <sizeUnit> queued for transmissions + waiting for ACK + rx-reordering """
 
     maxOnAir = 10
     """ transmission window link of any link """

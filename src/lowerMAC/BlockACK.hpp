@@ -33,7 +33,6 @@
 #include <WIFIMAC/management/PERInformationBase.hpp>
 #include <WIFIMAC/lowerMAC/ITransmissionCounter.hpp>
 
-
 #include <WIFIMAC/convergence/IRxStartEnd.hpp>
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 
@@ -41,6 +40,7 @@
 #include <WNS/ldk/Delayed.hpp>
 #include <WNS/ldk/arq/ARQ.hpp>
 #include <WNS/ldk/probe/Probe.hpp>
+#include <WNS/ldk/buffer/Buffer.hpp>
 
 #include <WNS/probe/bus/ContextCollector.hpp>
 #include <WNS/events/CanTimeout.hpp>
@@ -91,7 +91,7 @@ namespace wifimac {
 
         class BlockACK;
 
-        typedef std::pair<wns::ldk::CompoundPtr, Bit> CompoundPtrWithSize;
+        typedef std::pair<wns::ldk::CompoundPtr, unsigned int> CompoundPtrWithSize;
 
         class TransmissionQueue
         {
@@ -103,18 +103,21 @@ namespace wifimac {
                               wifimac::management::PERInformationBase* perMIB_);
             ~TransmissionQueue();
 
-            void processOutgoing(const wns::ldk::CompoundPtr& compound);
+            void processOutgoing(const wns::ldk::CompoundPtr& compound,
+                                 const unsigned int size);
             const wns::ldk::CompoundPtr hasData() const;
             wns::ldk::CompoundPtr getData();
             void processIncomingACK(std::set<BlockACKCommand::SequenceNumber> ackSNs);
             void missingACK();
-            const size_t onAirSize() const
+            const size_t getNumOnAirPDUs() const
                 { return onAirQueue.size(); }
 
-            const size_t waitingSize() const
+            const size_t getNumWaitingPDUs() const
                 { return txQueue.size(); }
 
-            const Bit sizeInBit() const;
+            const unsigned int onAirQueueSize() const;
+            const unsigned int txQueueSize() const;
+            const unsigned int storageSize() const;
 
             const bool waitsForACK() const;
 
@@ -142,12 +145,14 @@ namespace wifimac {
                            wns::service::dll::UnicastAddress adr_);
             ~ReceptionQueue();
 
-            void processIncomingData(const wns::ldk::CompoundPtr& compound);
+            void processIncomingData(const wns::ldk::CompoundPtr& compound,
+                                     const unsigned int size);
             void processIncomingACKreq(const wns::ldk::CompoundPtr& compound);
             const wns::ldk::CompoundPtr hasACK() const;
             wns::ldk::CompoundPtr getACK();
-            const size_t size() const;
-            const Bit sizeInBit() const;
+            const size_t numPDUs() const
+                { return rxStorage.size(); }
+            const unsigned int storageSize() const;
 
         private:
             void purgeRxStorage();
@@ -178,6 +183,7 @@ namespace wifimac {
         public:
 
             BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
+            BlockACK(const BlockACK& other);
 
             virtual ~BlockACK();
 
@@ -220,7 +226,7 @@ namespace wifimac {
 
     private:
             void printTxQueueStatus() const;
-            Bit sizeInBit() const;
+            unsigned int storageSize() const;
 
             const std::string managerName;
             const std::string rxStartEndName;
@@ -304,6 +310,10 @@ namespace wifimac {
             /// probing the number of tx attempts until successfull transmission
             /// or retry abort
             wns::probe::bus::ContextCollectorPtr numTxAttemptsProbe;
+
+            // calculation of size (e.g. by bits or pdus)
+            std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
+
         };
 
 } // mac
