@@ -44,24 +44,12 @@ names['blockUntilReply'] = 'BlockUntilReply'
 def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs =  wifimac.lowerMAC.__getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
-    if (config.useMultiSendBuffer == True):
-     names['buffer'] = 'MultiBuffer'
-     FUs.append(MultiBuffer( functionalUnitName = names['buffer'] + str(transceiverAddress),
-                                                commandName = 'queueCommand',
-						config = config.multiBuffer,
-                                                sizeUnit = config.bufferSizeUnit,
-                                                size = config.bufferSize,
-                                                selector = config.queueSelector,
-                                                parentLogger = logger))
-
-    else:
-     names['buffer'] = 'Buffer'
-     FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
-                                   commandName = names['buffer'] + 'Command',
-                                   sizeUnit = config.bufferSizeUnit,
-                                   size = config.bufferSize,
-                                   localIDs = probeLocalIDs,
-                                   probingEnabled = False))
+    FUs.append(MultiBuffer( functionalUnitName = names['buffer'] + str(transceiverAddress),
+                            commandName = 'queueCommand',
+                            config = config.multiBuffer,
+                            sizeUnit = config.bufferSizeUnit,
+                            size = config.bufferSize,
+                            parentLogger = logger))
 
     FUs.append(BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
                         commandName = names['arq'] + 'Command',

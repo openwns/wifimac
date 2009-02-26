@@ -45,7 +45,7 @@ class MultiBuffer(openwns.FUN.FunctionalUnit):
     size = None
     sizeUnit = None
 
-    def __init__(self, functionalUnitName, commandName, config, parentLogger, size, sizeUnit, selector, **kw):
+    def __init__(self, functionalUnitName, commandName, config, parentLogger, size, sizeUnit, **kw):
         super(MultiBuffer, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
         self.logger = wifimac.Logger.Logger(name = "MultiBuffer", parent = parentLogger)
         openwns.pyconfig.attrsetter(self, kw)
