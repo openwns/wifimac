@@ -42,6 +42,7 @@ TXOP::TXOP(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     managerName(config_.get<std::string>("managerName")),
     phyUserName(config_.get<std::string>("phyUserName")),
     nextFrameHolderName(config_.get<std::string>("nextFrameHolderName")),
+    raName(config_.get<std::string>("raName")),
 
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
     expectedACKDuration(config_.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
@@ -56,6 +57,7 @@ TXOP::TXOP(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     friends.manager = NULL;
     friends.phyUser = NULL;
     friends.nextFrameHolder = NULL;
+    friends.ra = NULL;
 }
 
 
@@ -70,6 +72,7 @@ void TXOP::onFUNCreated()
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
     friends.phyUser = getFUN()->findFriend<wifimac::convergence::PhyUser*>(phyUserName);
     friends.nextFrameHolder = getFUN()->findFriend<wns::ldk::DelayedInterface*>(nextFrameHolderName);
+    friends.ra = getFUN()->findFriend<wifimac::lowerMAC::RateAdaptation*>(raName);
 }
 
 void
@@ -157,7 +160,7 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
 
         wns::simulator::Time nextFrameExchangeDuration =
             this->sifsDuration
-            + friends.phyUser->getPSDUDuration(nextCompound)
+            + friends.phyUser->getPSDUDuration(nextCompound, friends.ra->getPhyMode(nextCompound))
             + this->sifsDuration
             + this->expectedACKDuration;
 

@@ -32,6 +32,7 @@
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/lowerMAC/NextFrameGetter.hpp>
+#include <WIFIMAC/lowerMAC/RateAdaptation.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Processor.hpp>
@@ -72,6 +73,7 @@ namespace wifimac { namespace lowerMAC {
         const std::string managerName;
         const std::string phyUserName;
         const std::string nextFrameHolderName;
+        const std::string raName;
 
         /** @brief Duration of the Short InterFrame Space */
         const wns::simulator::Time sifsDuration;
@@ -89,6 +91,7 @@ namespace wifimac { namespace lowerMAC {
             wifimac::lowerMAC::Manager* manager;
             wifimac::convergence::PhyUser* phyUser;
             wns::ldk::DelayedInterface* nextFrameHolder;
+            wifimac::lowerMAC::RateAdaptation* ra;
         } friends;
 
     };

@@ -265,7 +265,14 @@ void StopAndWaitARQ::onTimeout()
 size_t
 StopAndWaitARQ::getTransmissionCounter(const wns::ldk::CompoundPtr& compound) const
 {
-    return(this->getCommand(compound)->localTransmissionCounter);
+    if(getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this))
+    {
+        return(this->getCommand(compound)->localTransmissionCounter);
+    }
+    else
+    {
+        return 1;
+    }
 }
 
 void

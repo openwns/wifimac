@@ -44,12 +44,12 @@ names['blockUntilReply'] = 'BlockUntilReply'
 def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs =  wifimac.lowerMAC.__getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
-    FUs.append(MultiBuffer( functionalUnitName = names['buffer'] + str(transceiverAddress),
-                            commandName = 'queueCommand',
-                            config = config.multiBuffer,
-                            sizeUnit = config.bufferSizeUnit,
-                            size = config.bufferSize,
-                            parentLogger = logger))
+    FUs.append(MultiBuffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
+                           commandName = 'queueCommand',
+                           config = config.multiBuffer,
+                           sizeUnit = config.bufferSizeUnit,
+                           size = config.bufferSize,
+                           parentLogger = logger))
 
     FUs.append(BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
                         commandName = names['arq'] + 'Command',
@@ -86,16 +86,22 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                          config = config.ra,
                                          parentLogger = logger)
 
-    nextFrame = wifimac.lowerMAC.NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
-                                                 commandName = names['nextFrame'] + 'Command')
-
-    txop = wifimac.lowerMAC.TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
-                                 commandName = names['txop'] + 'Command',
-                                 managerName = names['manager'] +  str(transceiverAddress),
-                                 phyUserName =  names['phyUser'] + str(transceiverAddress),
-                                 nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
-                                 config = config.txop,
-                                 parentLogger = logger)
+    ### TXOP for DraftN temporarly deactivated:
+    ### No idea how to get the next frame: BlockACK+aggregation will send out one (big) frame
+    ### NextFrameHolder will hold nothing, the next frame comes only when the BlockACK-reply
+    ### is received. Putting the nextFrame before the BlockACK does also not work, aggregation
+    ### changes everything on its way...
+    #nextFrame = wifimac.lowerMAC.NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
+    #                                             commandName = names['nextFrame'] + 'Command')
+    #
+    #txop = wifimac.lowerMAC.TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
+    #                             commandName = names['txop'] + 'Command',
+    #                             managerName = names['manager'] +  str(transceiverAddress),
+    #                             phyUserName =  names['phyUser'] + str(transceiverAddress),
+    #                             nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
+    #                             raName = names['ra'] + str(transceiverAddress),
+    #                             config = config.txop,
+    #                             parentLogger = logger)
 
     rtscts = wifimac.lowerMAC.RTSCTS(functionalUnitName = names['rtscts'] + str(transceiverAddress),
                                      commandName = names['rtscts'] + 'Command',
@@ -107,6 +113,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                      txStartEndName = names['phyUser'] + str(transceiverAddress),
                                      config = config.rtscts,
                                      parentLogger = logger)
+
     raACK = wifimac.lowerMAC.RateAdaptation(functionalUnitName = names['ra'] + 'ACK'+ str(transceiverAddress),
                                             commandName = names['ra'] + 'ACK' +'Command',
                                             phyUserName = names['phyUser'] + str(transceiverAddress),
@@ -139,16 +146,18 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
     for num in xrange(0, len(FUs)-1):
         FUs[num].connect(FUs[num+1])
     # DraftN requires special structure to send (Block)ACKs via a different way
-    for fu in [ackSwitch, agg, ra, raACK, nextFrame, txop, rtscts, ackMux, block]:
+    #for fu in [ackSwitch, agg, ra, raACK, nextFrame, txop, rtscts, ackMux, block]:
+    for fu in [ackSwitch, agg, ra, raACK, rtscts, ackMux, block]:   
         myFUN.add(fu)
     # DraftN requires special handling so that the acks are not send through the aggregation path
     ackSwitch.connectOnDataFU(FUs[-1], dll.CompoundSwitch.FilterAll('All'))
     ackSwitch.connectSendDataFU(raACK, wifimac.helper.Filter.FrameType('ACK', names['manager'] + 'Command'))
     ackSwitch.connectSendDataFU(agg, dll.CompoundSwitch.FilterAll('All'))
     agg.connect(ra)
-    ra.connect(nextFrame)
-    nextFrame.connect(txop)
-    txop.connect(rtscts)
+    ra.connect(rtscts)
+    #ra.connect(nextFrame)
+    #nextFrame.connect(txop)
+    #txop.connect(rtscts)
     rtscts.connect(ackMux)
     raACK.connect(ackMux)
     ackMux.connect(block)

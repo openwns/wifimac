@@ -89,6 +89,7 @@ namespace wifimac { namespace convergence {
 
 		/** @brief Calculates the transmission duration for the given compound. */
 		wns::simulator::Time getPSDUDuration(const wns::ldk::CompoundPtr& compound) const;
+        wns::simulator::Time getPSDUDuration(const wns::ldk::CompoundPtr& compound, const PhyMode pm) const;
 
 		wns::Ratio getExpectedPostSINRFactor(unsigned int nss, unsigned int numRx);
 

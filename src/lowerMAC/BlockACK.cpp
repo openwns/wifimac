@@ -232,8 +232,6 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
 void
 BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
 {
-    uint32_t i;
-
     wns::service::dll::UnicastAddress transmitter = friends.manager->getTransmitterAddress(compound->getCommandPool());
 
     if(getCommand(compound->getCommandPool())->isACK())
@@ -501,7 +499,14 @@ void BlockACK::printTxQueueStatus() const
 size_t
 BlockACK::getTransmissionCounter(const wns::ldk::CompoundPtr& compound) const
 {
-    return(this->getCommand(compound)->localTransmissionCounter);
+    if(getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this))
+    {
+        return(this->getCommand(compound)->localTransmissionCounter);
+    }
+    else
+    {
+        return 1;
+    }
 }
 
 void

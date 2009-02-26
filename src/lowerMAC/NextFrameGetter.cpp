@@ -32,57 +32,83 @@
 using namespace wifimac::lowerMAC;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-	wifimac::lowerMAC::NextFrameGetter,
-	wns::ldk::FunctionalUnit,
-	"wifimac.lowerMAC.NextFrameGetter",
-	wns::ldk::FUNConfigCreator);
+    wifimac::lowerMAC::NextFrameGetter,
+    wns::ldk::FunctionalUnit,
+    "wifimac.lowerMAC.NextFrameGetter",
+    wns::ldk::FUNConfigCreator);
 
 
 void
 NextFrameGetter::processIncoming(const wns::ldk::CompoundPtr& compound)
 {
-	getDeliverer()->getAcceptor(compound)->onData(compound);
+    getDeliverer()->getAcceptor(compound)->onData(compound);
 } // processIncoming
 
 
 void
 NextFrameGetter::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
-	assure(hasCapacity(), "received PDU although not accepting.");
+    assure(hasCapacity(), "received PDU although not accepting.");
 
-    storage.push_back(compound);
-    flowTime = wns::simulator::getEventScheduler()->getTime();
-
+    storage = compound;
 } // processOutgoing
 
 
 bool
 NextFrameGetter::hasCapacity() const
 {
-	return (storage.empty() or (wns::simulator::getEventScheduler()->getTime() == flowTime));
+    return (storage == wns::ldk::CompoundPtr());
 } // hasCapacity
 
 
 const wns::ldk::CompoundPtr
 NextFrameGetter::hasSomethingToSend() const
 {
-    if(storage.empty())
-    {
-        return(wns::ldk::CompoundPtr());
-    }
-    else
-    {
-        return (*(storage.begin()));
-    }
+    return storage;
 } // hasSomethingToSend
 
 wns::ldk::CompoundPtr
 NextFrameGetter::getSomethingToSend()
 {
     assure(hasSomethingToSend(), "Called getSomethingToSend, but nothing to send");
-	wns::ldk::CompoundPtr it = *(storage.begin());
-    storage.pop_front();
-    flowTime = wns::simulator::getEventScheduler()->getTime();
-	return it;
+    wns::ldk::CompoundPtr it = storage;
+    storage = wns::ldk::CompoundPtr();
+    return it;
 } // getSomethingToSend
 
+void
+NextFrameGetter::tryToSend()
+{
+    // do not allow recursion
+    if(inWakeup)
+    {
+        return;
+    }
+
+    // check if the next compound can be send
+    const wns::ldk::CompoundPtr testCompound = hasSomethingToSend();
+    if(testCompound == wns::ldk::CompoundPtr())
+        return;
+    if(not getConnector()->hasAcceptor(testCompound))
+        return;
+
+    CompoundHandlerInterface* target = getConnector()->getAcceptor(testCompound);
+    // store the compound for sending
+    wns::ldk::CompoundPtr compound = getSomethingToSend();
+
+    // now the buffer is empty. signal to FU above
+    if(hasCapacity())
+    {
+        inWakeup = true;
+        getReceptor()->wakeup();
+        inWakeup = false;
+    }
+
+    // now, send the stored compound
+    target->sendData(compound);
+
+    if(hasSomethingToSend() != wns::ldk::CompoundPtr())
+    {
+        tryToSend();
+    }
+} // tryToSend
