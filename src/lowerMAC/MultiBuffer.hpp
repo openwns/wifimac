@@ -123,6 +123,7 @@ namespace wifimac { namespace lowerMAC {
         virtual const wns::ldk::CompoundPtr hasSomethingToSend() const;
         virtual wns::ldk::CompoundPtr getSomethingToSend();
         unsigned int getBufferSendSize() const;
+        unsigned int getSize(const ContainerType& buffer) const;
 
         // CanTimeout interface
         virtual void onTimeout();

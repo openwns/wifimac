@@ -54,7 +54,7 @@ class BlockACKConfig(object):
     """ Size of BlockACK """
     blockACKRequestBits = 24*8
     """ Size of BlockACKrequest """
-    impatientBAreqTransmission = True
+    impatient = True
     """ Transmission of the BAreq can be done according to two strategies:
     a) impatient: Send BAreq as soon as no other frames are in the reception queue, i.e. after a minimum of
     one frame has been send.

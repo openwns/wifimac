@@ -33,9 +33,17 @@ import wifimac.Logger
 
 class MultiBufferConfig(object):
     impatient = True
+    """ send row of frames although send size is not reached and buffer is not full"""
+
     sendSize = 10
+    """ send frames in a row, unit is determined by the sizeUnit! """
+
     timeout = 0
+    """ Start early transmission after timeout, although send size is not reached"""
+
     queueSelector = 'ConstantRRSelector'
+    """ strategy how to select queue """
+
 
 class MultiBuffer(openwns.FUN.FunctionalUnit):
 

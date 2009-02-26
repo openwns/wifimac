@@ -62,7 +62,7 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
     baBits(config_.get<Bit>("myConfig.blockACKBits")),
     baReqBits(config_.get<Bit>("myConfig.blockACKRequestBits")),
     maximumTransmissions(config_.get<size_t>("myConfig.maximumTransmissions")),
-    impatientBAreqTransmission(config_.get<bool>("myConfig.impatientBAreqTransmission")),
+    impatientBAreqTransmission(config_.get<bool>("myConfig.impatient")),
     currentReceiver(),
     nextReceiver(),
     txQueue(NULL),

@@ -50,7 +50,7 @@ Aggregation::Aggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& con
     wns::ldk::probe::Probe(),
 
     managerName(config_.get<std::string>("managerName")),
-    impatientTransmission(config_.get<bool>("myConfig.impatientTransmission")),
+    impatientTransmission(config_.get<bool>("myConfig.impatient")),
     maxDelay(config_.get<wns::simulator::Time>("myConfig.maxDelay")),
     sendNow(false),
     currentReceiver()

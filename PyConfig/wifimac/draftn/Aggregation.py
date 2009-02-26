@@ -49,8 +49,8 @@ class AggregationConfig(object):
     """ Each entry is padded so that its size is a multiple of this boundary """
     countPCISizeOfEntries = True
     """ Include the PCI size of each entry for the size calculation """
-    impatientTransmission = False
-    """ If impatient, the aggregation transmits the container as soon as possible, i.e. the lower FU is accepting.
+    impatient = False
+    """ If impatient, the aggregation transmits the container as soon as possible, i.e. when the lower FU is accepting.
     If not impatient, the container is transmitted only if
     a) maxEntries or maxDelay is reached (maxSize is not estimated)
     b) a ACK-frame (can also be BAreq) indicates the conclusion of the aggregation

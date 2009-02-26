@@ -27,6 +27,7 @@
 
 from NodeCreator import NodeCreator
 from ChannelManagerPool import ChannelManagerPool
+from Transceiver import *
 
 class Node(object):
     position = None
