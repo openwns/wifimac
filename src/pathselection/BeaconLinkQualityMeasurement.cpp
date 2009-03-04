@@ -145,6 +145,13 @@ BroadcastLinkQuality::newPeerMeasurement(double peerSuccessRate, wns::Ratio peer
         ps->createPeerLink(myAddress, peerAddress, m);
         linkCreated = true;
     }
+    if ( ps->getNextHop(myAddress, peerAddress) != wns::service::dll::UnicastAddress() and ps->getProxyFor(parent->getFUN()->getLayer<dll::Layer2*>()->getDLLAddress()) == wns::service::dll::UnicastAddress())
+    {
+
+		MESSAGE_SINGLE(NORMAL, parent->logger,"Registering mesh point as proxy for itself at VPS");
+ 		ps->registerProxy(myAddress,parent->getFUN()->getLayer<dll::Layer2*>()->getDLLAddress());	
+    }
+
     return(m);
 }
 

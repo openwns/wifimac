@@ -183,6 +183,21 @@ class NodeCreator(object):
 					       managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
 					       config = config.transceivers[i+1])
 
+		newMP.nl = ip.Component.IPv4Component ( newMP, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow=1.0 )
+		newMP.nl.addDLL ( "wifi",
+				# Where to get IP Adresses
+				_addressResolver = FixedAddressResolver ( "192.168.1."+str ( id ), "255.255.255.0" ),
+				# Name of ARP zone
+				_arpZone = "theOnlyZone",
+				# We can deliver locally without going to the gateway
+				_pointToPoint = True,
+				# Service names of DLL
+				_dllDataTransmission = newMP.dll.dataTransmission,
+				_dllNotification = newMP.dll.notification )
+
+		# create load generator
+		newMP.load = constanze.node.ConstanzeComponent ( newMP, "constanze" )
+
 		newMP.mobility = rise.Mobility.Component ( node = newMP,
 		                 			   name = "Mobility MP"+str ( id ),
 							   mobility = rise.Mobility.No ( openwns.Position() ))

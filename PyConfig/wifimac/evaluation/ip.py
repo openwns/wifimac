@@ -79,7 +79,7 @@ def installEvaluation(sim, staIds, rangId, settlingTime, maxPacketDelay, maxBitT
         minId = min(staIds)
         maxId = max(staIds)
         n = node.appendChildren(SettlingTimeGuard(settlingTime))
-        n.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [3]))
+	n.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [2,3]))
         n.getLeafs().appendChildren(Table(axis1 = 'MAC.Id', minValue1 = minId, maxValue1 = maxId+1, resolution1 = maxId+1 - minId,
                                              values = ['mean', 'trials'],
                                              formats = ['MatlabReadableSparse']))
