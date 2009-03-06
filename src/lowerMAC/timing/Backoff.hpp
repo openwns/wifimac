@@ -70,7 +70,7 @@ namespace wifimac { namespace lowerMAC { namespace timing {
 		virtual ~Backoff();
 
 		/** @brief Transmission request by the scheduler */
-		virtual void
+		virtual bool
         transmissionRequest(int transmissionCounter);
 
 		/** @brief Indicates a channel state transition idle->busy */
