@@ -158,7 +158,7 @@ RTSCTS::processIncoming(const wns::ldk::CompoundPtr& compound)
                 if(state == transmitRTS)
                     m << "state is transmitRTS\n";
                 if(state == waitForCTS)
-                    m "state is waitForCTS\n";
+                    m << "state is waitForCTS\n";
                 if(state == receiveCTS)
                     m << "state is receiveCTS\n";
                 MESSAGE_END();
