@@ -75,6 +75,7 @@ MeshForwarding::doIsAccepting(const wns::ldk::CompoundPtr& _compound) const
 {
     // First make a copy of the compound and use this, as we manipulate the
     // target address
+MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doIsAccepting starts");
     wns::ldk::CompoundPtr compound = _compound->copy();
 
     dll::UpperCommand* uc = getFUN()->getProxy()->getCommand<dll::UpperCommand>(compound->getCommandPool(), ucName);
@@ -87,6 +88,10 @@ MeshForwarding::doIsAccepting(const wns::ldk::CompoundPtr& _compound) const
     else
     {
         wns::service::dll::UnicastAddress mpDst = uc->peer.targetMACAddress;
+	if (!mpDst.isValid())
+	{
+	  mpDst = ps->getPortalFor(uc->peer.sourceMACAddress);
+	}
         uc->peer.targetMACAddress = ps->getNextHop(uc->peer.sourceMACAddress, mpDst);
         if(layer2->isTransceiverMAC(uc->peer.targetMACAddress))
         {
@@ -96,6 +101,7 @@ MeshForwarding::doIsAccepting(const wns::ldk::CompoundPtr& _compound) const
     }
 
     // Forward the manipulated compound
+MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doIsAccepting ends");
     return getConnector()->hasAcceptor(compound);
 }
 
@@ -404,9 +410,11 @@ bool MeshForwarding::doOnDataFRS(const wns::ldk::CompoundPtr& compound, Forwardi
 void
 MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
 {
-    if(layer2->getStationType() != dll::StationTypes::AP())
+MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doSendData starts");
+
+    if(layer2->getStationType() != dll::StationTypes::AP() and layer2->getStationType() != dll::StationTypes::FRS())
     {
-        throw wns::Exception("doSendData not valid for node types other than AP");
+        throw wns::Exception("doSendData not valid for node types other than AP and FRS");
     }
 
     // Received fresh packet from upper layer -> activate command
@@ -417,7 +425,12 @@ MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
 
     // this frame comes from the upperConvergence
     assure(uc->peer.sourceMACAddress.isValid(), "uc->peer.sourceMACAddress is not a valid MAC address");
-    assure(uc->peer.targetMACAddress.isValid(), "uc->peer.sourceMACAddress is not a valid MAC address");
+
+    // locally generated traffic, destination not known
+    if (!uc->peer.targetMACAddress.isValid())
+    {
+	uc->peer.targetMACAddress = ps->getPortalFor(uc->peer.sourceMACAddress);
+    }
 
     fc->magic.isUplink = false;
 
@@ -426,6 +439,7 @@ MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
     {
         MESSAGE_SINGLE(NORMAL, this->logger, "Destination " << uc->peer.targetMACAddress << " is directly associated -> deliver");
         sendFrameToOwnBSS(compound, fc, uc, uc->peer.sourceMACAddress, uc->peer.targetMACAddress);
+MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doSendData ends - directly associated");
         return;
     }
     else
@@ -444,6 +458,7 @@ MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
                                 layer2->getDLLAddress(),       // src
                                 layer2->getDLLAddress(),       // MeshSrc
                                 uc->peer.targetMACAddress);                                              // finalDst
+MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doSendData ends - other BSS");
             return;
         }
     } // end hasAssociated
