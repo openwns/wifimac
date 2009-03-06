@@ -48,7 +48,8 @@ namespace wifimac { namespace lowerMAC {
      *  2. If yes, store the compound temporarly
      *  3. Wakeup the upper FU (and loose control of the process)
      *  4. Transmit compound
-     * Recursion 
+     * Recursion by multiple doSendData is disabled by the use of a "inWakeup"
+     * variable.
      */
     class NextFrameGetter:
         public wns::ldk::fu::Plain<NextFrameGetter, wns::ldk::EmptyCommand>,

@@ -152,15 +152,20 @@ RTSCTS::processIncoming(const wns::ldk::CompoundPtr& compound)
             assure(this->pendingMSDU, "Received CTS, but no pending MSDU");
             if(state == idle)
             {
-                std::cout << "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout << "\n";
+                MESSAGE_BEGIN(NORMAL, this->logger, m, "received CTS although state is idle, now: ");
+                m << wns::simulator::getEventScheduler()->getTime();
+                m << ", last timeout: " << this->lastTimeout << "\n";
                 if(state == transmitRTS)
-                    std::cout << "state is transmitRTS\n";
+                    m << "state is transmitRTS\n";
                 if(state == waitForCTS)
-                    std::cout << "state is waitForCTS\n";
+                    m "state is waitForCTS\n";
                 if(state == receiveCTS)
-                    std::cout << "state is receiveCTS\n";
+                    m << "state is receiveCTS\n";
+                MESSAGE_END();
             }
-            assure(state != idle, "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout);
+            assure(state != idle,
+                   "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout);
+
             if((state == idle)
                 or
                (friends.manager->getTransmitterAddress(compound->getCommandPool())

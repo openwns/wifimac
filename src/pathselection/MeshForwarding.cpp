@@ -75,7 +75,6 @@ MeshForwarding::doIsAccepting(const wns::ldk::CompoundPtr& _compound) const
 {
     // First make a copy of the compound and use this, as we manipulate the
     // target address
-MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doIsAccepting starts");
     wns::ldk::CompoundPtr compound = _compound->copy();
 
     dll::UpperCommand* uc = getFUN()->getProxy()->getCommand<dll::UpperCommand>(compound->getCommandPool(), ucName);
@@ -101,7 +100,6 @@ MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doIsAccepting starts");
     }
 
     // Forward the manipulated compound
-MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doIsAccepting ends");
     return getConnector()->hasAcceptor(compound);
 }
 
@@ -410,7 +408,6 @@ bool MeshForwarding::doOnDataFRS(const wns::ldk::CompoundPtr& compound, Forwardi
 void
 MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
 {
-MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doSendData starts");
 
     if(layer2->getStationType() != dll::StationTypes::AP() and layer2->getStationType() != dll::StationTypes::FRS())
     {
@@ -439,7 +436,6 @@ MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doSendData starts");
     {
         MESSAGE_SINGLE(NORMAL, this->logger, "Destination " << uc->peer.targetMACAddress << " is directly associated -> deliver");
         sendFrameToOwnBSS(compound, fc, uc, uc->peer.sourceMACAddress, uc->peer.targetMACAddress);
-MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doSendData ends - directly associated");
         return;
     }
     else
@@ -458,7 +454,6 @@ MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doSendData ends - directly associated
                                 layer2->getDLLAddress(),       // src
                                 layer2->getDLLAddress(),       // MeshSrc
                                 uc->peer.targetMACAddress);                                              // finalDst
-MESSAGE_SINGLE(NORMAL, this->logger, "dbg: doSendData ends - other BSS");
             return;
         }
     } // end hasAssociated

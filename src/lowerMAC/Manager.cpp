@@ -230,10 +230,10 @@ Manager::getFrameType(const wns::ldk::CommandPool* commandPool) const
 
 wns::ldk::CompoundPtr
 Manager::createCompound(const wns::service::dll::UnicastAddress transmitterAddress,
-                                const wns::service::dll::UnicastAddress receiverAddress,
-                                const FrameType type,
-                                const wns::simulator::Time frameExchangeDuration,
-                                const bool requiresDirectReply)
+                        const wns::service::dll::UnicastAddress receiverAddress,
+                        const FrameType type,
+                        const wns::simulator::Time frameExchangeDuration,
+                        const bool requiresDirectReply)
 {
     wns::ldk::CompoundPtr compound(new wns::ldk::Compound(getFUN()->getProxy()->createCommandPool()));
     ManagerCommand* mc = activateCommand(compound->getCommandPool());

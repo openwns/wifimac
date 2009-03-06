@@ -66,11 +66,13 @@ srcFiles = [
     'src/lowerMAC/BlockACK.cpp',
     'src/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.cpp',
 
-    # (Virtual) Management stuff
+    # Management stuff
     'src/management/Beacon.cpp',
     'src/management/SINRInformationBase.cpp',
     'src/management/PERInformationBase.cpp',
     'src/management/VirtualCapabilityInformationBase.cpp',
+    #'src/management/protocolCalculator/ProtocolCalculator.cpp',
+    #'src/management/protocolCalculator/ErrorProbability.hpp',
 
     # Pathselection
     'src/pathselection/VirtualPathSelection.cpp',
@@ -139,6 +141,8 @@ hppFiles = [
     'src/management/PERInformationBase.hpp',
     'src/management/SINRInformationBase.hpp',
     'src/management/VirtualCapabilityInformationBase.hpp',
+    #'src/management/protocolCalculator/ProtocolCalculator.hpp',
+    #'src/management/protocolCalculator/ErrorProbability.hpp',
     'src/pathselection/BeaconLinkQualityMeasurement.hpp',
     'src/pathselection/ForwardingCommand.hpp',
     'src/pathselection/IPathSelection.hpp',
@@ -148,7 +152,7 @@ hppFiles = [
     'src/pathselection/NovelCheck.hpp',
     'src/pathselection/PathSelectionOverVPS.hpp',
     'src/pathselection/StationForwarding.hpp',
-    'src/pathselection/VirtualPathSelection.hpp',
+    'src/pathselection/VirtualPathSelection.hpp'
 ]
 pyconfigs = [
     'wifimac/FUNModes.py',
@@ -198,6 +202,14 @@ pyconfigs = [
     'wifimac/support/Rang.py',
     'wifimac/support/Transceiver.py',
     'wifimac/support/__init__.py',
+
+    'wifimac/protocolCalculator/__init__.py',
+    'wifimac/protocolCalculator/Duration.py',
+    'wifimac/protocolCalculator/ErrorProbability.py',
+    'wifimac/protocolCalculator/MIMO.py',
+    'wifimac/protocolCalculator/PhyMode.py',
+    'wifimac/protocolCalculator/Throughput.py',
+
 ]
 dependencies = []
 Return('libname srcFiles hppFiles pyconfigs dependencies')
