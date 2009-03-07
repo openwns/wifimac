@@ -115,6 +115,7 @@ def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalID
                               commandName = names['errorModelling'] + 'Command',
                               phyUserCommandName = names['phyUser'] + 'Command',
                               managerCommandName = names['manager'] + 'Command',
+                              protocolCalculatorName = names['protocolCalculator'] + str(transceiverAddress),
                               parentLogger = logger))
     FUs.append(PhyUser(functionalUnitName = names['phyUser'] + str(transceiverAddress),
                        commandName = names['phyUser'] + 'Command',

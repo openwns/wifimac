@@ -24,31 +24,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
+import openwns.node
 import openwns.FUN
 import openwns.pyconfig
 
+import ErrorProbability
 import wifimac.Logger
 
-class ErrorModelling(openwns.FUN.FunctionalUnit):
-	"""This class maps the cir to ser and calculates PER"""
-	name = 'ErrorModelling'
-	logger = None
-	phyUserCommandName = None
-	managerCommandName = None
-	protocolCalculatorName = None
-	cyclicPrefixReduction = 0.8
-	__plugin__ = 'wifimac.convergence.ErrorModelling'
+class Service(object):
+	nameInServiceFactory  = None
+	serviceName = None
 
-	def __init__(self,
-		     name,
-		     commandName,
-		     phyUserCommandName,
-		     managerCommandName,
-		     protocolCalculatorName,
-		     parentLogger = None, **kw):
-		super(ErrorModelling, self).__init__(functionalUnitName=name, commandName=commandName)
-		self.phyUserCommandName = phyUserCommandName
-		self.managerCommandName = managerCommandName
-		self.protocolCalculatorName = protocolCalculatorName
-		self.logger = wifimac.Logger.Logger("ErrorModelling", parent = parentLogger)
-		openwns.pyconfig.attrsetter(self, kw)
+class ProtocolCalculator(Service):
+	logger  = None
+	windowSize = None
+	errorProbability = None
+
+	def __init__(self, serviceName, parentLogger=None, **kw):
+		self.nameInServiceFactory = 'wifimac.management.ProtocolCalculator'
+        	self.serviceName = serviceName
+        	self.logger = wifimac.Logger.Logger(name = 'PC', parent = parentLogger)
+		self.errorProbability = ErrorProbability(guardInterval_us = 0.8)
+        	openwns.pyconfig.attrsetter(self, kw)

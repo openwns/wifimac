@@ -71,8 +71,10 @@ srcFiles = [
     'src/management/SINRInformationBase.cpp',
     'src/management/PERInformationBase.cpp',
     'src/management/VirtualCapabilityInformationBase.cpp',
-    #'src/management/protocolCalculator/ProtocolCalculator.cpp',
-    #'src/management/protocolCalculator/ErrorProbability.hpp',
+    'src/management/ProtocolCalculator.cpp',
+    'src/management/protocolCalculatorPlugins/ErrorProbability.cpp',
+    'src/management/protocolCalculatorPlugins/FrameLength.cpp',
+    'src/management/protocolCalculatorPlugins/Duration.cpp',
 
     # Pathselection
     'src/pathselection/VirtualPathSelection.cpp',
@@ -141,8 +143,10 @@ hppFiles = [
     'src/management/PERInformationBase.hpp',
     'src/management/SINRInformationBase.hpp',
     'src/management/VirtualCapabilityInformationBase.hpp',
-    #'src/management/protocolCalculator/ProtocolCalculator.hpp',
-    #'src/management/protocolCalculator/ErrorProbability.hpp',
+    'src/management/ProtocolCalculator.hpp',
+    'src/management/protocolCalculatorPlugins/ErrorProbability.hpp',
+    'src/management/protocolCalculatorPlugins/FrameLength.hpp',
+    'src/management/protocolCalculatorPlugins/Duration.hpp',
     'src/pathselection/BeaconLinkQualityMeasurement.hpp',
     'src/pathselection/ForwardingCommand.hpp',
     'src/pathselection/IPathSelection.hpp',
@@ -208,6 +212,7 @@ pyconfigs = [
     'wifimac/protocolCalculator/ErrorProbability.py',
     'wifimac/protocolCalculator/MIMO.py',
     'wifimac/protocolCalculator/PhyMode.py',
+    'wifimac/protocolCalculator/FrameLength.py',
     'wifimac/protocolCalculator/Throughput.py',
 
 ]

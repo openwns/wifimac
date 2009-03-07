@@ -3,6 +3,7 @@ import wifimac.draftn
 import wifimac.lowerMAC
 import wifimac.pathselection
 import wifimac.management
+import wifimac.protocolCalculator
 
 from openwns.pyconfig import Sealed
 
@@ -33,6 +34,7 @@ class Basic(Sealed):
 		self.names.update(wifimac.management.names)
 		self.names.update(wifimac.lowerMAC.names)
 		self.names.update(wifimac.draftn.names)
+		self.names.update(wifimac.protocolCalculator.names)
 
 	def createLowerMAC(self, config, myFUN):
 		return(wifimac.lowerMAC.getFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
@@ -50,6 +52,8 @@ class Basic(Sealed):
 		myServices.append(wifimac.management.InformationBases.PER(serviceName = self.names['perMIB'] + str(self.transceiverAddress),
 									  config = config.perMIB,
 									  parentLogger = self.logger))
+		myServices.append(wifimac.protocolCalculator.ProtocolCalculator(serviceName = self.names['protocolCalculator'] + str(self.transceiverAddress),
+										parentLogger = self.logger))
 		return(myServices)
 
 class DraftN(Basic):

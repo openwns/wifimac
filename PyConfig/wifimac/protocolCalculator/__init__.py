@@ -24,31 +24,37 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import openwns.FUN
-import openwns.pyconfig
+
+from Duration import Duration
+from ErrorProbability import ErrorProbability
+from MIMO import MIMO
+from PhyMode import *
+from Throughput import Throughput
+from FrameLength import FrameLength
 
 import wifimac.Logger
 
-class ErrorModelling(openwns.FUN.FunctionalUnit):
-	"""This class maps the cir to ser and calculates PER"""
-	name = 'ErrorModelling'
-	logger = None
-	phyUserCommandName = None
-	managerCommandName = None
-	protocolCalculatorName = None
-	cyclicPrefixReduction = 0.8
-	__plugin__ = 'wifimac.convergence.ErrorModelling'
+import openwns.node
+import openwns.FUN
+import openwns.pyconfig
 
-	def __init__(self,
-		     name,
-		     commandName,
-		     phyUserCommandName,
-		     managerCommandName,
-		     protocolCalculatorName,
-		     parentLogger = None, **kw):
-		super(ErrorModelling, self).__init__(functionalUnitName=name, commandName=commandName)
-		self.phyUserCommandName = phyUserCommandName
-		self.managerCommandName = managerCommandName
-		self.protocolCalculatorName = protocolCalculatorName
-		self.logger = wifimac.Logger.Logger("ErrorModelling", parent = parentLogger)
-		openwns.pyconfig.attrsetter(self, kw)
+names = dict()
+names['protocolCalculator'] = 'protocolCalculator'
+
+class Service(object):
+	nameInServiceFactory  = None
+	serviceName = None
+
+class ProtocolCalculator(Service):
+	logger  = None
+	windowSize = None
+	errorProbability = None
+
+	def __init__(self, serviceName, parentLogger=None, **kw):
+		self.nameInServiceFactory = 'wifimac.management.ProtocolCalculator'
+        	self.serviceName = serviceName
+        	self.logger = wifimac.Logger.Logger(name = 'PC', parent = parentLogger)
+		self.errorProbability = ErrorProbability(guardInterval = 0.8e-6)
+		self.duration = Duration(guardInterval = 0.8e-6)
+		self.frameLength = FrameLength()
+        	openwns.pyconfig.attrsetter(self, kw)

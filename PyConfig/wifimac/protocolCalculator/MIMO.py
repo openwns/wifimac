@@ -24,31 +24,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-import openwns.FUN
-import openwns.pyconfig
 
-import wifimac.Logger
+from math import pow, log10
 
-class ErrorModelling(openwns.FUN.FunctionalUnit):
-	"""This class maps the cir to ser and calculates PER"""
-	name = 'ErrorModelling'
-	logger = None
-	phyUserCommandName = None
-	managerCommandName = None
-	protocolCalculatorName = None
-	cyclicPrefixReduction = 0.8
-	__plugin__ = 'wifimac.convergence.ErrorModelling'
+class MIMO:
+    def getPostSNR_dB(self, preSNR_dB, n_streams, n_rxAntennas):
+        # This function implements the SNR processing at the receiver for each
+        # spatial stream using ZF detection and returns the post-processing SNR,
+        # Post_SNR, corresponding to the pre-processing SNR values.
 
-	def __init__(self,
-		     name,
-		     commandName,
-		     phyUserCommandName,
-		     managerCommandName,
-		     protocolCalculatorName,
-		     parentLogger = None, **kw):
-		super(ErrorModelling, self).__init__(functionalUnitName=name, commandName=commandName)
-		self.phyUserCommandName = phyUserCommandName
-		self.managerCommandName = managerCommandName
-		self.protocolCalculatorName = protocolCalculatorName
-		self.logger = wifimac.Logger.Logger("ErrorModelling", parent = parentLogger)
-		openwns.pyconfig.attrsetter(self, kw)
+        # The Caculation is based on the following assumptions
+        # 1. The MIMO channel model is block fading Guassian matrix representing
+        # the flat Rayleigh fading MIMO channel
+        # 2. The Zero-Forcing detect is used at the receiver and 
+        # the post SNR of kth stream is expressed as [A. Paulraj 2003]
+        # Deterministic model based on the Chi-quared distribution of Post-SNR is
+        # used in this function
+        return(float(preSNR_dB) + 10.0 * log10((n_rxAntennas - n_streams + 1) / float(n_streams)))

@@ -45,7 +45,9 @@ def installEvaluation(sim, staIds, rangId, settlingTime, maxPacketDelay, maxBitT
 
     sourceName = 'ip.endToEnd.packet.incoming.delay'
     node = getTop(sim, sourceName, settlingTime, [rangId])
-    node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = maxPacketDelay, resolution = resolution))
+    node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = maxPacketDelay, resolution = resolution,
+                                       name = 'ip.endToEnd.packet.incoming.delay',
+                                       description = 'End-to-End Packet Delay (Uplink) [s]'))
 ##     node.getLeafs().appendChildren(Moments())
 ##     node.getLeafs().appendChildren(DLRE(mode = 'g',
 ##                                         name = sourceName,
@@ -56,7 +58,9 @@ def installEvaluation(sim, staIds, rangId, settlingTime, maxPacketDelay, maxBitT
 
     sourceName = 'ip.endToEnd.packet.outgoing.delay'
     node = getTop(sim, sourceName, settlingTime, [rangId])
-    node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = maxPacketDelay, resolution = resolution))
+    node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = maxPacketDelay, resolution = resolution,
+                                       name = 'ip.endToEnd.packet.outgoing.delay',
+                                       description = 'End-to-End Packet Delay (Downlink) [s]'))
 ##     node.getLeafs().appendChildren(Moments())
 ##     node.getLeafs().appendChildren(DLRE(mode = 'g',
 ##                                         name = sourceName,
@@ -72,7 +76,8 @@ def installEvaluation(sim, staIds, rangId, settlingTime, maxPacketDelay, maxBitT
         node = openwns.evaluation.createSourceNode(sim, sourceName )
         node.appendChildren(SettlingTimeGuard(settlingTime))
         node.getLeafs().appendChildren(Accept(by = 'wns.node.Node.id', ifIn = [rangId]))
-        node.getLeafs().appendChildren(Moments())
+        node.getLeafs().appendChildren(Moments(name = sourceName,
+                                               description = "Throughput (" + direction + ") [bit/s]"))
 
         # bit throughput of each client as table probe
         node = openwns.evaluation.getSourceNode(sim, sourceName)

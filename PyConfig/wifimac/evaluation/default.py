@@ -108,12 +108,16 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
         node = openwns.evaluation.createSourceNode(sim, 'wifimac.e2e.packet.incoming.delay')
         node.appendChildren(SettlingTimeGuard(settlingTime))
         n = node.getLeafs().appendChildren(Enumerated(by = 'MAC.StationType', keys = [1,3], names = ['ul', 'dl'], format = '%s'))
-        node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100))
+        node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100, 
+                                           name = "wifimac.e2e.packet.incoming.delay", 
+                                           description = "Incoming packet delay [s]"))
         #node.getLeafs().appendChildren(Moments())
         #node.getLeafs().appendChildren(DLRE(mode='g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001, maxRoundingError = 0.001))
 
         n.appendChildren(Separate(by = "MAC.CompoundHopCount", forAll = range(1, maxHopCount+1), format = "hc%d"))
-        n.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100))
+        n.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
+                                        name = "wifimac.e2e.packet.incoming.delay", 
+                                        description = "Incoming packet delay [s]"))
         #n.getLeafs().appendChildren(Moments())
         #n.getLeafs().appendChildren(DLRE(mode='g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001, maxRoundingError = 0.001))
 
