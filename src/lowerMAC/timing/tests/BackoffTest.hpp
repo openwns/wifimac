@@ -39,88 +39,88 @@
 
 namespace wifimac { namespace lowerMAC { namespace timing { namespace tests {
 
-	class BackoffTest:
-		public wns::TestFixture
-	{
-		CPPUNIT_TEST_SUITE( BackoffTest );
-		CPPUNIT_TEST ( onTXrequestDuringBusy );
-		CPPUNIT_TEST ( onTXrequestDuringIdle );
-		CPPUNIT_TEST ( averageBackoff        );
-		CPPUNIT_TEST_SUITE_END();
+    class BackoffTest:
+        public wns::TestFixture
+    {
+        CPPUNIT_TEST_SUITE( BackoffTest );
+        CPPUNIT_TEST ( onTXrequestDuringBusy );
+        CPPUNIT_TEST ( onTXrequestDuringIdle );
+        CPPUNIT_TEST ( averageBackoff        );
+        CPPUNIT_TEST_SUITE_END();
 
-		class BackoffObserverMock :
-			public virtual BackoffObserver
-		{
-		public:
-			BackoffObserverMock():
-				cBackoffExpired(0),
-				txWaiting(false)
-				{
-				}
+        class BackoffObserverMock :
+            public virtual BackoffObserver
+        {
+        public:
+            BackoffObserverMock():
+                cBackoffExpired(0),
+                txWaiting(false)
+                {
+                }
 
-			virtual void backoffExpired()
-				{
-					++cBackoffExpired;
-				}
-			virtual bool hasTransmissionWaiting() const
-				{
-					return txWaiting;
-				}
-			int cBackoffExpired;
-			bool txWaiting;
-		};
+            virtual void backoffExpired()
+                {
+                    ++cBackoffExpired;
+                }
+            virtual bool hasTransmissionWaiting() const
+                {
+                    return txWaiting;
+                }
+            int cBackoffExpired;
+            bool txWaiting;
+        };
 
-		/**
+        /**
 		 * @brief Enable deterministic backoff
 		 **/
-		class BackoffFixed:
-			public Backoff
-		{
-		public:
-			BackoffFixed(BackoffObserver* backoffObserver,
-						 const wns::pyconfig::View& config):
-				Backoff(backoffObserver, config)
-				{
-				}
+        class BackoffFixed:
+            public Backoff
+        {
+        public:
+            BackoffFixed(BackoffObserver* backoffObserver,
+                         const wns::pyconfig::View& config):
+                Backoff(backoffObserver, config)
+                {
+                }
 
-			// Fix counter to have deterministic tests
-			virtual void fixBackoffCounter(int slots)
-				{
-					this->counter = slots;
-				}
-		};
+            // Fix counter to have deterministic tests
+            virtual void fixBackoffCounter(int slots)
+                {
+                    this->counter = slots;
+                }
+        };
 
-		// members
-		BackoffFixed* bo;
-		BackoffObserverMock* boObserver;
+        // members
+        BackoffFixed* bo;
+        BackoffObserverMock* boObserver;
 
-		const wns::simulator::Time sifsDuration;
-		const wns::simulator::Time slotDuration;
-		const wns::simulator::Time ackDuration;
-		const wns::simulator::Time aifsDuration;
-		const wns::simulator::Time eifsDuration;
+        const wns::simulator::Time sifsDuration;
+        const wns::simulator::Time slotDuration;
+        const wns::simulator::Time ackDuration;
+        const wns::simulator::Time aifsDuration;
+        const wns::simulator::Time eifsDuration;
 
-		const int cwMin;
-		const int cwMax;
+        const int cwMin;
+        const int cwMax;
 
-		// used to send events to backoff entity
-		typedef wns::events::MemberFunction<Backoff> BackoffEvent;
+        // used to send events to backoff entity
+        typedef wns::events::MemberFunction<Backoff> BackoffEvent;
 
-	public:
-		BackoffTest();
+    public:
+        BackoffTest();
 
-	private:
-		virtual void prepare();
-		virtual void cleanup();
+    private:
+        virtual void prepare();
+        virtual void cleanup();
 
-		// the tests
-		void onTXrequestDuringBusy();
-		void onTXrequestDuringIdle();
-		void averageBackoff();
+        // the tests
+        void onTXrequestDuringBusy();
+        void onTXrequestDuringIdle();
+        void averageBackoff();
 
-		// support functions to generate random samples
-		double generateBackoffSample();
-	};
+        // support functions to generate random samples
+        double generateBackoffSample();
+    };
 
 } // tests
 } // timing
