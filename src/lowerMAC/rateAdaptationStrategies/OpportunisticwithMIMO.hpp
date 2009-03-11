@@ -26,10 +26,10 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
-#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
+#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTICWITHMIMO_HPP
+#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTICWITHMIMO_HPP
 
-#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/OpportunisticwithMIMO.hpp>
+#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/IRateAdaptationStrategy.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
@@ -45,11 +45,11 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 	 *    for the upcomming transmission.
 	 */
 
-    class SINRwithMIMO:
-        public OpportunisticwithMIMO
+    class OpportunisticwithMIMO:
+        public IRateAdaptationStrategy
     {
     public:
-        SINRwithMIMO(
+        OpportunisticwithMIMO(
             wifimac::management::PERInformationBase* _per,
             wifimac::lowerMAC::Manager* _manager,
             wifimac::convergence::PhyUser* _phyUser,
@@ -65,6 +65,8 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
                    const wns::Ratio lqm);
 
     private:
+        wifimac::management::PERInformationBase* per;
+
         struct Friends
         {
             wifimac::convergence::PhyUser* phyUser;
@@ -73,6 +75,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
         wns::logger::Logger* logger;
 
+        int curPhyModeId;
         unsigned int curSpatialStreams;
     };
 }}}

@@ -43,7 +43,6 @@ SINR::SINR(
     logger(_logger)
 {
     friends.phyUser = _phyUser;
-    curPhyModeId = friends.phyUser->getPhyModeProvider()->getLowestId();
 }
 
 wifimac::convergence::PhyMode

@@ -73,8 +73,6 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         } friends;
 
         wns::logger::Logger* logger;
-
-        int curPhyModeId;
     };
 }}}
 

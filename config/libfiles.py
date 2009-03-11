@@ -65,6 +65,7 @@ srcFiles = [
     'src/lowerMAC/MultiBuffer.cpp',
     'src/lowerMAC/BlockACK.cpp',
     'src/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.cpp',
+    'src/lowerMAC/rateAdaptationStrategies/OpportunisticwithMIMO.cpp',
 
     # Management stuff
     'src/management/Beacon.cpp',
@@ -135,6 +136,7 @@ hppFiles = [
     'src/lowerMAC/rateAdaptationStrategies/Opportunistic.hpp',
     'src/lowerMAC/rateAdaptationStrategies/SINR.hpp',
     'src/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.hpp',
+    'src/lowerMAC/rateAdaptationStrategies/OpportunisticwithMIMO.hpp',
     'src/lowerMAC/timing/Backoff.hpp',
     'src/lowerMAC/timing/DCF.hpp',
     'src/lowerMAC/timing/tests/BackoffTest.hpp',
