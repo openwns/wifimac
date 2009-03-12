@@ -27,6 +27,7 @@
  ******************************************************************************/
 
 #include <WIFIMAC/convergence/PreambleGenerator.hpp>
+#include <DLL/Layer2.hpp>
 
 using namespace wifimac::convergence;
 
@@ -39,6 +40,7 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
 PreambleGenerator::PreambleGenerator(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
 	wns::ldk::fu::Plain<PreambleGenerator, PreambleGeneratorCommand>(fun),
     phyUserName(config_.get<std::string>("phyUserName")),
+    protocolCalculatorName(config_.get<std::string>("protocolCalculatorName")),
     managerName(config_.get<std::string>("managerName")),
 	logger(config_.get("logger")),
     pendingCompound(),
@@ -47,6 +49,7 @@ PreambleGenerator::PreambleGenerator(wns::ldk::fun::FUN* fun, const wns::pyconfi
 	MESSAGE_SINGLE(NORMAL, this->logger, "created");
     friends.manager = NULL;
     friends.phyUser = NULL;
+    protocolCalculator = NULL;
 }
 
 PreambleGenerator::~PreambleGenerator()
@@ -61,7 +64,8 @@ PreambleGenerator::onFUNCreated()
 
     friends.phyUser = getFUN()->findFriend<wifimac::convergence::PhyUser*>(phyUserName);
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
-
+    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
+    friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
 }
 
 void
@@ -82,7 +86,9 @@ void
 PreambleGenerator::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
     // compute transmission duration of the frame, dependent on the mcs
-    wns::simulator::Time frameTxDuration = friends.phyUser->getPSDUDuration(compound);
+    wifimac::convergence::PhyMode phyMode = friends.manager->getPhyMode(compound->getCommandPool());
+    wns::simulator::Time frameTxDuration = protocolCalculator->getDuration()->getMPDU_PPDU(compound->getLengthInBits(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"))
+    - protocolCalculator->getDuration()->getPreamble(phyMode.getNumberOfSpatialStreams(),std::string("Basic"));
 
     // First we generate a preamble
     this->pendingPreamble = compound->copy();

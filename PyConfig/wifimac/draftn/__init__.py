@@ -107,6 +107,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                      commandName = names['rtscts'] + 'Command',
                                      managerName = names['manager'] + str(transceiverAddress),
                                      phyUserName = names['phyUser'] + str(transceiverAddress),
+				     protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                                      arqName = names['arq'] + str(transceiverAddress),
                                      navName = names['channelState'] + str(transceiverAddress),
                                      rxStartName = names['frameSynchronization'] + str(transceiverAddress),
@@ -246,8 +247,9 @@ def getConvergenceFUN(transceiverAddress, names, config, myFUN, logger, probeLoc
 
     FUs.append(wifimac.convergence.DeAggregation(name = names['deAggregation'] + str(transceiverAddress),
                                                  commandName = names['txDuration'] + 'Command',
-                                                 phyUserName = names['phyUser'] + str(transceiverAddress),
+                                                 protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                                                  managerName = names['manager'] + str(transceiverAddress),
+                                                 phyUserName = names['phyUser'] + str(transceiverAddress),
                                                  aggregationCommandName = 'AggregationCommand',
                                                  parentLogger = logger))
     FUs.extend(wifimac.convergence.__lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs))

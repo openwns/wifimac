@@ -30,7 +30,7 @@
 #define WIFIMAC_CONVERGENCE_TXDURATIONSETTER_HPP
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
-#include <WIFIMAC/convergence/PhyUser.hpp>
+#include <WIFIMAC/management/ProtocolCalculator.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Processor.hpp>
@@ -83,13 +83,13 @@ namespace wifimac { namespace convergence {
 
         void onFUNCreated();
 
-        const std::string phyUserName;
+        const std::string protocolCalculatorName;
         const std::string managerName;
         wns::logger::Logger logger;
+        wifimac::management::ProtocolCalculator* protocolCalculator;
 
         struct Friends
         {
-            wifimac::convergence::PhyUser* phyUser;
             wifimac::lowerMAC::Manager* manager;
         } friends;
     };

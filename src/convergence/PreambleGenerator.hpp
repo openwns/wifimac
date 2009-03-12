@@ -31,6 +31,7 @@
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
+#include <WIFIMAC/management/ProtocolCalculator.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Delayed.hpp>
@@ -73,21 +74,23 @@ namespace wifimac { namespace convergence {
         const wns::ldk::CompoundPtr hasSomethingToSend() const;
         wns::ldk::CompoundPtr getSomethingToSend();
 
-		void onFUNCreated();
+	void onFUNCreated();
 
         const std::string phyUserName;
+        const std::string protocolCalculatorName;
         const std::string managerName;
 
         wns::logger::Logger logger;
 
         wns::ldk::CompoundPtr pendingCompound;
         wns::ldk::CompoundPtr pendingPreamble;
+	wifimac::management::ProtocolCalculator* protocolCalculator;
 
-		struct Friends
-		{
-			wifimac::convergence::PhyUser* phyUser;
-            wifimac::lowerMAC::Manager* manager;
-		} friends;
+	struct Friends
+	{
+		wifimac::convergence::PhyUser* phyUser;
+        	wifimac::lowerMAC::Manager* manager;
+	} friends;
 	};
 
 

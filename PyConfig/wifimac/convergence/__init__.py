@@ -50,7 +50,7 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
 
     FUs.append(TxDurationSetter(name = names['txDuration'] + str(transceiverAddress),
                                 commandName = names['txDuration'] + 'Command',
-                                phyUserName = names['phyUser'] + str(transceiverAddress),
+                                protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                                 managerName = names['manager'] + str(transceiverAddress),
                                 parentLogger = logger))
 
@@ -78,7 +78,8 @@ def __upperPart__(transceiverAddress, names, config, myFUN, logger, probeLocalID
                                  commandName = 'PreambleCommand',
                                  phyUserName = names['phyUser'] + str(transceiverAddress),
                                  managerName = names['manager'] + str(transceiverAddress),
-                                 parentLogger = logger))
+                                 protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+				 parentLogger = logger))
     return FUs
 
 def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):

@@ -31,11 +31,13 @@ class DeAggregation(openwns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.convergence.DeAggregation'
 	logger = None
 	phyUserName = None
+	protocolCalculatorName = None
 	managerName = None
 	aggregationCommandName = None
 
-	def __init__(self, name, commandName, phyUserName, managerName, aggregationCommandName, parentLogger = None):
+	def __init__(self, name, commandName, phyUserName, protocolCalculatorName, managerName, aggregationCommandName, parentLogger = None):
 		super(DeAggregation, self).__init__(functionalUnitName = name, commandName = commandName)
+		self.protocolCalculatorName = protocolCalculatorName
 		self.phyUserName = phyUserName
 		self.managerName = managerName
 		self.aggregationCommandName = aggregationCommandName
