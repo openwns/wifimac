@@ -30,12 +30,14 @@ import openwns.pyconfig
 
 import wifimac.Logger
 
-class NextFrameGetter(openwns.FUN.FunctionalUnit):
-    __plugin__ = 'wifimac.lowerMAC.NextFrameGetter'
+class NextAggFrameGetter(openwns.FUN.FunctionalUnit):
+    __plugin__ = 'wifimac.lowerMAC.NextAggFrameGetter'
 
+    bufferName = None
     protocolCalculatorName = None
-
-    def __init__(self, functionalUnitName, commandName, protocolCalculatorName, **kw):
-        super(NextFrameGetter, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
-        self.protocolCalculatorName = protocolCalculatorName
-	openwns.pyconfig.attrsetter(self, kw)
+    
+    def __init__(self, functionalUnitName, commandName, bufferName, protocolCalculatorName, **kw):
+        super(NextAggFrameGetter, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
+	self.bufferName = bufferName
+	self.protocolCalculatorName = protocolCalculatorName
+        openwns.pyconfig.attrsetter(self, kw)

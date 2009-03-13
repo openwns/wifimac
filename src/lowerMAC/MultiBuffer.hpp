@@ -124,6 +124,7 @@ namespace wifimac { namespace lowerMAC {
         virtual wns::ldk::CompoundPtr getSomethingToSend();
         unsigned int getBufferSendSize() const;
         unsigned int getSize(const ContainerType& buffer) const;
+	std::vector<Bit> getCurrentBufferSizes() const;
 
         // CanTimeout interface
         virtual void onTimeout();

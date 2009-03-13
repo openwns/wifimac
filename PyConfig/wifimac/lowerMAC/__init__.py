@@ -77,7 +77,8 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                                parentLogger = logger))
 
     FUs.append(NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
-                               commandName = names['nextFrame'] + 'Command'))
+                               protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+			       commandName = names['nextFrame'] + 'Command'))
 
     FUs.append(StopAndWaitARQ(fuName = names['arq'] + str(transceiverAddress),
                               commandName = names['arq'] + 'Command',

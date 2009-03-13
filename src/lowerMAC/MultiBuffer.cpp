@@ -317,6 +317,27 @@ MultiBuffer::getSize(const ContainerType& buffer) const
     return size;
 }
 
+std::vector<Bit> 
+MultiBuffer::getCurrentBufferSizes() const
+{
+	std::vector<Bit> sizes;
+	ContainerType *buffer = NULL;
+	if (currentBuffer != -1)
+	{
+		buffer = sendBuffers.find(currentBuffer);
+		MESSAGE_SINGLE(NORMAL,logger,"CurrentBuffer: " << currentBuffer);
+		MESSAGE_SINGLE(NORMAL,logger,"CurrentBufferPointer: " << buffer);
+		MESSAGE_SINGLE(NORMAL,logger,"CurrentBufferSize: " << buffer->size());
+		if (buffer->size() != 0)
+			for(ContainerType::const_iterator it=buffer->begin();it != buffer->end();++it)
+		    	{
+				sizes.push_back( (*it)->getLengthInBits());
+		    	}
+ 	}
+	return sizes;
+}
+
+
 void
 MultiBuffer::onTimeout()
 {

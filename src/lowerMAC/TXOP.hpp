@@ -91,7 +91,7 @@ namespace wifimac { namespace lowerMAC {
         struct Friends
         {
             wifimac::lowerMAC::Manager* manager;
-            wns::ldk::DelayedInterface* nextFrameHolder;
+            wifimac::lowerMAC::NextFrameGetter* nextFrameHolder;
             wifimac::lowerMAC::RateAdaptation* ra;
         } friends;
 

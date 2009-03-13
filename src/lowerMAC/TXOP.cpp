@@ -70,7 +70,7 @@ void TXOP::onFUNCreated()
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
 
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
-    friends.nextFrameHolder = getFUN()->findFriend<wns::ldk::DelayedInterface*>(nextFrameHolderName);
+    friends.nextFrameHolder = getFUN()->findFriend<wifimac::lowerMAC::NextFrameGetter*>(nextFrameHolderName);
     friends.ra = getFUN()->findFriend<wifimac::lowerMAC::RateAdaptation*>(raName);
     protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
@@ -126,7 +126,6 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
         // cut TXOP duration by current frame
 	phyMode = friends.manager->getPhyMode(compound->getCommandPool());
 	duration = protocolCalculator->getDuration()->getMSDU_PPDU(compound->getLengthInBits(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
-MESSAGE_SINGLE(NORMAL, this->logger,"MYSTUFF: CURRENT: " << compound->getLengthInBits() << " / " << phyMode.getDataBitsPerSymbol() << " / " << phyMode.getNumberOfSpatialStreams());
 
         this->remainingTXOPDuration = this->remainingTXOPDuration
             - duration
@@ -166,8 +165,8 @@ MESSAGE_SINGLE(NORMAL, this->logger,"MYSTUFF: CURRENT: " << compound->getLengthI
         }
 
 	phyMode = friends.ra->getPhyMode(nextCompound);
-	duration = protocolCalculator->getDuration()->getMSDU_PPDU(nextCompound->getLengthInBits(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
-MESSAGE_SINGLE(NORMAL, this->logger,"MYSTUFF: NEXT: " << nextCompound->getLengthInBits() << " / " << phyMode.getDataBitsPerSymbol() << " / " << phyMode.getNumberOfSpatialStreams());
+	duration = protocolCalculator->getDuration()->getFrame(friends.nextFrameHolder->getNextSize(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
+
         wns::simulator::Time nextFrameExchangeDuration =
             this->sifsDuration
             + duration
