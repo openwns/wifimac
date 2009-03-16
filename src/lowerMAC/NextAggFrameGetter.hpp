@@ -26,18 +26,20 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_NEXTFRAMEGETTER_HPP
-#define WIFIMAC_LOWERMAC_NEXTFRAMEGETTER_HPP
+#ifndef WIFIMAC_LOWERMAC_NEXTAGGFRAMEGETTER_HPP
+#define WIFIMAC_LOWERMAC_NEXTAGGFRAMEGETTER_HPP
 
 #include <WNS/ldk/Delayed.hpp>
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Command.hpp>
+#include <WIFIMAC/lowerMAC/NextFrameGetter.hpp>
+#include <WIFIMAC/lowerMAC/MultiBuffer.hpp>
 #include <WIFIMAC/management/ProtocolCalculator.hpp>
 
 namespace wifimac { namespace lowerMAC {
 
     /**
-	 * @brief NextFrameGetter enables peek-ahead of the next compound
+	 * @brief NextAggFrameGetter enables peek-ahead of the next compound(s)
 	 *
      * On first sight, NextFrameGetter is a simple store-and-forward FU, without
      * any functionality that alters the compound itself. The only difference to
@@ -52,65 +54,36 @@ namespace wifimac { namespace lowerMAC {
      * Recursion by multiple doSendData is disabled by the use of a "inWakeup"
      * variable.
      */
-    class NextFrameGetter:
-        public wns::ldk::fu::Plain<NextFrameGetter, wns::ldk::EmptyCommand>,
-        public wns::ldk::DelayedInterface
+    class NextAggFrameGetter:
+	  public wifimac::lowerMAC::NextFrameGetter
     {
     public:
 
-        NextFrameGetter(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& /*config*/);
+        NextAggFrameGetter(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& /*config*/);
 
         // Delayed interface
-        virtual void processIncoming(const wns::ldk::CompoundPtr& compound);
         virtual void processOutgoing(const wns::ldk::CompoundPtr&);
-        virtual bool hasCapacity() const;
-        virtual const wns::ldk::CompoundPtr hasSomethingToSend() const;
-        virtual wns::ldk::CompoundPtr getSomethingToSend();
 
 	virtual Bit getNextSize() const;
-
-        // compoundHandlerInterface
-        void
-        doSendData(const wns::ldk::CompoundPtr& compound)
-            {
-                processOutgoing(compound);
-                tryToSend();
-            };// doSendData
-        void
-        doOnData(const wns::ldk::CompoundPtr& compound)
-            {
-                processIncoming(compound);
-                tryToSend();
-            };// doOnData
-
-        bool
-        doIsAccepting(const wns::ldk::CompoundPtr& /* compound */) const
-            {
-                return hasCapacity();
-            }; // doIsAccpting
-
-        void
-        doWakeup()
-            {
-                tryToSend();
-            }; // doWakeup
-
-        // the special tryToSend method...
-        void tryToSend();
 
     private:
 	void onFUNCreated();
 
-	const std::string protocolCalculatorName;
+        const std::string bufferName;
+        const std::string protocolCalculatorName;
         wifimac::management::ProtocolCalculator *protocolCalculator;
 
-        wns::ldk::CompoundPtr storage;
-        bool inWakeup;
+	struct Friends
+        {
+            wifimac::lowerMAC::MultiBuffer* buffer;
+        } friends;
 
+	int32_t numOfCompounds;
+	Bit PSDUSize;
     };
 
 
 } // mac
 } // wifimac
 
-#endif // WIFIMAC_LOWERMAC_NEXTFRAMEGETTER_HPP
+#endif // WIFIMAC_LOWERMAC_NEXTAGGFRAMEGETTER_HPP

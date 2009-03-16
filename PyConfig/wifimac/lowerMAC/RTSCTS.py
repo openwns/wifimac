@@ -48,7 +48,7 @@ class RTSCTS(openwns.FUN.FunctionalUnit):
     """ Name in FU Factory """
 
     logger = None
-
+    protocolCalculatorName = None
     phyUserName = None
     managerName = None
     arqName = None
@@ -58,10 +58,11 @@ class RTSCTS(openwns.FUN.FunctionalUnit):
 
     myConfig = None
 
-    def __init__(self, functionalUnitName, commandName, managerName, phyUserName, arqName, navName, rxStartName, txStartEndName, config, parentLogger = None, **kw):
+    def __init__(self, functionalUnitName, commandName, managerName, protocolCalculatorName, phyUserName, arqName, navName, rxStartName, txStartEndName, config, parentLogger = None, **kw):
         super(RTSCTS, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
         self.managerName = managerName
         self.phyUserName = phyUserName
+        self.protocolCalculatorName = protocolCalculatorName
         self.arqName = arqName
         self.navName = navName
         self.rxStartName = rxStartName

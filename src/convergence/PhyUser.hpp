@@ -81,16 +81,6 @@ namespace wifimac { namespace convergence {
 		/** @brief Frequency tuning */
 		void setFrequency(double frequency);
 
-		/**
-		 * @brief Returns the duration of the PLCP Header, including the OFDM preamble
-		 *    and the symbol with the PHY-Protocol Information.
-		 */
-		wns::simulator::Time getPreambleDuration() const;
-
-		/** @brief Calculates the transmission duration for the given compound. */
-		wns::simulator::Time getPSDUDuration(const wns::ldk::CompoundPtr& compound) const;
-        wns::simulator::Time getPSDUDuration(const wns::ldk::CompoundPtr& compound, const PhyMode pm) const;
-
 		wns::Ratio getExpectedPostSINRFactor(unsigned int nss, unsigned int numRx);
 
 	private:

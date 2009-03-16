@@ -30,7 +30,8 @@
 #define WIFIMAC_CONVERGENCE_DEAGGREGATION_HPP
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
-#include <WIFIMAC/convergence/PhyUser.hpp>
+#include <WIFIMAC/management/ProtocolCalculator.hpp>
+
 #include <WIFIMAC/convergence/TxDurationSetter.hpp>
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 
@@ -108,7 +109,7 @@ namespace wifimac { namespace convergence {
         void onTimeout();
 
         const std::string managerName;
-        const std::string phyUserName;
+        const std::string protocolCalculatorName;
         const std::string txStartEndName;
         const std::string aggregationCommandName;
 
@@ -127,12 +128,12 @@ namespace wifimac { namespace convergence {
         int numEntries;
 
         wns::logger::Logger logger;
+	wifimac::management::ProtocolCalculator *protocolCalculator;
 
-		struct Friends
-		{
-			wifimac::convergence::PhyUser* phyUser;
-            wifimac::lowerMAC::Manager* manager;
-		} friends;
+	struct Friends
+	{
+	           wifimac::lowerMAC::Manager* manager;
+	} friends;
 	};
 
 

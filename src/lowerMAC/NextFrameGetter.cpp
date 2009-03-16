@@ -28,6 +28,7 @@
 
 #include <WIFIMAC/lowerMAC/NextFrameGetter.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
+#include <DLL/Layer2.hpp>
 
 using namespace wifimac::lowerMAC;
 
@@ -37,6 +38,19 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
     "wifimac.lowerMAC.NextFrameGetter",
     wns::ldk::FUNConfigCreator);
 
+NextFrameGetter::NextFrameGetter(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
+            wns::ldk::fu::Plain<NextFrameGetter, wns::ldk::EmptyCommand>(fun),
+            storage(),
+	    protocolCalculatorName(config_.get<std::string>("protocolCalculatorName")),
+            inWakeup(false)
+{
+    protocolCalculator = NULL;
+}
+
+void NextFrameGetter::onFUNCreated()
+{
+    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
+}
 
 void
 NextFrameGetter::processIncoming(const wns::ldk::CompoundPtr& compound)
@@ -75,6 +89,16 @@ NextFrameGetter::getSomethingToSend()
     storage = wns::ldk::CompoundPtr();
     return it;
 } // getSomethingToSend
+
+Bit 
+NextFrameGetter::getNextSize() const
+{
+	if (storage == wns::ldk::CompoundPtr())
+	{
+		return 0;
+	}
+	return protocolCalculator->getFrameLength()->getPSDU(storage->getLengthInBits());
+}
 
 void
 NextFrameGetter::tryToSend()

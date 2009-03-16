@@ -204,7 +204,7 @@ Duration::getBlockACK(unsigned int streams, unsigned int bandwidth, std::string 
 }
 
 wns::simulator::Time
-Duration::getPPDU(Bit msduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::getMSDU_PPDU(Bit msduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
     return(getFrame(pc->getFrameLength()->getPSDU(msduFrameSize),
                     dbps,
@@ -212,6 +212,17 @@ Duration::getPPDU(Bit msduFrameSize, unsigned int dbps, unsigned int streams, un
                     bandwidth,
                     plcpMode));
 }
+
+wns::simulator::Time
+Duration::getMPDU_PPDU(Bit mpduSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+{
+    return(getFrame(mpduSize,
+                    dbps,
+                    streams,
+                    bandwidth,
+                    plcpMode));
+}
+
 
 wns::simulator::Time
 Duration::getA_MPDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const

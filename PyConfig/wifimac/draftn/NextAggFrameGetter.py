@@ -24,21 +24,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
 import openwns.FUN
+import openwns.pyconfig
+
 import wifimac.Logger
 
-class DeAggregation(openwns.FUN.FunctionalUnit):
-	__plugin__ = 'wifimac.convergence.DeAggregation'
-	logger = None
-	phyUserName = None
-	protocolCalculatorName = None
-	managerName = None
-	aggregationCommandName = None
+class NextAggFrameGetter(openwns.FUN.FunctionalUnit):
+    __plugin__ = 'wifimac.lowerMAC.NextAggFrameGetter'
 
-	def __init__(self, name, commandName, phyUserName, protocolCalculatorName, managerName, aggregationCommandName, parentLogger = None):
-		super(DeAggregation, self).__init__(functionalUnitName = name, commandName = commandName)
-		self.protocolCalculatorName = protocolCalculatorName
-		self.phyUserName = phyUserName
-		self.managerName = managerName
-		self.aggregationCommandName = aggregationCommandName
-		self.logger = wifimac.Logger.Logger("DeAggregation", parent = parentLogger)
+    bufferName = None
+    protocolCalculatorName = None
+    
+    def __init__(self, functionalUnitName, commandName, bufferName, protocolCalculatorName, **kw):
+        super(NextAggFrameGetter, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
+	self.bufferName = bufferName
+	self.protocolCalculatorName = protocolCalculatorName
+        openwns.pyconfig.attrsetter(self, kw)

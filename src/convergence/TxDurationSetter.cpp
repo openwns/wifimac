@@ -27,6 +27,7 @@
  ******************************************************************************/
 
 #include <WIFIMAC/convergence/TxDurationSetter.hpp>
+#include <DLL/Layer2.hpp>
 
 using namespace wifimac::convergence;
 
@@ -39,14 +40,14 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
 TxDurationSetter::TxDurationSetter(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     wns::ldk::fu::Plain<TxDurationSetter, TxDurationSetterCommand>(fun),
 
-    phyUserName(config_.get<std::string>("phyUserName")),
+    protocolCalculatorName(config_.get<std::string>("protocolCalculatorName")),
     managerName(config_.get<std::string>("managerName")),
 
     logger(config_.get("logger"))
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "created");
 
-    friends.phyUser = NULL;
+    protocolCalculator = NULL;
     friends.manager = NULL;
 }
 
@@ -59,7 +60,7 @@ void TxDurationSetter::onFUNCreated()
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
 
-    friends.phyUser = getFUN()->findFriend<wifimac::convergence::PhyUser*>(phyUserName);
+    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
 }
 
@@ -73,12 +74,14 @@ void
 TxDurationSetter::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
     TxDurationSetterCommand* command = activateCommand(compound->getCommandPool());
+    wifimac::convergence::PhyMode phyMode = friends.manager->getPhyMode(compound->getCommandPool());
 
     // calculate tx duration
-    wns::simulator::Time frameTxDuration = 0;
+    wns::simulator::Time preambleTxDuration = protocolCalculator->getDuration()->getPreamble(phyMode.getNumberOfSpatialStreams(),std::string("Basic"));
+
     if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
     {
-        command->local.txDuration = friends.phyUser->getPreambleDuration();
+        command->local.txDuration = preambleTxDuration;
 
         MESSAGE_BEGIN(NORMAL, this->logger, m, "Preamble");
         m << ": duration " << command->local.txDuration;
@@ -86,11 +89,11 @@ TxDurationSetter::processOutgoing(const wns::ldk::CompoundPtr& compound)
     }
     else
     {
-        command->local.txDuration = friends.phyUser->getPSDUDuration(compound);
+        command->local.txDuration = protocolCalculator->getDuration()->getMPDU_PPDU(compound->getLengthInBits(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic")) - preambleTxDuration;
 
         MESSAGE_BEGIN(NORMAL, this->logger, m, "Command");
         m << " start " << wns::simulator::getEventScheduler()->getTime();
-        m << " stop " << wns::simulator::getEventScheduler()->getTime() + frameTxDuration;
+        m << " stop " << wns::simulator::getEventScheduler()->getTime() + command->local.txDuration;
         MESSAGE_END();
 
     }

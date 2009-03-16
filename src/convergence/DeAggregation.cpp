@@ -28,6 +28,8 @@
 
 #include <WIFIMAC/convergence/DeAggregation.hpp>
 
+#include <DLL/Layer2.hpp>
+
 #include <WNS/ldk/concatenation/Concatenation.hpp>
 
 
@@ -43,7 +45,7 @@ DeAggregation::DeAggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View&
     wns::ldk::fu::Plain<DeAggregation, DeAggregationCommand>(fun),
 
     managerName(config_.get<std::string>("managerName")),
-    phyUserName(config_.get<std::string>("phyUserName")),
+    protocolCalculatorName(config_.get<std::string>("protocolCalculatorName")),
     txStartEndName(config_.get<std::string>("phyUserName")),
     aggregationCommandName(config_.get<std::string>("aggregationCommandName")),
 
@@ -57,7 +59,7 @@ DeAggregation::DeAggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View&
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "created");
 
-    friends.phyUser = NULL;
+    protocolCalculator = NULL;
     friends.manager = NULL;
 }
 
@@ -69,8 +71,7 @@ DeAggregation::~DeAggregation()
 void DeAggregation::onFUNCreated()
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
-
-    friends.phyUser = getFUN()->findFriend<wifimac::convergence::PhyUser*>(phyUserName);
+    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
 
     // Observe txStartEnd
@@ -168,10 +169,12 @@ DeAggregation::processOutgoing(const wns::ldk::CompoundPtr& compound)
 
     // calculate tx duration
     DeAggregationCommand* command = activateCommand(compound->getCommandPool());
-
-    if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
+    wifimac::convergence::PhyMode phyMode = friends.manager->getPhyMode(compound->getCommandPool());
+    wns::simulator::Time preambleTxDuration = protocolCalculator->getDuration()->getPreamble(phyMode.getNumberOfSpatialStreams(),std::string("Basic"));
+    
+if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
     {
-        command->local.txDuration = friends.phyUser->getPreambleDuration();
+        command->local.txDuration = preambleTxDuration;
         if(getFUN()->getCommandReader(aggregationCommandName)->commandIsActivated(compound->getCommandPool()))
         {
             // preamble of aggregation command
@@ -189,7 +192,7 @@ DeAggregation::processOutgoing(const wns::ldk::CompoundPtr& compound)
     this->currentTxCompound = compound;
     this->doSignalTxStart = true;
 
-    wns::simulator::Time frameTxDuration = friends.phyUser->getPSDUDuration(compound);
+    wns::simulator::Time frameTxDuration = protocolCalculator->getDuration()->getMPDU_PPDU(compound->getLengthInBits(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic")) - preambleTxDuration;
 
     if(not getFUN()->getCommandReader(aggregationCommandName)->commandIsActivated(compound->getCommandPool()))
     {

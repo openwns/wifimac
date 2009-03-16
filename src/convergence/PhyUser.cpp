@@ -270,36 +270,6 @@ void PhyUser::setFrequency(double frequency)
     }
 }
 
-wns::simulator::Time PhyUser::getPreambleDuration() const
-{
-    return(preambleDuration + phyModes.getSymbolDuration());
-}
-
-wns::simulator::Time PhyUser::getPSDUDuration(const wns::ldk::CompoundPtr& compound, const PhyMode pm) const
-{
-    Bit length = compound->getLengthInBits();
-    // get the PSDU size
-    int numSymbols = pm.getNumSymbols(length + service + tail);
-
-    wns::simulator::Time duration = phyModes.getSymbolDuration() * numSymbols;
-
-    MESSAGE_BEGIN(NORMAL, logger, m, "calcDuration: ");
-    m << "psduSize = " << length;
-    m << "+" << service+tail;
-    m << " @ " << pm << ", " << pm.getNumberOfSpatialStreams() << " stream(s)";
-    m << " -> " << numSymbols << " symbols";
-    m << " a " << phyModes.getSymbolDuration();
-    m << " -> " << duration;
-    MESSAGE_END();
-
-    return(duration);
-}
-
-wns::simulator::Time PhyUser::getPSDUDuration(const wns::ldk::CompoundPtr& compound) const
-{
-    return(this->getPSDUDuration(compound, friends.manager->getPhyMode(compound->getCommandPool())));
-}
-
 PhyModeProvider* PhyUser::getPhyModeProvider()
 {
     return &phyModes;

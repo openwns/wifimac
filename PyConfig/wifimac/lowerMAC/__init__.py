@@ -77,7 +77,8 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                                parentLogger = logger))
 
     FUs.append(NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
-                               commandName = names['nextFrame'] + 'Command'))
+                               protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+			       commandName = names['nextFrame'] + 'Command'))
 
     FUs.append(StopAndWaitARQ(fuName = names['arq'] + str(transceiverAddress),
                               commandName = names['arq'] + 'Command',
@@ -104,7 +105,7 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs.append(TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
                     commandName = names['txop'] + 'Command',
                     managerName = names['manager'] +  str(transceiverAddress),
-                    phyUserName =  names['phyUser'] + str(transceiverAddress),
+                    protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                     nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
                     raName = names['ra'] + str(transceiverAddress),
                     config = config.txop,
@@ -165,6 +166,7 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
                     commandName = names['rtscts'] + 'Command',
                     managerName = names['manager'] + str(transceiverAddress),
                     phyUserName = names['phyUser'] + str(transceiverAddress),
+		    protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                     arqName = names['arq'] + str(transceiverAddress),
                     navName = names['channelState'] + str(transceiverAddress),
                     rxStartName = names['frameSynchronization'] + str(transceiverAddress),
