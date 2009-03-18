@@ -29,8 +29,8 @@
 #include <WIFIMAC/management/Beacon.hpp>
 #include <WIFIMAC/convergence/PhyUserCommand.hpp>
 #include <WIFIMAC/Layer2.hpp>
-
 #include <WNS/Exception.hpp>
+#include <WNS/service/dll/StationTypes.hpp>
 #include <DLL/StationManager.hpp>
 
 using namespace wifimac::management;
@@ -70,7 +70,7 @@ Beacon::onFUNCreated()
 
     if (config.get<bool>("myConfig.enabled"))
     {
-        assure(friends.manager->getStationType() != dll::StationTypes::UT(),
+        assure(friends.manager->getStationType() != wns::service::dll::StationTypes::UT(),
                "STAs cannot transmit a beacon, as nobody can synchonize to them");
         // starting the periodic beacon transmission
         wns::simulator::Time delay = config.get<wns::simulator::Time>("myConfig.delay");
@@ -79,7 +79,7 @@ Beacon::onFUNCreated()
         MESSAGE_SINGLE(NORMAL, this->logger, "Starting beacon with delay " << delay << " and period " << period);
     }
 
-    if (friends.manager->getStationType() == dll::StationTypes::UT())
+    if (friends.manager->getStationType() == wns::service::dll::StationTypes::UT())
     {
         scanFrequencies = config.getSequence("myConfig.scanFrequencies");
         freqIter = scanFrequencies.begin<double>();
@@ -103,7 +103,7 @@ void Beacon::processIncoming(const wns::ldk::CompoundPtr& compound)
     }
 
     // store the received power in case of later association
-    if(friends.manager->getStationType() == dll::StationTypes::UT() and this->hasTimeoutSet())
+    if(friends.manager->getStationType() == wns::service::dll::StationTypes::UT() and this->hasTimeoutSet())
     {
 
         // to strings are equal if compare returns 0
@@ -169,7 +169,7 @@ Beacon::periodically()
 void
 Beacon::onTimeout()
 {
-    assure(friends.manager->getStationType() == dll::StationTypes::UT(), "Only STAs (UTs) can become associated");
+    assure(friends.manager->getStationType() == wns::service::dll::StationTypes::UT(), "Only STAs (UTs) can become associated");
 
     MESSAGE_SINGLE(NORMAL, this->logger, "Timeout for beacon scanning on frequency " << *freqIter);
     ++freqIter;

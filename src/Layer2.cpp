@@ -31,7 +31,7 @@
 #include <WIFIMAC/pathselection/IPathSelection.hpp>
 #include <WIFIMAC/pathselection/Metric.hpp>
 #include <WIFIMAC/helper/contextprovider/CommandInformation.hpp>
-
+#include <WNS/service/dll/StationTypes.hpp>
 #include <WNS/Assure.hpp>
 #include <DLL/StationManager.hpp>
 
@@ -97,7 +97,7 @@ Layer2::registerManager(wifimac::lowerMAC::Manager* manager,
     // Register transceiver as an own station, if it has a different address
     if(address != this->getDLLAddress())
     {
-        assure(getStationType() != dll::StationTypes::UT(), "UT do not support multiple addresses, because they have no support pathselection");
+        assure(getStationType() != wns::service::dll::StationTypes::UT(), "UT do not support multiple addresses, because they have no support pathselection");
 
         this->getStationManager()->registerStation(this->stationID, address, this);
 
