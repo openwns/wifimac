@@ -67,6 +67,12 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
     }
     unsigned int maxNumSS = (numTx < numRx) ? numTx : numRx;
 
+    assure(curPhyModeId >= friends.phyUser->getPhyModeProvider()->getLowestId(),
+           "Invalid curPhyModeId");
+    assure(curSpatialStreams >= 1, "Invalid curSpatialStreams");
+    wifimac::convergence::PhyMode curPhyMode = friends.phyUser->getPhyModeProvider()->getPhyMode(curPhyModeId);
+    curPhyMode.setNumberOfSpatialStreams(curSpatialStreams);
+
     if(not per->knowsPER(receiver))
     {
         assure(numTransmissions >= 1, "Must have at least one transmission");
@@ -74,17 +80,37 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
         // if no information about the PER is available (due to a recent change),
         // we take the current phyMode and reduce it by the number of
         // retransmissions
-        int phyModeId = std::max(curPhyModeId - (static_cast<int>(numTransmissions) - 1),
-                                 friends.phyUser->getPhyModeProvider()->getLowestId());
+        int phyModeId = curPhyModeId - (static_cast<int>(numTransmissions)-1);
+        int ss = curSpatialStreams;
+        if(phyModeId < friends.phyUser->getPhyModeProvider()->getLowestId())
+        {
+            if(ss > 1)
+            {
+                --ss;
+                phyModeId = curPhyModeId;
+            }
+            else
+            {
+                phyModeId = friends.phyUser->getPhyModeProvider()->getLowestId();
+            }
+        }
+
+        assure(phyModeId >= friends.phyUser->getPhyModeProvider()->getLowestId(),
+               "Invalid phyModeId");
+        assure(ss >= 1, "Invalid ss");
+
+        wifimac::convergence::PhyMode phyMode = friends.phyUser->getPhyModeProvider()->getPhyMode(phyModeId);
+        phyMode.setNumberOfSpatialStreams(ss);
+
         MESSAGE_BEGIN(NORMAL, *logger, m, "RA unknown PER");
         m << " to receiver " << receiver;
         m << " transmissions: " << numTransmissions;
         m << " numTx: " << numTx;
         m << " numRx: " << numRx;
-        m << " use " << friends.phyUser->getPhyModeProvider()->getPhyMode(phyModeId);
-        m << "*" << curSpatialStreams;
+        m << " use " << phyMode;
         MESSAGE_END();
-        return(friends.phyUser->getPhyModeProvider()->getPhyMode(phyModeId));
+
+        return(phyMode);
     }
 
     double curPER = per->getPER(receiver);
@@ -111,7 +137,7 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
         }
     }
 
-    if(curPER < 0.05)
+    if(curPER < 0.01)
     {
         // nearly all frames are successful -> go up
         if(curPhyModeId < friends.phyUser->getPhyModeProvider()->getHighestId())
@@ -130,17 +156,22 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
         }
     }
 
-    if((curPhyModeId != nextPhyModeId) or (curSpatialStreams != nextSpatialStreams))
+    assure(nextPhyModeId >= friends.phyUser->getPhyModeProvider()->getLowestId(),
+           "Invalid nextPhyModeId");
+    assure(nextSpatialStreams >= 1, "Invalid nextSpatialStreams");
+
+    wifimac::convergence::PhyMode nextPhyMode = friends.phyUser->getPhyModeProvider()->getPhyMode(nextPhyModeId);
+    nextPhyMode.setNumberOfSpatialStreams(nextSpatialStreams);
+
+    if(nextPhyMode != curPhyMode)
     {
         MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
         m << " to receiver " << receiver;
         m << " per: " << per->getPER(receiver);
         m << " numTx: " << numTx;
         m << " numRx: " << numRx;
-        m << " going from " << friends.phyUser->getPhyModeProvider()->getPhyMode(curPhyModeId);
-        m << "*" << curSpatialStreams;
-        m << " to " << friends.phyUser->getPhyModeProvider()->getPhyMode(nextPhyModeId);
-        m << "*" << nextSpatialStreams;
+        m << " going from " << curPhyMode;
+        m << " to " << nextPhyMode;
         MESSAGE_END();
 
         per->reset(receiver);
@@ -149,8 +180,5 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
     curPhyModeId = nextPhyModeId;
     curSpatialStreams = nextSpatialStreams;
 
-    wifimac::convergence::PhyMode mcs = friends.phyUser->getPhyModeProvider()->getPhyMode(curPhyModeId);
-    mcs.setNumberOfSpatialStreams(curSpatialStreams);
-
-    return(mcs);
+    return(nextPhyMode);
 }

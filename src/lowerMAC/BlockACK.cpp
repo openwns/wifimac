@@ -711,14 +711,15 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
         if((snIt == ackSNs.end()) or (*snIt != onAirSN))
         {
              // retransmission
-            if(++(parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter) > parent->maximumTransmissions)
+            int txCounter = ++(parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
+            perMIB->onFailedTransmission(adr);
+            if(txCounter > parent->maximumTransmissions)
             {
                 MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
                 m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
                 m << " -> reached max transmissions, drop";
                 MESSAGE_END();
-                parent->numTxAttemptsProbe->put(onAirIt->first, parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
-                perMIB->onFailedTransmission(adr);
+                parent->numTxAttemptsProbe->put(onAirIt->first, txCounter);
             }
             else
             {
@@ -726,7 +727,6 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
                  m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
                  m << " -> retransmit";
                  MESSAGE_END();
-                 perMIB->onFailedTransmission(adr);
 
                 if(insertBack)
                 {

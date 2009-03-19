@@ -35,6 +35,11 @@ import wifimac.Layer2
 import wifimac.support.Rang
 import wifimac.Logger
 
+import ip.VirtualARP
+import ip.VirtualDNS
+import wifimac.pathselection
+
+
 import ip.Component
 import ip
 from ip.AddressResolver import FixedAddressResolver, VirtualDHCPResolver
@@ -205,7 +210,7 @@ class NodeCreator(object):
 
 		return newMP
 
-	def createSTA ( self, idGen, managerPool, config) :
+	def createSTA ( self, idGen, managerPool, rang, config, loggerLevel, dllLoggerLevel) :
 		id = idGen.next()
 		newSTA = Station("STA" + str(id), id)
 
@@ -239,6 +244,17 @@ class NodeCreator(object):
 				_dllDataTransmission = newSTA.dll.dataTransmission,
 				_dllNotification = newSTA.dll.notification )
 
+		# IP Route Table
+		newSTA.nl.addRoute("192.168.1.0", "255.255.255.0", "0.0.0.0", "wifi")
+		newSTA.nl.addRoute(rang.nl.dataLinkLayers[0].addressResolver.address,
+				"255.255.255.255",
+				rang.nl.dataLinkLayers[0].addressResolver.address,
+				"wifi")
+		rang.nl.addRoute(newSTA.nl.dataLinkLayers[0].addressResolver.address,
+				 "255.255.255.255",
+				 newSTA.nl.dataLinkLayers[0].addressResolver.address,
+				 "wifi")
+
 		# create load generator
 		newSTA.load = constanze.node.ConstanzeComponent ( newSTA, "constanze" )
 
@@ -248,9 +264,14 @@ class NodeCreator(object):
 							    mobility = rise.Mobility.No ( openwns.Position() ))
 		newSTA.mobility.mobility.setCoords ( config.position )
 
+		newSTA.logger.level = loggerLevel
+		newSTA.dll.logger.level = dllLoggerLevel
+
+
 		return newSTA
 
-	def createRANG(self):
+	def createRANG(self, listener, loggerLevel,
+		       listenerWindowSize = 1.0, listenerSampleInterval = 0.5):
 		rang = Station('RANG', (256*255)-1)
 
 		# create dll
@@ -274,4 +295,33 @@ class NodeCreator(object):
 		# create load generator
 		rang.load = constanze.node.ConstanzeComponent(rang, "constanze")
 
+		rang.logger.level = loggerLevel
+
+		if(listener):
+			ipListenerBinding = constanze.node.IPListenerBinding(rang.nl.domainName, parentLogger=rang.logger)
+			listener = constanze.node.Listener(rang.nl.domainName + ".listener", probeWindow = 0.1, parentLogger=rang.logger)
+			rang.load.addListener(ipListenerBinding, listener)
+			rang.nl.windowedEndToEndProbe.config.windowSize = listenerWindowSize
+			rang.nl.windowedEndToEndProbe.config.sampleInterval = listenerSampleInterval
+
 		return rang
+
+	def createVARP(self, loggerLevel, name = "VARP", zone = "theOnlyZone"):
+		varp = ip.VirtualARP.VirtualARPServer(name, zone)
+		varp.logger.level = loggerLevel
+		return varp
+
+	def createVDNS(self, loggerLevel, name = "VDNS", root = "ip.DEFAULT.GLOBAL"):
+		vdns = ip.VirtualDNS.VirtualDNSServer(name, root)
+		vdns.logger.level = loggerLevel
+		return vdns
+
+	def createVPS(self, numNodes, loggerLevel, name = "VPS"):
+		vps = wifimac.pathselection.VirtualPSServer("VPS", numNodes = numNodes)
+		vps.logger.level = loggerLevel
+		return vps
+
+	def createVCIB(self, loggerLevel, name = "VCIB"):
+		vcibs = wifimac.management.InformationBases.VirtualCababilityInformationService(name)
+		vcibs.logger.level = loggerLevel
+		return vcibs

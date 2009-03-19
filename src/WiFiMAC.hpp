@@ -51,37 +51,44 @@
  * Additional functionality is provided by the management plane and helper
  * functionalities.
  *
- * The basis component of is wifimac::MultiRadioLayer2. It is derived from
- * dll::Layer2 and allows for multiple transceivers, each consisting of a lower
- * MAC, a convergence and a OFDM-based radio.
+ * The basis component of the WiFiMAC is wifimac::Layer2, derived from
+ * dll::Layer2. It allows for multiple transceivers, each consisting of a lower
+ * MAC, a convergence and a OFDM-based radio. The multiple transceivers are
+ * combined using the higher MAC, essentially a forwarding-entity that uses path
+ * selection algorithms to determine the optimal transceiver for the given
+ * packet destination.
  *
  * @section HigherMAC Higher MAC
  *
- * The Higher MAC provides the wifimac::pathselection functionality, including measurement
- * of the link metric.
+ * The Higher MAC provides the wifimac::pathselection functionality, including
+ * measurement of the link metric.
  *
  * @section LowerMAC Lower MAC
  *
- * The Lower MAC is all about the Distributed Contention Function (DCF) of IEEE
- * 802.11 and possible enhancements: wifimac::scheduler
+ * The Lower MAC, wifimac::lowerMAC, represents the data link layer in every transceiver. In here,
+ * the neccessary functional units for the operation of the IEEE 802.11 MAC can
+ * be found.
  *
  * @section Convergence Convergence
  *
  * wifimac::convergence provides FUs to access the OFDM physical layer, but also
  * incorporates
+ *
  * @li Error modelling, including synchronization and
  * @li Interfaces to signal the current channel state to the MAC
  *
- * @section Add Additional functionality
+ * @section Additional functionality
  *
  * wifimac::helper incorporates functions for dll::CompoundFilter,
- * contextprovider and keys.
+ * contextprovider (wifimac::helper::contextprovider) and keys.
  *
  * wifimac::management contains functions for the management plane. Most
  * importantly the wifimac::management::Beacon FU for beacon transmission and
  * reception plus association; Furthermore, the management information bases for
- * PER measurement (wifimac::management::PERInformationBase) and SINR
- * measurement (wifimac::management::SINRInformationBase)
+ *
+ * @li PER measurement (wifimac::management::PERInformationBase)
+ * @li SINR measurement (wifimac::management::SINRInformationBase)
+ * @li Node capabilities (wifimac::management::VirtualCapabilityInformationBase)
  *
  */
 

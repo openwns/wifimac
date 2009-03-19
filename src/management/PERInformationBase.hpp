@@ -38,12 +38,12 @@
 
 namespace wifimac { namespace management {
 
-	class PERInformationBase:
-		public wns::ldk::ManagementService
-	{
-	public:
-		PERInformationBase( wns::ldk::ManagementServiceRegistry*, const wns::pyconfig::View& config );
-		virtual ~PERInformationBase() {};
+    class PERInformationBase:
+        public wns::ldk::ManagementService
+    {
+    public:
+        PERInformationBase( wns::ldk::ManagementServiceRegistry*, const wns::pyconfig::View& config );
+        virtual ~PERInformationBase() {};
 
         void reset(const wns::service::dll::UnicastAddress target);
 
@@ -53,18 +53,17 @@ namespace wifimac { namespace management {
         bool knowsPER(const wns::service::dll::UnicastAddress target) const;
         double getPER(const wns::service::dll::UnicastAddress target) const;
 
-	private:
-		void
-		onMSRCreated();
+    private:
+        void
+        onMSRCreated();
 
         typedef wns::container::Registry<wns::service::dll::UnicastAddress, wns::SlidingWindow*> slidingWindowMap;
         slidingWindowMap perHolder;
 
-		wns::logger::Logger logger;
+        wns::logger::Logger logger;
         const simTimeType windowSize;
         const int minSamples;
-        const Bit frameSizeThreshold;
-	};
+    };
 } // management
 } // wifimac
 

@@ -257,8 +257,8 @@ StopAndWaitARQ::transmissionHasFailed(const wns::ldk::CompoundPtr& compound)
 
 void StopAndWaitARQ::onTimeout()
 {
-    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout of ACK")
-        this->perMIB->onFailedTransmission(friends.manager->getReceiverAddress(activeCompound->getCommandPool()));
+    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout of ACK");
+    this->perMIB->onFailedTransmission(friends.manager->getReceiverAddress(activeCompound->getCommandPool()));
     this->transmissionHasFailed(activeCompound);
 }
 

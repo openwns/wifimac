@@ -50,6 +50,7 @@ namespace wifimac { namespace convergence {
 
 namespace wifimac { namespace lowerMAC {
 
+    /** @brief */
     class ManagerCommand :
         public wifimac::IKnowsFrameTypeCommand
     {
@@ -112,10 +113,14 @@ namespace wifimac { namespace lowerMAC {
         virtual
         ~Manager();
 
-         /** @brief Processor Interface Implementation */
+        /** @brief Process incoming compounds: Do Nothing at all*/
         void processIncoming(const wns::ldk::CompoundPtr& compound);
+
+        /** @brief Process outgoing compounds: Activate command, set type to
+         * DATA and frame exchange duration to SIFS+ACK */
         void processOutgoing(const wns::ldk::CompoundPtr& compound);
 
+        /** @brief Returns the phyUser*/
         wifimac::convergence::PhyUser*
         getPhyUser();
 
@@ -123,18 +128,26 @@ namespace wifimac { namespace lowerMAC {
         dll::Layer2::StationType
         getStationType() const;
 
+        /** @brief Returns the MAC address is this transceiver. Do not use the
+         * similar function from the dll::UpperConvergence - this will give you
+         * the MAC address of the complete Layer2 */
         wns::service::dll::UnicastAddress
         getMACAddress() const;
 
+        /** @brief Start association of a STA to the AP with svrAddress */
         void
         associateWith(wns::service::dll::UnicastAddress svrAddress);
 
+        /** @brief Returns the address of the AP to which the STA is associated */
         wns::service::dll::UnicastAddress
         getAssociatedTo() const;
 
+        /** @brief Create-reply function */
         wns::ldk::CommandPool*
         createReply(const wns::ldk::CommandPool* original) const;
 
+        /** @brief Helper function for all FUs in this transceiver to create a
+         * new compound with given addresses, type, duration */
         wns::ldk::CompoundPtr
         createCompound(const wns::service::dll::UnicastAddress transmitterAddress,
                        const wns::service::dll::UnicastAddress receiverAddress,
@@ -142,11 +155,11 @@ namespace wifimac { namespace lowerMAC {
                        const wns::simulator::Time frameExchangeDuration,
                        const bool requiresDirectReply = false);
 
-        /** @brief Getter for the transmitter address */
+        /** @brief Getter for the transmitter address of the compound*/
         wns::service::dll::UnicastAddress
         getTransmitterAddress(const wns::ldk::CommandPool* commandPool) const;
 
-        /** @brief Getter for the receiver address */
+        /** @brief Getter for the receiver address of the compound*/
         wns::service::dll::UnicastAddress
         getReceiverAddress(const wns::ldk::CommandPool* commandPool) const;
 
@@ -154,29 +167,57 @@ namespace wifimac { namespace lowerMAC {
         bool
         isForMe(const wns::ldk::CommandPool* commandPool) const;
 
-        /** @brief Setter and getter for the frame type */
+        /** @brief Get the frame type */
         wifimac::FrameType
         getFrameType(const wns::ldk::CommandPool* commandPool) const;
+
+        /** @brief Set the frame type */
         void
         setFrameType(const wns::ldk::CommandPool* commandPool, const FrameType type);
 
-        /** @brief Setter and getter for the frame exchange duration */
+        /** @brief Get the frame exchange duration
+         *
+         *  The frame exchange duration denotes the expected duration of the
+         *  complete frame exchange, starting from the successful reception of
+         *  the compound where this duration is stored. E.g. an RTS contains the
+         *  sum of SIFS, CTS, SIFS, DATA, ACK. Nodes overhearing this duration
+         *  will set their NAV accordingly.
+         *
+         *  The frame exchange duration is also used for the duration field in
+         *  the preamble
+         */
         wns::simulator::Time
         getFrameExchangeDuration(const wns::ldk::CommandPool* commandPool) const;
+
+        /** @brief Set the frame exchange duration */
         void
         setFrameExchangeDuration(const wns::ldk::CommandPool* commandPool, const wns::simulator::Time duration);
 
-        /** @brief Setter and getter for the PhyMode */
+        /** @brief Get the PhyMode */
         wifimac::convergence::PhyMode
         getPhyMode(const wns::ldk::CommandPool* commandPool) const;
+
+        /** @brief Set the PhyMode using wifimac::convergence::PhyMode */
         void
         setPhyMode(const wns::ldk::CommandPool* commandPool, const wifimac::convergence::PhyMode phyMode);
+
+        /** @brief Set the PhyMode using a PhyModeId*/
         void
         setPhyMode(const wns::ldk::CommandPool* commandPool, const int phyModeId);
 
-        /** @brief Setter and getter for the directReply */
+        /** @brief Get the "requires direct reply" flag
+         *
+         *  If a compound requires a direct (i.e. after a short, constant
+         *  duration) reply, this bit is set. The receiving node must stop all
+         *  other transmission attempts and generate the accorind reply.
+         *
+         *  An examples is the RTS (requires a CTS after SIFS)
+         *
+         */
         bool
         getRequiresDirectReply(const wns::ldk::CommandPool* commandPool) const;
+
+        /** @brief Set the "requires direct reply" flag */
         void
         setRequiresDirectReply(const wns::ldk::CommandPool* commandPool, bool requiresDirectReply);
 
@@ -190,14 +231,23 @@ namespace wifimac { namespace lowerMAC {
 
         const wns::pyconfig::View config_;
         wns::logger::Logger logger_;
+
+        /** @brief Expected duration of an ACK frame*/
         const wns::simulator::Time expectedACKDuration;
+
+        /** @brief Short Interframce Space duration */
         const wns::simulator::Time sifsDuration;
 
+        /** @brief my MAC address, as given by the upper convergence */
         const wns::service::dll::UnicastAddress myMACAddress_;
+
+        /** @brief Name of the upper convergence */
         const std::string ucName_;
 
+        /** @brief Number of antennas of the receiver */
         const unsigned int numAntennas;
 
+        /** @brief In case of a STA, the AP to which the STA is associated */
         wns::service::dll::UnicastAddress associatedTo;
 
         struct Friends

@@ -31,6 +31,7 @@
 #include <WNS/PowerRatio.hpp>
 #include <WNS/pyconfig/View.hpp>
 #include <WNS/logger/Logger.hpp>
+#include <WNS/Ttos.hpp>
 
 #include <WNS/simulator/Bit.hpp>
 
@@ -79,12 +80,6 @@ namespace wifimac { namespace convergence {
          * @brief Get the number of spatial streams for transmission
          */
         unsigned int getNumberOfSpatialStreams() const;
-
-		/**
-		 * @brief Output the phyMode description
-		 */
-        std::string getString() const { return modulation_+"-"+codingRate_;};
-
         std::string getModulation() const { return modulation_;};
         std::string getRate() const { return codingRate_;};
 
@@ -119,7 +114,7 @@ namespace wifimac { namespace convergence {
 
 	inline std::ostream& operator<< (std::ostream& s, const PhyMode& p)
 	{
-		return s << p.getString();
+        return s << p.getModulation() << "-" << p.getRate() << "*" << wns::Ttos(p.getNumberOfSpatialStreams());
 	}
 }}
 
