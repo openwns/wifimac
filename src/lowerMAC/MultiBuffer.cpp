@@ -41,81 +41,80 @@ using namespace wifimac::lowerMAC;
 // if no buffer has reached the send limit, while the multi buffer still has storage capcity
 int ConstantRRSelector::getSendBuffer(const DestinationBuffers &buffers, const bool strict) 
 {
+    ContainerType *buffer;
+    DestinationBuffers::const_iterator itr;
+    const unsigned int bufferSendSize = multiBuffer->getBufferSendSize();
+    int newCurrentBuffer = -1;
+    int count = lastBuffer;
 
-   ContainerType *buffer;
-   DestinationBuffers::const_iterator itr;
-   const unsigned int bufferSendSize = multiBuffer->getBufferSendSize();
-   int newCurrentBuffer = -1;
-   int count = lastBuffer;
+    // Round Robin approach to check for the next send buffer, based on MAC Id and the last used buffer (if any)
 
-   // Round Robin approach to check for the next send buffer, based on MAC Id and the last used buffer (if any)
+    // get to the current buffer (if any, else we will start with the first buffer)
+    for (itr = buffers.begin(); (itr != buffers.end()) and (count > 0); ++itr)
+    {
+        --count;
+    }
 
-   // get to the current buffer (if any, else we will start with the first buffer)
-   for (itr = buffers.begin(); (itr != buffers.end()) and (count > 0); ++itr)
-   {
-       --count;
-   }
+    // if there was a current buffer, iterate to successor
+    if (lastBuffer >= 0)
+    {
+        if (itr != buffers.end())
+        {
+            itr++;
+        }
+        else
+        {
+            itr = buffers.begin();
+        }
+    }
+    // search for buffer following the last used to find next buffer which size meets size criteria
+    for (itr; itr != buffers.end(); itr++)
+    {
+        if ((multiBuffer->getSize(*(itr->second)) >= bufferSendSize))
+        {
+            newCurrentBuffer = itr->first;
+            break;
+        }
+    }
+    // reached the last buffer without finding a potential buffer to be send next
+    // check now buffers from first one to the last used one
+    count = lastBuffer;
+    if ((newCurrentBuffer == -1) and (lastBuffer >= 0))
+    {
+        for (itr=buffers.begin(); (itr != buffers.end()) and (count >= 0); itr++)
+        {
+            count--;
+            if ((multiBuffer->getSize(*(itr->second)) >= bufferSendSize))
+            {
+                newCurrentBuffer = itr->first;
+                break;
+            }
+        }
+    }
 
-   // if there was a current buffer, iterate to successor
-   if (lastBuffer >= 0)
-   {
-       if (itr != buffers.end())
-       {
-           itr++;
-       }
-       else
-       {
-           itr = buffers.begin();
-       }
-   }
-   // search for buffer following the last used to find next buffer which size meets size criteria
-   for (itr; itr != buffers.end(); itr++)
-   {
-       if ((multiBuffer->getSize(*(itr->second)) >= bufferSendSize))
-       {
-           newCurrentBuffer = itr->first;
-           break;
-       }
-   }
-   // reached the last buffer without finding a potential buffer to be send next
-   // check now buffers from first one to the last used one
-   count = lastBuffer;
-   if ((newCurrentBuffer == -1) and (lastBuffer >= 0))
-   {
-       for (itr=buffers.begin(); (itr != buffers.end()) and (count >= 0); itr++)
-       {
-           count--;
-           if ((multiBuffer->getSize(*(itr->second)) >= bufferSendSize))
-           {
-               newCurrentBuffer = itr->first;
-               break;
-           }
-       }
-   }
+    // no send buffer currently has met the size criteria
+    if (newCurrentBuffer == -1)
+    {
+        // return buffer with biggest size
+        if (strict == false)
+        {
+            newCurrentBuffer = buffers.begin()->first;
+            for (itr = buffers.begin(); itr != buffers.end(); itr++)
+            {
+                if (multiBuffer->getSize(*(itr->second)) > multiBuffer->getSize(*(buffers.find(newCurrentBuffer))))
+                {
+                    newCurrentBuffer = itr->first;
+                }
+            }
 
-   // no send buffer currently has met the size criteria
-   if (newCurrentBuffer == -1)
-   {
-       // return buffer with biggest size
-       if (strict == false)
-       {
-           newCurrentBuffer = buffers.begin()->first;
-           for (itr = buffers.begin(); itr != buffers.end(); itr++)
-           {
-               if (multiBuffer->getSize(*(itr->second)) > multiBuffer->getSize(*(buffers.find(newCurrentBuffer))))
-               {
-                   newCurrentBuffer = itr->first;
-               }
-           }
-
-           if (multiBuffer->getSize(*(buffers.find(newCurrentBuffer))) == 0)
-           {
-               newCurrentBuffer = -1;
-           }
-       }
-   }
-   lastBuffer = newCurrentBuffer;
-   return newCurrentBuffer;
+            if (multiBuffer->getSize(*(buffers.find(newCurrentBuffer))) == 0)
+            {
+                newCurrentBuffer = -1;
+            }
+        }
+    }
+    lastBuffer = newCurrentBuffer;
+    return newCurrentBuffer;
 }
 
 // "register" multi buffer this strategy is attached to
@@ -151,7 +150,7 @@ MultiBuffer::MultiBuffer(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& con
     bufferSendSize(config.get<int>("myConfig.sendSize")),
     incomingTimeout(config.get<wns::simulator::Time>("myConfig.timeout")),
     impatient(config.get<bool>("myConfig.impatient")),
-    stilltoBeSent(0),
+    stillToBeSend(0),
     currentSize(0),
     currentBuffer(-1),
     queueSelector()
@@ -181,7 +180,7 @@ MultiBuffer::MultiBuffer(const MultiBuffer& other) :
     sendBuffers(other.sendBuffers),
     currentSize(other.currentSize),
     currentBuffer(other.currentBuffer),
-    stilltoBeSent(other.stilltoBeSent),
+    stillToBeSend(other.stillToBeSend),
     bufferSendSize(other.bufferSendSize),
     queueSelector(wns::clone(other.queueSelector)),
     sizeCalculator(wns::clone(other.sizeCalculator)),
@@ -205,14 +204,15 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
     dll::UpperCommand* ucCommand = commandReader->readCommand<dll::UpperCommand>(compound->getCommandPool());
     int address = ucCommand->peer.targetMACAddress.getInteger();;
     unsigned int compoundSize = (*sizeCalculator)(compound);
-    ContainerType *buffer;
-    DestinationBuffers::const_iterator itr;
     bool bufferFull = false;
+
+    MESSAGE_SINGLE(NORMAL, this->logger, "process outgoing command to " <<  ucCommand->peer.targetMACAddress << " with size " << compoundSize);
 
     // aggregated sizes of all send buffers would exceed the overall limit
     if (currentSize + compoundSize > maxSize)
     {
         bufferFull = true;
+        MESSAGE_SINGLE(NORMAL, this->logger, "Buffer limit exceeded -> drop ");
     }
     else
     {
@@ -221,16 +221,11 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
             cancelTimeout();
         }
         currentSize += compoundSize;
-        if (sendBuffers.knows(address))
+        if (not sendBuffers.knows(address))
         {
-            buffer = sendBuffers.find(address);
+            sendBuffers.insert(address, new ContainerType());
         }
-        else // first time for this receiver
-        {
-            buffer = new ContainerType();
-            sendBuffers.insert(address,buffer);
-        }
-        buffer->push_back(compound);
+        sendBuffers.find(address)->push_back(compound);
         if (incomingTimeout > 0)
         {
             this->setTimeout(this->incomingTimeout);
@@ -240,18 +235,20 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
     // no send buffer met the "flush" criteria so far, maybe after we (tried to) add this new compound
     if (currentBuffer == -1)
     {
-        currentBuffer = queueSelector->getSendBuffer(sendBuffers, (!bufferFull and !impatient));
+        currentBuffer = queueSelector->getSendBuffer(sendBuffers,
+                                                     (not bufferFull and not impatient));
         if (currentBuffer != -1)
         {
             if (getSize(*(sendBuffers.find(currentBuffer))) >= bufferSendSize)
             {
-                stilltoBeSent = bufferSendSize;
+                stillToBeSend = bufferSendSize;
             }
             else
             {
-                stilltoBeSent = getSize(*(sendBuffers.find(currentBuffer)));
+                stillToBeSend = getSize(*(sendBuffers.find(currentBuffer)));
             }
         }
+        MESSAGE_SINGLE(NORMAL, this->logger, "CurrentBuffer changed to " << currentBuffer);
     }
 } // processOutgoing
 
@@ -277,22 +274,26 @@ MultiBuffer::getSomethingToSend()
    wns::ldk::CompoundPtr it = buffer->front();
    buffer->pop_front();
    currentSize -= (*sizeCalculator)(it);
-   stilltoBeSent -= (*sizeCalculator)(it);
+   stillToBeSend -= (*sizeCalculator)(it);
+
+   MESSAGE_SINGLE(NORMAL, this->logger, "getSomethingToSend, stilltoBeSend becomes " << stillToBeSend);
 
    // if all packages for the current "run" have been sent, call strategy for the next buffer (id)
-   if (stilltoBeSent <= 0)
+   if (stillToBeSend <= 0)
    {
-       currentBuffer = queueSelector->getSendBuffer(sendBuffers,!impatient);
+       currentBuffer = queueSelector->getSendBuffer(sendBuffers, not impatient);
        if (currentBuffer != -1)
        {
            if (getSize(*(sendBuffers.find(currentBuffer))) >= bufferSendSize)
            {
-               stilltoBeSent = bufferSendSize;
+               stillToBeSend = bufferSendSize;
            }
            else
            {
-               stilltoBeSent = getSize(*(sendBuffers.find(currentBuffer)));
+               stillToBeSend = getSize(*(sendBuffers.find(currentBuffer)));
            }
+
+           MESSAGE_SINGLE(NORMAL, this->logger, "Strategy selected new buffer, stilltoBeSend set to " << stillToBeSend);
        }
    }
    return it;
@@ -317,49 +318,53 @@ MultiBuffer::getSize(const ContainerType& buffer) const
     return size;
 }
 
-std::vector<Bit> 
+std::vector<Bit>
 MultiBuffer::getCurrentBufferSizes() const
 {
-	std::vector<Bit> sizes;
-	ContainerType *buffer = NULL;
-	int32_t counter =0;
-	if (currentBuffer != -1)
-	{
-		buffer = sendBuffers.find(currentBuffer);
-		if (buffer->size() != 0)
-		{
-			for(ContainerType::const_iterator it=buffer->begin();it != buffer->end();++it)
-		    	{
-				
-				sizes.push_back( (*it)->getLengthInBits());
-				counter++;
-				if (counter == stilltoBeSent)
-				{
-					break;
-				}
-		    	}
-		}
- 	}
-	return sizes;
+    std::vector<Bit> sizes;
+    ContainerType *buffer = NULL;
+    int32_t counter =0;
+    if (currentBuffer != -1)
+    {
+        buffer = sendBuffers.find(currentBuffer);
+        if (buffer->size() != 0)
+        {
+            for(ContainerType::const_iterator it=buffer->begin();it != buffer->end();++it)
+            {
+                sizes.push_back( (*it)->getLengthInBits());
+                counter++;
+                if (counter == stillToBeSend)
+                {
+                    break;
+                }
+            }
+        }
+    }
+    return sizes;
 }
 
 
 void
 MultiBuffer::onTimeout()
 {
+
     if (currentBuffer == -1) // no buffer meets the strategy criteria
     {
         // get the buffer with the most compounds, to be sent next
         currentBuffer = queueSelector->getSendBuffer(sendBuffers, false);
         if (currentBuffer != -1)
         {
-            stilltoBeSent = this->getSize(*(sendBuffers.find(currentBuffer)));
+            stillToBeSend = this->getSize(*(sendBuffers.find(currentBuffer)));
         }
         else // no waiting compounds at all no new timer setting needed
         {
+            MESSAGE_SINGLE(NORMAL, this->logger, "Timeout, but no waiting compounds");
             return;
         }
     }
+    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout, stillToBeSend set to " << stillToBeSend);
     // restart countdown
     this->setTimeout(this->incomingTimeout);
+
+    tryToSend();
 }

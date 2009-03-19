@@ -74,7 +74,6 @@ void ErrorModelling::processIncoming(const wns::ldk::CompoundPtr& compound)
 
     emc->local.per = pc->getErrorProbability()->getPER(sinr, commandPoolSize + dataSize, phyMode);
 
-
     MESSAGE_BEGIN(NORMAL, logger, m, "New compound with SNR " << sinr);
     m << " len " << commandPoolSize + dataSize;
     m << " phyMode " << phyMode;

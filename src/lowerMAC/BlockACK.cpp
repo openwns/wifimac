@@ -71,6 +71,7 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
     nextFirstCompound(),
     nextTransmissionSN(),
     baState(idle),
+    inWakeup(false),
 
     logger(config_.get("logger"))
 {
@@ -121,7 +122,8 @@ BlockACK::BlockACK(const BlockACK& other) :
     baReqBits(other.baReqBits),
     maximumTransmissions(other.maximumTransmissions),
     impatientBAreqTransmission(other.impatientBAreqTransmission),
-    sizeCalculator(wns::clone(other.sizeCalculator))
+    sizeCalculator(wns::clone(other.sizeCalculator)),
+    inWakeup(other.inWakeup)
 {
 }
 
@@ -181,7 +183,10 @@ BlockACK::hasCapacity() const
     // if the last compound to be processed has a different receiver as the
     // current one, don't accept further compounds till current send block is
     // transmitted successfully OR buffer capacity has been reached
-    return((this->storageSize() < this->capacity) and (currentReceiver == nextReceiver));
+    return((this->storageSize() < this->capacity) and 
+           (currentReceiver == nextReceiver) and
+           ((txQueue == NULL) or
+            (not txQueue->waitsForACK())));
 }
 
 void
@@ -227,6 +232,18 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
     }
     nextReceiver = receiver;
     MESSAGE_SINGLE(NORMAL, this->logger, "Stored outgoing frame, remaining capacity " << this->capacity - this->storageSize());
+
+    // try to get more frames before sending
+    while(hasCapacity() and
+          (not inWakeup) and
+          (sendBuffer->hasSomethingToSend() != wns::ldk::CompoundPtr()))
+    {
+        MESSAGE_SINGLE(NORMAL, this->logger, "Ask sendBuffer for more frames");
+        // avoid recursion
+        inWakeup = true;
+        getReceptor()->wakeup();
+        inWakeup = false;
+    }
 }
 
 void
@@ -345,14 +362,20 @@ BlockACK::getACK()
 const wns::ldk::CompoundPtr
 BlockACK::hasData() const
 {
-        if (txQueue != NULL)
-        {
-                return(txQueue->hasData());
-        }
-        else
-        {
-                return wns::ldk::CompoundPtr();
-        }
+    if(inWakeup)
+    {
+        // currently asking the sendBuffer for more frames -> delay transmission
+        return wns::ldk::CompoundPtr();
+    }
+
+    if (txQueue != NULL)
+    {
+        return(txQueue->hasData());
+    }
+    else
+    {
+        return wns::ldk::CompoundPtr();
+    }
 } // hasData
 
 wns::ldk::CompoundPtr
@@ -363,17 +386,6 @@ BlockACK::getData()
     // get the next waiting compound
     wns::ldk::CompoundPtr it = txQueue->getData();
 
-    // if there are more compounds in the send buffer FU above the BlockACK for
-    // the same receiver, which haven't been processed yet and the BlockACK FU
-    // accepts them, "manually" store the next compound waiting in the send
-    // buffer FU
-    if ((txQueue->getNumWaitingPDUs() == 0) and
-        (hasCapacity()) and
-        (sendBuffer->hasSomethingToSend() != wns::ldk::CompoundPtr()))
-    {
-        MESSAGE_SINGLE(NORMAL, this->logger, "getData(): one look ahead insert of next compound from send buffer");
-        processOutgoing(sendBuffer->getSomethingToSend());
-    }
     return(it);
 } // getData
 
@@ -701,6 +713,8 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
     }
 
     std::set<BlockACKCommand::SequenceNumber>::iterator snIt = ackSNs.begin();
+    assure(isSortedBySN(onAirQueue),
+           "onAirQueue is not sorted by SN!");
 
     for(std::deque<CompoundPtrWithSize>::iterator onAirIt = onAirQueue.begin();
         onAirIt != onAirQueue.end();
@@ -713,6 +727,7 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
              // retransmission
             int txCounter = ++(parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
             perMIB->onFailedTransmission(adr);
+
             if(txCounter > parent->maximumTransmissions)
             {
                 MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
@@ -755,6 +770,31 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
     onAirQueue.clear();
 
 } // TransmissionQueue::processACK
+
+bool TransmissionQueue::isSortedBySN(const std::deque<CompoundPtrWithSize> q) const
+{
+    if(q.empty())
+    {
+        return true;
+    }
+    std::deque<CompoundPtrWithSize>::const_iterator it = q.begin();
+    BlockACKCommand::SequenceNumber lastSN = parent->getCommand((it->first)->getCommandPool())->peer.sn;
+    ++it;
+
+    for(;
+        it != q.end();
+        it++)
+    {
+        BlockACKCommand::SequenceNumber curSN = parent->getCommand((it->first)->getCommandPool())->peer.sn;
+        if(curSN < lastSN)
+        {
+            return false;
+        }
+        lastSN = curSN;
+    }
+    return true;
+
+}
 
 void TransmissionQueue::missingACK()
 {
@@ -882,7 +922,7 @@ void ReceptionQueue::processIncomingACKreq(const wns::ldk::CompoundPtr& compound
         rxStorage.erase(rxStorage.begin());
     }
     // waitingForSN is never reduced
-    this->waitingForSN = minSN > this->waitingForSN ? minSN : this->waitingForSN;
+    this->waitingForSN = (minSN > this->waitingForSN) ? (minSN) : (this->waitingForSN);
     // shift of waitingForSN might free already received frames
     this->purgeRxStorage();
 

@@ -69,7 +69,7 @@ class DraftN(Basic):
         # resource usage strategy: Buffer, blockACK, aggregation, TxOP
         self.layer2.bufferSize = 50
         self.layer2.bufferSizeUnit = 'PDU'
-        self.layer2.multiBuffer.impatient = True
+        self.layer2.multiBuffer.impatient = False
         self.layer2.multiBuffer.sendSize = maxAggregation
         self.layer2.blockACK.capacity = 50
         self.layer2.blockACK.maxOnAir = maxAggregation

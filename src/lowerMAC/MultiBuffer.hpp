@@ -46,7 +46,7 @@
 namespace wifimac { namespace lowerMAC {
 
     typedef std::list<wns::ldk::CompoundPtr> ContainerType;
-    typedef wns::container::Registry<unsigned int, ContainerType *> DestinationBuffers;
+    typedef wns::container::Registry<unsigned int, ContainerType*> DestinationBuffers;
 
     class MultiBuffer;
 
@@ -66,10 +66,10 @@ namespace wifimac { namespace lowerMAC {
        // that meets selection criteria, if none, returns buffer with most
        // compounds or -1 if all empty
        virtual int
-       getSendBuffer(const DestinationBuffers &buffers, bool strict) = 0;
+       getSendBuffer(const DestinationBuffers& buffers, bool strict) = 0;
 
        virtual void
-       setMultiBuffer(MultiBuffer *buffer, wns::logger::Logger *l) = 0;
+       setMultiBuffer(MultiBuffer* buffer, wns::logger::Logger* l) = 0;
 
        virtual
        ~IQueuing()
@@ -82,19 +82,20 @@ namespace wifimac { namespace lowerMAC {
         public wns::Cloneable<ConstantRRSelector>
     {
         virtual int
-        getSendBuffer(const DestinationBuffers &buffers, bool strict);
+        getSendBuffer(const DestinationBuffers& buffers, bool strict);
 
         virtual void
-        setMultiBuffer(MultiBuffer *buffer, wns::logger::Logger *l);
+        setMultiBuffer(MultiBuffer* buffer, wns::logger::Logger* l);
 
     protected:
-        MultiBuffer *multiBuffer;
+        MultiBuffer* multiBuffer;
         int lastBuffer;
-        wns::logger::Logger *logger;
+        wns::logger::Logger* logger;
     };
 
     /**
      * @brief Multi queue buffer
+     *
      * incoming compounds are stored in seperate queues, depending on the receiver address
      * The buffer drops incoming compounds if adding them would exceed the overall buffer size (buffer is marked FULL then)
      * the queue selector strategy determines which queue will be transmitted next.
@@ -117,17 +118,34 @@ namespace wifimac { namespace lowerMAC {
         MultiBuffer(const MultiBuffer& other);
 
         /// Delayed interface
-        virtual bool hasCapacity() const { return true;}
-        virtual void processIncoming(const wns::ldk::CompoundPtr& compound);
-        virtual void processOutgoing(const wns::ldk::CompoundPtr&);
-        virtual const wns::ldk::CompoundPtr hasSomethingToSend() const;
-        virtual wns::ldk::CompoundPtr getSomethingToSend();
-        unsigned int getBufferSendSize() const;
-        unsigned int getSize(const ContainerType& buffer) const;
-	std::vector<Bit> getCurrentBufferSizes() const;
+        virtual bool
+        hasCapacity() const
+            { return true;}
+
+        virtual void
+        processIncoming(const wns::ldk::CompoundPtr& compound);
+
+        virtual void
+        processOutgoing(const wns::ldk::CompoundPtr&);
+
+        virtual const wns::ldk::CompoundPtr
+        hasSomethingToSend() const;
+
+        virtual wns::ldk::CompoundPtr
+        getSomethingToSend();
+
+        unsigned int
+        getBufferSendSize() const;
+
+        unsigned int
+        getSize(const ContainerType& buffer) const;
+
+        std::vector<Bit>
+        getCurrentBufferSizes() const;
 
         // CanTimeout interface
-        virtual void onTimeout();
+        virtual void
+        onTimeout();
 
     private:
         std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
@@ -137,7 +155,7 @@ namespace wifimac { namespace lowerMAC {
         const int maxSize;
         int currentSize;
         int currentBuffer;
-        int stilltoBeSent;
+        int stillToBeSend;
         const bool impatient;
         unsigned int getCurrentSendBuffer();
         std::auto_ptr<IQueuing> queueSelector;

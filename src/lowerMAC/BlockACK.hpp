@@ -103,28 +103,48 @@ namespace wifimac {
                               wifimac::management::PERInformationBase* perMIB_);
             ~TransmissionQueue();
 
-            void processOutgoing(const wns::ldk::CompoundPtr& compound,
-                                 const unsigned int size);
-            const wns::ldk::CompoundPtr hasData() const;
-            wns::ldk::CompoundPtr getData();
-            void processIncomingACK(std::set<BlockACKCommand::SequenceNumber> ackSNs);
-            void missingACK();
+            void
+            processOutgoing(const wns::ldk::CompoundPtr& compound,
+                            const unsigned int size);
+
+            const wns::ldk::CompoundPtr
+            hasData() const;
+
+            wns::ldk::CompoundPtr
+            getData();
+
+            void
+            processIncomingACK(std::set<BlockACKCommand::SequenceNumber> ackSNs);
+
+            void
+            missingACK();
+
             const size_t getNumOnAirPDUs() const
                 { return onAirQueue.size(); }
 
             const size_t getNumWaitingPDUs() const
                 { return txQueue.size(); }
 
-            const unsigned int onAirQueueSize() const;
-            const unsigned int txQueueSize() const;
-            const unsigned int storageSize() const;
+            const unsigned int
+            onAirQueueSize() const;
 
-            const bool waitsForACK() const;
+            const unsigned int
+            txQueueSize() const;
 
-            const BlockACKCommand::SequenceNumber getNextSN() const
+            const unsigned int
+            storageSize() const;
+
+            const bool
+            waitsForACK() const;
+
+            const BlockACKCommand::SequenceNumber
+            getNextSN() const
                 { return nextSN; }
 
         private:
+            bool
+            isSortedBySN(const std::deque<CompoundPtrWithSize> q) const;
+
             wifimac::management::PERInformationBase* perMIB;
             const BlockACK* parent;
             const size_t maxOnAir;
@@ -313,6 +333,8 @@ namespace wifimac {
 
             // calculation of size (e.g. by bits or pdus)
             std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
+
+            bool inWakeup;
 
         };
 
