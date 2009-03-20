@@ -29,7 +29,7 @@
 #include <WIFIMAC/management/PERInformationBase.hpp>
 
 #include <WNS/simulator/Time.hpp>
-#include <WNS/logger/Logger.hpp>
+
 
 
 
@@ -41,11 +41,10 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(wifimac::management::PERInformationBase,
                                      wns::ldk::MSRConfigCreator);
 
 PERInformationBase::PERInformationBase( wns::ldk::ManagementServiceRegistry* msr, const wns::pyconfig::View& config):
-	wns::ldk::ManagementService(msr),
-	logger(config.get("logger")),
+    wns::ldk::ManagementService(msr),
+    logger(config.get("logger")),
     windowSize(config.get<simTimeType>("myConfig.windowSize")),
-    minSamples(config.get<int>("myConfig.minSamples")),
-    frameSizeThreshold(config.get<Bit>("myConfig.frameSizeThreshold"))
+    minSamples(config.get<int>("myConfig.minSamples"))
 {
 
 }

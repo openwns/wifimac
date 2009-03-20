@@ -135,11 +135,9 @@ Backoff::onTimeout()
     }
 }
 
-void
+bool
 Backoff::transmissionRequest(const int transmissionCounter)
 {
-    assure(!transmissionWaiting, "already one transmission pending");
-
     transmissionWaiting = true;
 
     assure(transmissionCounter >= 1, "transmissionCounter must be >= 1");
@@ -165,9 +163,9 @@ Backoff::transmissionRequest(const int transmissionCounter)
         MESSAGE_SINGLE(NORMAL, logger, "Post-Backoff has expired -> direct go for one frame");
         transmissionWaiting = false;
         backoffFinished = false;
-        backoffObserver->backoffExpired();
-        return;
+        return true;
     }
+    return false;
 }
 
 void

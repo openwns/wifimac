@@ -29,6 +29,7 @@ from BlockUntilReply import *
 from BlockACK import *
 from Aggregation import *
 from MultiBuffer import *
+from NextAggFrameGetter import *
 import wifimac.lowerMAC
 import wifimac.convergence
 
@@ -44,25 +45,18 @@ names['blockUntilReply'] = 'BlockUntilReply'
 def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs =  wifimac.lowerMAC.__getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
-    if (config.useMultiSendBuffer == True):
-     names['buffer'] = 'MultiBuffer'
-     FUs.append(MultiBuffer( functionalUnitName = names['buffer'] + str(transceiverAddress),
-                                                commandName = 'queueCommand',
-						config = config.multiBuffer,
-                                                sizeUnit = config.bufferSizeUnit,
-                                                size = config.bufferSize,
-                                                selector = config.queueSelector,
-                                                parentLogger = logger))
+    FUs.append(MultiBuffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
+                           commandName = 'queueCommand',
+                           config = config.multiBuffer,
+                           sizeUnit = config.bufferSizeUnit,
+                           size = config.bufferSize,
+                           parentLogger = logger))
 
-    else:
-     names['buffer'] = 'Buffer'
-     FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
-                                   commandName = names['buffer'] + 'Command',
-                                   sizeUnit = config.bufferSizeUnit,
-                                   size = config.bufferSize,
-                                   localIDs = probeLocalIDs,
-                                   probingEnabled = False))
-
+    FUs.append(NextAggFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
+                               bufferName = names['buffer'] + str(transceiverAddress),
+			       protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+			       commandName = names['nextFrame'] + 'Command'))
+			       
     FUs.append(BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
                         commandName = names['arq'] + 'Command',
                         managerName = names['manager'] + str(transceiverAddress),
@@ -98,14 +92,13 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                          config = config.ra,
                                          parentLogger = logger)
 
-    nextFrame = wifimac.lowerMAC.NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
-                                                 commandName = names['nextFrame'] + 'Command')
 
     txop = wifimac.lowerMAC.TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
                                  commandName = names['txop'] + 'Command',
                                  managerName = names['manager'] +  str(transceiverAddress),
-                                 phyUserName =  names['phyUser'] + str(transceiverAddress),
+                                 protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                                  nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
+                                 raName = names['ra'] + str(transceiverAddress),
                                  config = config.txop,
                                  parentLogger = logger)
 
@@ -113,12 +106,14 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                      commandName = names['rtscts'] + 'Command',
                                      managerName = names['manager'] + str(transceiverAddress),
                                      phyUserName = names['phyUser'] + str(transceiverAddress),
+				     protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                                      arqName = names['arq'] + str(transceiverAddress),
                                      navName = names['channelState'] + str(transceiverAddress),
                                      rxStartName = names['frameSynchronization'] + str(transceiverAddress),
                                      txStartEndName = names['phyUser'] + str(transceiverAddress),
                                      config = config.rtscts,
                                      parentLogger = logger)
+
     raACK = wifimac.lowerMAC.RateAdaptation(functionalUnitName = names['ra'] + 'ACK'+ str(transceiverAddress),
                                             commandName = names['ra'] + 'ACK' +'Command',
                                             phyUserName = names['phyUser'] + str(transceiverAddress),
@@ -151,15 +146,14 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
     for num in xrange(0, len(FUs)-1):
         FUs[num].connect(FUs[num+1])
     # DraftN requires special structure to send (Block)ACKs via a different way
-    for fu in [ackSwitch, agg, ra, raACK, nextFrame, txop, rtscts, ackMux, block]:
+    for fu in [ackSwitch, agg, ra, raACK, txop, rtscts, ackMux, block]:
         myFUN.add(fu)
     # DraftN requires special handling so that the acks are not send through the aggregation path
     ackSwitch.connectOnDataFU(FUs[-1], dll.CompoundSwitch.FilterAll('All'))
     ackSwitch.connectSendDataFU(raACK, wifimac.helper.Filter.FrameType('ACK', names['manager'] + 'Command'))
     ackSwitch.connectSendDataFU(agg, dll.CompoundSwitch.FilterAll('All'))
     agg.connect(ra)
-    ra.connect(nextFrame)
-    nextFrame.connect(txop)
+    ra.connect(txop)
     txop.connect(rtscts)
     rtscts.connect(ackMux)
     raACK.connect(ackMux)
@@ -249,8 +243,9 @@ def getConvergenceFUN(transceiverAddress, names, config, myFUN, logger, probeLoc
 
     FUs.append(wifimac.convergence.DeAggregation(name = names['deAggregation'] + str(transceiverAddress),
                                                  commandName = names['txDuration'] + 'Command',
-                                                 phyUserName = names['phyUser'] + str(transceiverAddress),
+                                                 protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                                                  managerName = names['manager'] + str(transceiverAddress),
+                                                 phyUserName = names['phyUser'] + str(transceiverAddress),
                                                  aggregationCommandName = 'AggregationCommand',
                                                  parentLogger = logger))
     FUs.extend(wifimac.convergence.__lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs))

@@ -40,8 +40,9 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
 TXOP::TXOP(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     wns::ldk::fu::Plain<TXOP, wns::ldk::EmptyCommand>(fun),
     managerName(config_.get<std::string>("managerName")),
-    phyUserName(config_.get<std::string>("phyUserName")),
+    protocolCalculatorName(config_.get<std::string>("protocolCalculatorName")),
     nextFrameHolderName(config_.get<std::string>("nextFrameHolderName")),
+    raName(config_.get<std::string>("raName")),
 
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
     expectedACKDuration(config_.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
@@ -54,8 +55,9 @@ TXOP::TXOP(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     MESSAGE_SINGLE(NORMAL, this->logger, "created");
 
     friends.manager = NULL;
-    friends.phyUser = NULL;
+    protocolCalculator = NULL;
     friends.nextFrameHolder = NULL;
+    friends.ra = NULL;
 }
 
 
@@ -68,8 +70,9 @@ void TXOP::onFUNCreated()
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
 
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
-    friends.phyUser = getFUN()->findFriend<wifimac::convergence::PhyUser*>(phyUserName);
-    friends.nextFrameHolder = getFUN()->findFriend<wns::ldk::DelayedInterface*>(nextFrameHolderName);
+    friends.nextFrameHolder = getFUN()->findFriend<wifimac::lowerMAC::NextFrameGetter*>(nextFrameHolderName);
+    friends.ra = getFUN()->findFriend<wifimac::lowerMAC::RateAdaptation*>(raName);
+    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
 
 void
@@ -85,6 +88,9 @@ TXOP::processIncoming(const wns::ldk::CompoundPtr& compound)
 void
 TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
+    wns::simulator::Time duration = 0;
+    wifimac::convergence::PhyMode phyMode;
+ 
     switch(friends.manager->getFrameType(compound->getCommandPool()))
     {
     case DATA:
@@ -118,8 +124,11 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
         }
 
         // cut TXOP duration by current frame
+	phyMode = friends.manager->getPhyMode(compound->getCommandPool());
+	duration = protocolCalculator->getDuration()->getMSDU_PPDU(compound->getLengthInBits(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
+
         this->remainingTXOPDuration = this->remainingTXOPDuration
-            - friends.phyUser->getPSDUDuration(compound)
+            - duration
             - this->sifsDuration
             - this->expectedACKDuration;
 
@@ -155,9 +164,12 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
             return;
         }
 
+	phyMode = friends.ra->getPhyMode(nextCompound);
+	duration = protocolCalculator->getDuration()->getFrame(friends.nextFrameHolder->getNextSize(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
+
         wns::simulator::Time nextFrameExchangeDuration =
             this->sifsDuration
-            + friends.phyUser->getPSDUDuration(nextCompound)
+            + duration
             + this->sifsDuration
             + this->expectedACKDuration;
 

@@ -36,6 +36,7 @@
 #include <WIFIMAC/convergence/INetworkAllocationVector.hpp>
 #include <WIFIMAC/convergence/IRxStartEnd.hpp>
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
+#include <WIFIMAC/management/ProtocolCalculator.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Delayed.hpp>
@@ -124,6 +125,7 @@ namespace wifimac { namespace lowerMAC {
         const std::string navName;
         const std::string rxsName;
         const std::string txStartEndName;
+        const std::string protocolCalculatorName;
 
         /** @brief Duration of the Short InterFrame Space */
         const wns::simulator::Time sifsDuration;
@@ -148,6 +150,7 @@ namespace wifimac { namespace lowerMAC {
         wns::ldk::CompoundPtr pendingCTS;
         wns::ldk::CompoundPtr pendingMSDU;
 
+	wifimac::management::ProtocolCalculator *protocolCalculator;
         struct Friends
         {
             wifimac::convergence::PhyUser* phyUser;

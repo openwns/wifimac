@@ -296,7 +296,7 @@ void FrameSynchronization::processPSDU(const wns::ldk::CompoundPtr& compound)
 
     MESSAGE_BEGIN(NORMAL, logger, m, "");
     m << "Received psdu. Synchronized: " << (curState == Synchronized or curState == waitForFinalDelivery);
-    m << "; TransmitterOk: " << (friends.manager->getTransmitterAddress(compound->getCommandPool()) == this->synchronizedToAddress);
+    m << "; Transmitter ok: " << (friends.manager->getTransmitterAddress(compound->getCommandPool()) == this->synchronizedToAddress);
     m << "; CRC ok: " << (getFUN()->getCommandReader(crcCommandName)->
                           readCommand<wns::ldk::crc::CRCCommand>(compound->getCommandPool())->
                           local.checkOK);

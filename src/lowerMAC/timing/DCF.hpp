@@ -33,54 +33,58 @@
 #include <WIFIMAC/convergence/IChannelState.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
-#include <WNS/ldk/Delayed.hpp>
 #include <WNS/ldk/Command.hpp>
 
 
 namespace wifimac { namespace lowerMAC { namespace timing {
 
-	/** @brief Distributed Coordination Function */
-	class DCF:
-		public wns::ldk::fu::Plain<DCF, wns::ldk::EmptyCommand>,
-        public wns::ldk::Delayed<DCF>,
-		public virtual BackoffObserver
-	{
+    /** @brief Distributed Coordination Function
+     *
+     *  Implements the known CSMA/CA using exponential backoff. FU does _not_
+     *  store any compounds, but uses the doIsAccepting to trigger the backoff:
+     *  1. Upper FU calls doIsAccepting -> backoff instance is asked for
+     *  permission
+     *  2a. (Post-)backoff has run down: Return true, packet is send
+     *  2b. Backoff has not finished: Return false
+     *  3b. Backoff calls DCF back when finished
+     *  4b. DCF wakes upper FU up, re-start at 1
+     */
+    class DCF:
+        public wns::ldk::fu::Plain<DCF, wns::ldk::EmptyCommand>,
+        public virtual BackoffObserver
+    {
 
-	public:
+    public:
 
-		DCF(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
+        DCF(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
 
-		virtual
-		~DCF();
+        virtual
+        ~DCF();
 
-        /// Delayed interface realization
-        void processIncoming(const wns::ldk::CompoundPtr& compound);
-        void processOutgoing(const wns::ldk::CompoundPtr& compound);
-        bool hasCapacity() const;
-        const wns::ldk::CompoundPtr hasSomethingToSend() const;
-        wns::ldk::CompoundPtr getSomethingToSend();
+        /// compound Handler Interface
+        void doSendData(const wns::ldk::CompoundPtr& compound);
+        void doOnData(const wns::ldk::CompoundPtr& compound);
+        bool doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
+        void doWakeup();
 
         virtual void onFUNCreated();
 
-	private:
+    private:
 
-		/** @brief BackoffObserver interface for the transmission of data frames */
-		virtual void backoffExpired();
+        /** @brief BackoffObserver interface for the transmission of data frames */
+        virtual void backoffExpired();
 
-        /** @brief Storage of the current frame that waits for tx permission */
-		wns::ldk::CompoundPtr currentFrame;
-
-		const std::string csName;
+        const std::string csName;
         const std::string arqCommandName;
 
-		/** @brief The backoff instance */
-		Backoff backoff;
+        /** @brief The backoff instance */
+        mutable Backoff backoff;
 
         /** @brief indicates that transmission is permitted */
-        bool sendNow;
+        mutable bool sendNow;
 
-		wns::logger::Logger logger;
-	};
+        wns::logger::Logger logger;
+    };
 } // timing
 } // lowerMAC
 } // wifimac

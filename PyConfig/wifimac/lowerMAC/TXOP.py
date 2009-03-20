@@ -43,17 +43,19 @@ class TXOP(openwns.FUN.FunctionalUnit):
 
     logger = None
 
-    phyUserName = None
+    protocolCalculatorName = None
     managerName = None
     nextFrameHolderName = None
+    raName = None
 
     myConfig = None
 
-    def __init__(self, functionalUnitName, commandName, managerName, phyUserName, nextFrameHolderName, config, parentLogger = None, **kw):
+    def __init__(self, functionalUnitName, commandName, managerName, protocolCalculatorName, nextFrameHolderName, raName, config, parentLogger = None, **kw):
         super(TXOP, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
         self.managerName = managerName
-        self.phyUserName = phyUserName
+        self.protocolCalculatorName = protocolCalculatorName
         self.nextFrameHolderName = nextFrameHolderName
+        self.raName = raName
         assert(config.__class__ == TXOPConfig)
         self.myConfig = config
         self.logger = wifimac.Logger.Logger(name = "TXOP", parent = parentLogger)

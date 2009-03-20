@@ -1,3 +1,30 @@
+###############################################################################
+# This file is part of openWNS (open Wireless Network Simulator)
+# _____________________________________________________________________________
+#
+# Copyright (C) 2004-2008
+# Chair of Communication Networks (ComNets)
+# Kopernikusstr. 16, D-52074 Aachen, Germany
+# phone: ++49-241-80-27910,
+# fax: ++49-241-80-22242
+# email: info@openwns.org
+# www: http://www.openwns.org
+# _____________________________________________________________________________
+#
+# openWNS is free software; you can redistribute it and/or modify it under the
+# terms of the GNU Lesser General Public License version 2 as published by the
+# Free Software Foundation;
+#
+# openWNS is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
 from PhyUser import *
 from ChannelState import *
 from TxDurationSetter import *
@@ -23,7 +50,7 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
 
     FUs.append(TxDurationSetter(name = names['txDuration'] + str(transceiverAddress),
                                 commandName = names['txDuration'] + 'Command',
-                                phyUserName = names['phyUser'] + str(transceiverAddress),
+                                protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                                 managerName = names['manager'] + str(transceiverAddress),
                                 parentLogger = logger))
 
@@ -51,7 +78,8 @@ def __upperPart__(transceiverAddress, names, config, myFUN, logger, probeLocalID
                                  commandName = 'PreambleCommand',
                                  phyUserName = names['phyUser'] + str(transceiverAddress),
                                  managerName = names['manager'] + str(transceiverAddress),
-                                 parentLogger = logger))
+                                 protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+				 parentLogger = logger))
     return FUs
 
 def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
@@ -88,6 +116,7 @@ def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalID
                               commandName = names['errorModelling'] + 'Command',
                               phyUserCommandName = names['phyUser'] + 'Command',
                               managerCommandName = names['manager'] + 'Command',
+                              protocolCalculatorName = names['protocolCalculator'] + str(transceiverAddress),
                               parentLogger = logger))
     FUs.append(PhyUser(functionalUnitName = names['phyUser'] + str(transceiverAddress),
                        commandName = names['phyUser'] + 'Command',

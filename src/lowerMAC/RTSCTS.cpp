@@ -28,6 +28,7 @@
 
 #include <WIFIMAC/lowerMAC/RTSCTS.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
+#include <DLL/Layer2.hpp>
 
 using namespace wifimac::lowerMAC;
 
@@ -42,6 +43,7 @@ RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
 
     phyUserName(config_.get<std::string>("phyUserName")),
     managerName(config_.get<std::string>("managerName")),
+    protocolCalculatorName(config_.get<std::string>("protocolCalculatorName")),
     arqName(config_.get<std::string>("arqName")),
     navName(config_.get<std::string>("navName")),
     rxsName(config_.get<std::string>("rxStartName")),
@@ -69,6 +71,7 @@ RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "created, threshold: " << rtsctsThreshold << "b");
 
+    protocolCalculator = NULL;
     friends.phyUser = NULL;
     friends.manager = NULL;
     friends.arq = NULL;
@@ -104,6 +107,7 @@ void RTSCTS::onFUNCreated()
     this->wns::Observer<wifimac::convergence::ITxStartEnd>::startObserving
         (getFUN()->findFriend<wifimac::convergence::TxStartEndNotification*>(txStartEndName));
 
+    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
 
 void
@@ -152,15 +156,20 @@ RTSCTS::processIncoming(const wns::ldk::CompoundPtr& compound)
             assure(this->pendingMSDU, "Received CTS, but no pending MSDU");
             if(state == idle)
             {
-                std::cout << "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout << "\n";
+                MESSAGE_BEGIN(NORMAL, this->logger, m, "received CTS although state is idle, now: ");
+                m << wns::simulator::getEventScheduler()->getTime();
+                m << ", last timeout: " << this->lastTimeout << "\n";
                 if(state == transmitRTS)
-                    std::cout << "state is transmitRTS\n";
+                    m << "state is transmitRTS\n";
                 if(state == waitForCTS)
-                    std::cout << "state is waitForCTS\n";
+                    m << "state is waitForCTS\n";
                 if(state == receiveCTS)
-                    std::cout << "state is receiveCTS\n";
+                    m << "state is receiveCTS\n";
+                MESSAGE_END();
             }
-            assure(state != idle, "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout);
+            assure(state != idle,
+                   "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout);
+
             if((state == idle)
                 or
                (friends.manager->getTransmitterAddress(compound->getCommandPool())
@@ -382,11 +391,15 @@ wns::ldk::CompoundPtr
 RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& msdu)
 {
     // Calculate duration of the msdu for NAV setting
+	wifimac::convergence::PhyMode phyMode = friends.phyUser->getPhyModeProvider()->getPhyMode(phyModeId);
+	wns::simulator::Time duration = 
+	protocolCalculator->getDuration()->getMSDU_PPDU(msdu->getLengthInBits(),phyMode.getDataBitsPerSymbol(), 
+							phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
 
     wns::simulator::Time nav = sifsDuration
         + expectedCTSDuration
         + sifsDuration
-        + friends.phyUser->getPSDUDuration(msdu)
+        + duration
         + sifsDuration
         + expectedACKDuration;
 

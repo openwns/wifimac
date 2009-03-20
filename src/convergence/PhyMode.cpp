@@ -72,7 +72,7 @@ int PhyMode::getNumSymbols(Bit length) const
         throw wns::Exception("dataBitsPerSymbol <= 0! Did you initialize this PhyMode?");
     }
 
-    int numSymbols = static_cast<int>(ceil(static_cast<double>(length)/static_cast<double>(dataBitsPerSymbol_*numberOfSpatialStreams_)));
+    int numSymbols = static_cast<int>(ceil(static_cast<double>(length)/static_cast<double>(this->getDataBitsPerSymbol())));
     MESSAGE_SINGLE(VERBOSE, logger_, length << "b --> " << numSymbols << " Symbols");
 
     return numSymbols;
@@ -80,6 +80,9 @@ int PhyMode::getNumSymbols(Bit length) const
 
 Bit PhyMode::getDataBitsPerSymbol() const
 {
+    assure(dataBitsPerSymbol_ > 0, "dataBitsPerSymbol <= 0");
+    assure(numberOfSpatialStreams_ > 0, "numberOfSpatialStreams <= 0");
+
     return(dataBitsPerSymbol_*numberOfSpatialStreams_);
 }
 
@@ -95,18 +98,19 @@ unsigned int PhyMode::getNumberOfSpatialStreams() const
 
 bool PhyMode::operator <(const PhyMode& rhs) const
 {
-    assure(dataBitsPerSymbol_ > 0, "dataBitsPerSymbol <= 0 in lhs");
-    assure(rhs.dataBitsPerSymbol_ > 0, "dataBitsPerSymbol <= 0 in rhs");
-
-    return(dataBitsPerSymbol_ < rhs.dataBitsPerSymbol_);
+    return(this->getDataBitsPerSymbol() < rhs.getDataBitsPerSymbol());
 }
 
 bool PhyMode::operator ==(const PhyMode& rhs) const
 {
     assure(dataBitsPerSymbol_ > 0, "dataBitsPerSymbol <= 0 in lhs");
     assure(rhs.dataBitsPerSymbol_ > 0, "dataBitsPerSymbol <= 0 in rhs");
+    assure(numberOfSpatialStreams_ > 0, "numberOfSpatialStreams <= 0 in lhs");
+    assure(rhs.numberOfSpatialStreams_ > 0, "numberOfSpatialStreams <= 0 in rhs");
 
-    return(dataBitsPerSymbol_ == rhs.dataBitsPerSymbol_);
+
+    return(dataBitsPerSymbol_ == rhs.dataBitsPerSymbol_ and
+           numberOfSpatialStreams_ == rhs.numberOfSpatialStreams_);
 }
 
 bool PhyMode::operator !=(const PhyMode& rhs) const

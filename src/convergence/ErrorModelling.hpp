@@ -30,6 +30,7 @@
 #define WIFIMAC_CONVERGENCE_ERRORMODELLING
 
 #include <WIFIMAC/convergence/PhyUser.hpp>
+#include <WIFIMAC/management/ProtocolCalculator.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Processor.hpp>
@@ -94,31 +95,17 @@ namespace wifimac { namespace convergence {
         void processIncoming(const wns::ldk::CompoundPtr& compound);
         void processOutgoing(const wns::ldk::CompoundPtr& compound);
 
+        void onFUNCreated();
+
     private:
         wns::pyconfig::View config;
         wns::logger::Logger logger;
         const std::string phyUserCommandName;
         const std::string managerCommandName;
-        const double cyclicPrefixReduction;
+        const std::string protocolCalculatorName;
 
-        /// @brief Calculate probability of error in pairwise comparison of two
-        /// paths that differ in d bits
-        double Pd(double rawBer, double d) const;
+        wifimac::management::ProtocolCalculator* pc;
 
-        /// @brief Calculate first error event probability of coding rate 1/2
-        double Pu12(double rawBer) const;
-
-        /// @brief Calculate first error event probability of coding rate 2/3
-        double Pu23(double rawBer) const;
-
-        /// @brief Calculate first error event probability of coding rate 3/4
-        double Pu34(double rawBer) const;
-
-        /// @brief Calculate first error event probability of coding rate 5/6
-        double Pu56(double rawBer) const;
-
-        /// @brief Computes the Q function as found in Proakis (3rd ed, 1995, eq. 2-1-98)
-        double Q(double x) const;
     }; // ErrorModelling
 } // convergence
 } // wifimac

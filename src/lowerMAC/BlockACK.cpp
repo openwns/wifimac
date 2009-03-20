@@ -62,7 +62,7 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
     baBits(config_.get<Bit>("myConfig.blockACKBits")),
     baReqBits(config_.get<Bit>("myConfig.blockACKRequestBits")),
     maximumTransmissions(config_.get<size_t>("myConfig.maximumTransmissions")),
-    impatientBAreqTransmission(config_.get<bool>("myConfig.impatientBAreqTransmission")),
+    impatientBAreqTransmission(config_.get<bool>("myConfig.impatient")),
     currentReceiver(),
     nextReceiver(),
     txQueue(NULL),
@@ -76,19 +76,54 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "created");
 
-        // read the localIDs from the config
+    // read the localIDs from the config
     wns::probe::bus::ContextProviderCollection localContext(&fun->getLayer()->getContextProviderCollection());
     for (int ii = 0; ii<config_.len("localIDs.keys()"); ++ii)
     {
         std::string key = config_.get<std::string>("localIDs.keys()",ii);
-        uint32_t value  = config_.get<uint32_t>("localIDs.values()",ii);
+        unsigned int value  = config_.get<unsigned int>("localIDs.values()",ii);
         localContext.addProvider(wns::probe::bus::contextprovider::Constant(key, value));
         MESSAGE_SINGLE(VERBOSE, logger, "Using Local IDName '"<<key<<"' with value: "<<value);
     }
     numTxAttemptsProbe = wns::probe::bus::collector(localContext, config_, "numTxAttemptsProbeName");
     friends.manager = NULL;
+
+    std::string pluginName = config_.get<std::string>("myConfig.sizeUnit");
+    sizeCalculator = std::auto_ptr<wns::ldk::buffer::SizeCalculator>(wns::ldk::buffer::SizeCalculator::Factory::creator(pluginName)->create());
 }
 
+BlockACK::BlockACK(const BlockACK& other) :
+    CompoundHandlerInterface(other),
+    CommandTypeSpecifierInterface(other),
+    HasReceptorInterface(other),
+    HasConnectorInterface(other),
+    HasDelivererInterface(other),
+    CloneableInterface(other),
+    IOutputStreamable(other),
+    PythonicOutput(other),
+    FunctionalUnit(other),
+    DelayedInterface(other),
+    wns::ldk::arq::ARQ(other),
+    wns::ldk::fu::Plain<BlockACK, BlockACKCommand>(other),
+    wns::ldk::Delayed<BlockACK>(other),
+    managerName(other.managerName),
+    rxStartEndName(other.rxStartEndName),
+    txStartEndName(other.txStartEndName),
+    sendBufferName(other.sendBufferName),
+    perMIBServiceName(other.perMIBServiceName),
+    sendBuffer(other.sendBuffer),
+    sifsDuration(other.sifsDuration),
+    expectedACKDuration(other.expectedACKDuration),
+    preambleProcessingDelay(other.preambleProcessingDelay),
+    capacity(other.capacity),
+    maxOnAir(other.maxOnAir),
+    baBits(other.baBits),
+    baReqBits(other.baReqBits),
+    maximumTransmissions(other.maximumTransmissions),
+    impatientBAreqTransmission(other.impatientBAreqTransmission),
+    sizeCalculator(wns::clone(other.sizeCalculator))
+{
+}
 
 BlockACK::~BlockACK()
 {
@@ -118,26 +153,27 @@ void BlockACK::onFUNCreated()
     // signal packet success/errors to MIB
     perMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
     sendBuffer = getFUN()->findFriend<wns::ldk::DelayedInterface*>(sendBufferName);
-}
+} // BlockACK::onFUNCreated
 
-Bit BlockACK::sizeInBit() const
+unsigned int
+BlockACK::storageSize() const
 {
-    Bit size = 0;
+    unsigned int size = 0;
 
     if (txQueue != NULL)
     {
-        size = txQueue->sizeInBit();
+        size = txQueue->storageSize();
     }
 
     for(wns::container::Registry<wns::service::dll::UnicastAddress, ReceptionQueue*>::const_iterator it = rxQueues.begin();
         it != rxQueues.end();
         it++)
     {
-        size += (*it).second->sizeInBit();
+        size += (*it).second->storageSize();
     }
 
     return(size);
-}
+} // BlockACK::size()
 
 bool
 BlockACK::hasCapacity() const
@@ -145,7 +181,7 @@ BlockACK::hasCapacity() const
     // if the last compound to be processed has a different receiver as the
     // current one, don't accept further compounds till current send block is
     // transmitted successfully OR buffer capacity has been reached
-    return((this->sizeInBit() < this->capacity) and (currentReceiver == nextReceiver));
+    return((this->storageSize() < this->capacity) and (currentReceiver == nextReceiver));
 }
 
 void
@@ -159,7 +195,7 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
         // processed compound has the current receiver as destination, added to
         // compound block for next round
         MESSAGE_SINGLE(NORMAL, this->logger,"Next frame in a row  processed for receiver: " << currentReceiver << " with SN: " << txQueue->getNextSN());
-        txQueue->processOutgoing(compound);
+        txQueue->processOutgoing(compound, (*sizeCalculator)(compound));
     }
     else
     {
@@ -186,18 +222,16 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
         m << " processed for receiver: " << currentReceiver;
         m << " with SN: " << nextTransmissionSN.find(receiver);
         MESSAGE_END();
-        txQueue->processOutgoing(nextFirstCompound);
+        txQueue->processOutgoing(nextFirstCompound, (*sizeCalculator)(nextFirstCompound));
         nextFirstCompound = wns::ldk::CompoundPtr();
     }
     nextReceiver = receiver;
-    MESSAGE_SINGLE(NORMAL, this->logger, "Stored outgoing frame, remaining capacity " << this->capacity - this->sizeInBit());
+    MESSAGE_SINGLE(NORMAL, this->logger, "Stored outgoing frame, remaining capacity " << this->capacity - this->storageSize());
 }
 
 void
 BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
 {
-    uint32_t i;
-
     wns::service::dll::UnicastAddress transmitter = friends.manager->getTransmitterAddress(compound->getCommandPool());
 
     if(getCommand(compound->getCommandPool())->isACK())
@@ -214,7 +248,7 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
         }
         this->baState = idle;
         txQueue->processIncomingACK(getCommand(compound->getCommandPool())->peer.ackSNs);
-        if ((txQueue->waitingSize()+txQueue->onAirSize()) != 0)
+        if ((txQueue->getNumWaitingPDUs()+txQueue->getNumOnAirPDUs()) != 0)
         {
             // either not all compounds of the current send block have been
             // transmitted successfully or compounds for the same receiver
@@ -245,7 +279,7 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
             m << " with StartSN: " << nextTransmissionSN.find(nextReceiver);
             MESSAGE_END();
 
-            txQueue->processOutgoing(nextFirstCompound);
+            txQueue->processOutgoing(nextFirstCompound, (*sizeCalculator)(nextFirstCompound));
             nextFirstCompound = wns::ldk::CompoundPtr();
             currentReceiver = nextReceiver;
         }
@@ -284,8 +318,8 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
         MESSAGE_SINGLE(NORMAL, this->logger, "First frame from " << transmitter << " -> new rxQueue");
         rxQueues.insert(transmitter, new ReceptionQueue(this, getCommand(compound->getCommandPool())->peer.sn, transmitter));
     }
-    rxQueues.find(transmitter)->processIncomingData(compound);
-}
+    rxQueues.find(transmitter)->processIncomingData(compound, (*sizeCalculator)(compound));
+} // BlockACK::processIncoming
 
 const wns::ldk::CompoundPtr
 BlockACK::hasACK() const
@@ -333,12 +367,12 @@ BlockACK::getData()
     // the same receiver, which haven't been processed yet and the BlockACK FU
     // accepts them, "manually" store the next compound waiting in the send
     // buffer FU
-    if ((txQueue->waitingSize() == 0) and
+    if ((txQueue->getNumWaitingPDUs() == 0) and
         (hasCapacity()) and
         (sendBuffer->hasSomethingToSend() != wns::ldk::CompoundPtr()))
     {
-        MESSAGE_SINGLE(NORMAL, this->logger, "getData(): one look ahead insert of next compound from send buffer")
-            processOutgoing(sendBuffer->getSomethingToSend());
+        MESSAGE_SINGLE(NORMAL, this->logger, "getData(): one look ahead insert of next compound from send buffer");
+        processOutgoing(sendBuffer->getSomethingToSend());
     }
     return(it);
 } // getData
@@ -465,7 +499,14 @@ void BlockACK::printTxQueueStatus() const
 size_t
 BlockACK::getTransmissionCounter(const wns::ldk::CompoundPtr& compound) const
 {
-    return(this->getCommand(compound)->localTransmissionCounter);
+    if(getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this))
+    {
+        return(this->getCommand(compound)->localTransmissionCounter);
+    }
+    else
+    {
+        return 1;
+    }
 }
 
 void
@@ -514,17 +555,21 @@ TransmissionQueue::~TransmissionQueue()
 } // TransmissionQueue::~TransmissionQueue
 
 
-const Bit TransmissionQueue::sizeInBit() const
+const unsigned int TransmissionQueue::onAirQueueSize() const
 {
-    Bit size = 0;
-
+    unsigned int size = 0;
     for(std::deque<CompoundPtrWithSize>::const_iterator it = onAirQueue.begin();
         it != onAirQueue.end();
         it++)
     {
         size += it->second;
     }
+    return(size);
+}
 
+const unsigned int TransmissionQueue::txQueueSize() const
+{
+    unsigned int size = 0;
     for(std::deque<CompoundPtrWithSize>::const_iterator it = txQueue.begin();
         it != txQueue.end();
         it++)
@@ -534,7 +579,13 @@ const Bit TransmissionQueue::sizeInBit() const
     return(size);
 }
 
-void TransmissionQueue::processOutgoing(const wns::ldk::CompoundPtr& compound)
+
+const unsigned int TransmissionQueue::storageSize() const
+{
+    return(this->onAirQueueSize() + this->txQueueSize());
+}
+
+void TransmissionQueue::processOutgoing(const wns::ldk::CompoundPtr& compound, const unsigned int size)
 {
     BlockACKCommand* baCommand = parent->activateCommand(compound->getCommandPool());
     baCommand->peer.type = I;
@@ -542,7 +593,7 @@ void TransmissionQueue::processOutgoing(const wns::ldk::CompoundPtr& compound)
     baCommand->localTransmissionCounter = 1;
 
     MESSAGE_SINGLE(NORMAL, parent->logger, "TxQ" << adr << ": Queue outgoing compound with sn " << baCommand->peer.sn);
-    txQueue.push_back(CompoundPtrWithSize(compound, compound->getLengthInBits()));
+    txQueue.push_back(CompoundPtrWithSize(compound, size));
 } // TransmissionQueue::processOutgoing
 
 const wns::ldk::CompoundPtr TransmissionQueue::hasData() const
@@ -553,17 +604,32 @@ const wns::ldk::CompoundPtr TransmissionQueue::hasData() const
         // no other transmissions during waiting for ACK
         return(wns::ldk::CompoundPtr());
     }
-    if((not txQueue.empty()) and (onAirQueue.size() < this->maxOnAir))
+    if((not txQueue.empty()) and (onAirQueueSize()+txQueue.front().second <= this->maxOnAir))
     {
         // regular frame pending
         MESSAGE_SINGLE(VERBOSE, parent->logger, "TxQ" << adr << ": hasData: Regular frame is pending");
         return(txQueue.front().first);
     }
 
+    // baReq pending
     if(this->baReqRequired)
     {
-        if((parent->impatientBAreqTransmission) or
-           (onAirQueue.size() == this->maxOnAir))
+        // impatient BAreq -> send as soon as required
+        if(parent->impatientBAreqTransmission)
+        {
+            return(this->baREQ);
+        }
+
+        // next compound would exceed on air limit -> send
+        if((not txQueue.empty()) and
+           (onAirQueueSize()+txQueue.front().second > this->maxOnAir))
+        {
+            return(this->baREQ);
+        }
+
+        // no next compound, but nothing would match anyway -> send
+        if((txQueue.empty()) and
+           (onAirQueueSize() == this->maxOnAir))
         {
             return(this->baREQ);
         }
@@ -577,7 +643,9 @@ wns::ldk::CompoundPtr TransmissionQueue::getData()
 {
     assure(this->hasData(), "Called getData although hasData is false");
 
-    if((not txQueue.empty()) and (onAirQueue.size() < this->maxOnAir))
+    // compound pending?
+    if((not txQueue.empty()) and
+       (onAirQueue.size()+txQueue.front().second <= this->maxOnAir))
     {
         // transmit another frame
         onAirQueue.push_back(txQueue.front());
@@ -590,6 +658,9 @@ wns::ldk::CompoundPtr TransmissionQueue::getData()
         return(it->copy());
     }
 
+    // no compound pending --> BAreq must be pending
+    assure(this->baReqRequired,
+           "No compound pending and no baReqRequired, but hasData is true");
     if(txQueue.empty())
     {
         MESSAGE_SINGLE(NORMAL, parent->logger, "TxQ" << adr << ": No more frames to tx, send BAreq with start-sn " << parent->getCommand(onAirQueue.front().first)->peer.sn);
@@ -640,14 +711,15 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
         if((snIt == ackSNs.end()) or (*snIt != onAirSN))
         {
              // retransmission
-            if(++(parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter) > parent->maximumTransmissions)
+            int txCounter = ++(parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
+            perMIB->onFailedTransmission(adr);
+            if(txCounter > parent->maximumTransmissions)
             {
                 MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
                 m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
                 m << " -> reached max transmissions, drop";
                 MESSAGE_END();
-                parent->numTxAttemptsProbe->put(onAirIt->first, parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
-                perMIB->onFailedTransmission(adr);
+                parent->numTxAttemptsProbe->put(onAirIt->first, txCounter);
             }
             else
             {
@@ -655,7 +727,6 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
                  m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
                  m << " -> retransmit";
                  MESSAGE_END();
-                 perMIB->onFailedTransmission(adr);
 
                 if(insertBack)
                 {
@@ -708,14 +779,9 @@ ReceptionQueue::ReceptionQueue(BlockACK* parent_, BlockACKCommand::SequenceNumbe
     MESSAGE_SINGLE(NORMAL, parent->logger, "RxQ" << adr << " created");
 } // ReceptionQueue
 
-const size_t ReceptionQueue::size() const
+const unsigned int ReceptionQueue::storageSize() const
 {
-    return(rxStorage.size());
-} // ReceptionQueue::size
-
-const Bit ReceptionQueue::sizeInBit() const
-{
-    Bit size = 0;
+    unsigned int size = 0;
 
     for(std::map<BlockACKCommand::SequenceNumber, CompoundPtrWithSize>::const_iterator it = rxStorage.begin();
         it != rxStorage.end();
@@ -724,9 +790,9 @@ const Bit ReceptionQueue::sizeInBit() const
         size += it->second.second;
     }
     return(size);
-}
+} // ReceptionQueue::size
 
-void ReceptionQueue::processIncomingData(const wns::ldk::CompoundPtr& compound)
+void ReceptionQueue::processIncomingData(const wns::ldk::CompoundPtr& compound, const unsigned int size)
 {
     assure(this->blockACK == wns::ldk::CompoundPtr(), "Received blockACKreq - cannot process more incoming data");
 
@@ -771,7 +837,7 @@ void ReceptionQueue::processIncomingData(const wns::ldk::CompoundPtr& compound)
             m << ", waiting for " << this->waitingForSN;
             m << " --> store";
             MESSAGE_END();
-            rxStorage[baCommand->peer.sn] = CompoundPtrWithSize(compound, compound->getLengthInBits());
+            rxStorage[baCommand->peer.sn] = CompoundPtrWithSize(compound, size);
         }
     }
 

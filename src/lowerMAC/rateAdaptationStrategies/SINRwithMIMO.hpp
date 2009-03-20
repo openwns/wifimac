@@ -29,7 +29,7 @@
 #ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
 #define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
 
-#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/SINR.hpp>
+#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/OpportunisticwithMIMO.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
@@ -46,7 +46,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 	 */
 
     class SINRwithMIMO:
-        public SINR
+        public OpportunisticwithMIMO
     {
     public:
         SINRwithMIMO(

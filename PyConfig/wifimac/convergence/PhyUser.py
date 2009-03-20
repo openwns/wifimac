@@ -57,7 +57,6 @@ class PhyUser(openwns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.convergence.PhyUser'
 	"""Name in FunctionalUnitFactory"""
 
-
 	logger = None
 	# Declaration of PHY-Modes
 	PhyModePreamble = None
@@ -94,7 +93,7 @@ class PhyUser(openwns.FUN.FunctionalUnit):
 		phyModes = config.phyModes(self.logger)
 		openwns.pyconfig.attrsetter(self, kw)
 
-		self.PhyModePreamble = phyModes.getPhyModePreamble() 
+		self.PhyModePreamble = phyModes.getPhyModePreamble()
 		self.PhyMode0 = phyModes.getPhyMode0()
 		self.PhyMode1 = phyModes.getPhyMode1()
 		self.PhyMode2 = phyModes.getPhyMode2()
@@ -103,4 +102,3 @@ class PhyUser(openwns.FUN.FunctionalUnit):
 		self.PhyMode5 = phyModes.getPhyMode5()
 		self.PhyMode6 = phyModes.getPhyMode6()
 		self.PhyMode7 = phyModes.getPhyMode7()
-

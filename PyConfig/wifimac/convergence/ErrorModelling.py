@@ -35,6 +35,7 @@ class ErrorModelling(openwns.FUN.FunctionalUnit):
 	logger = None
 	phyUserCommandName = None
 	managerCommandName = None
+	protocolCalculatorName = None
 	cyclicPrefixReduction = 0.8
 	__plugin__ = 'wifimac.convergence.ErrorModelling'
 
@@ -43,9 +44,11 @@ class ErrorModelling(openwns.FUN.FunctionalUnit):
 		     commandName,
 		     phyUserCommandName,
 		     managerCommandName,
+		     protocolCalculatorName,
 		     parentLogger = None, **kw):
 		super(ErrorModelling, self).__init__(functionalUnitName=name, commandName=commandName)
 		self.phyUserCommandName = phyUserCommandName
 		self.managerCommandName = managerCommandName
+		self.protocolCalculatorName = protocolCalculatorName
 		self.logger = wifimac.Logger.Logger("ErrorModelling", parent = parentLogger)
 		openwns.pyconfig.attrsetter(self, kw)

@@ -64,11 +64,11 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = __getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
     FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
-                                   commandName = names['buffer'] + 'Command',
-                                   sizeUnit = config.bufferSizeUnit,
-                                   size = config.bufferSize,
-                                   localIDs = probeLocalIDs,
-                                   probingEnabled = False))
+                                       commandName = names['buffer'] + 'Command',
+                                       sizeUnit = config.bufferSizeUnit,
+                                       size = config.bufferSize,
+                                       localIDs = probeLocalIDs,
+                                       probingEnabled = False))
 
     FUs.append(DuplicateFilter(functionalUnitName = names['DuplicateFilter'] + str(transceiverAddress),
                                commandName =  names['DuplicateFilter'] + 'Command',
@@ -76,42 +76,40 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                                arqCommandName = names['arq'] + 'Command',
                                parentLogger = logger))
 
-    ra = RateAdaptation(functionalUnitName = names['ra'] + str(transceiverAddress),
-                        commandName = names['ra'] + 'Command',
-                        phyUserName = names['phyUser'] + str(transceiverAddress),
-                        managerName = names['manager'] + str(transceiverAddress),
-                        arqName = names['arq'] + str(transceiverAddress),
-                        sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
-                        perMIBServiceName = names['perMIB'] + str(transceiverAddress),
-                        config = config.ra,
-                        parentLogger = logger)
+    FUs.append(NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
+                               protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+			       commandName = names['nextFrame'] + 'Command'))
 
-    nextFrame = NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
-                                                 commandName = names['nextFrame'] + 'Command')
+    FUs.append(StopAndWaitARQ(fuName = names['arq'] + str(transceiverAddress),
+                              commandName = names['arq'] + 'Command',
+                              managerName = names['manager'] + str(transceiverAddress),
+                              csName = names['channelState'] + str(transceiverAddress),
+                              rxStartName = names['frameSynchronization'] + str(transceiverAddress),
+                              txStartEndName = names['phyUser'] + str(transceiverAddress),
+                              perMIBServiceName = names['perMIB'] + str(transceiverAddress),
+                              probePrefix = 'wifimac.linkQuality',
+                              config = config.arq,
+                              parentLogger = logger,
+                              localIDs = probeLocalIDs))
 
-    arq = StopAndWaitARQ(fuName = names['arq'] + str(transceiverAddress),
-                         commandName = names['arq'] + 'Command',
-                         managerName = names['manager'] + str(transceiverAddress),
-                         csName = names['channelState'] + str(transceiverAddress),
-                         rxStartName = names['frameSynchronization'] + str(transceiverAddress),
-                         txStartEndName = names['phyUser'] + str(transceiverAddress),
-                         perMIBServiceName = names['perMIB'] + str(transceiverAddress),
-                         probePrefix = 'wifimac.linkQuality',
-                         config = config.arq,
-                         parentLogger = logger,
-                         localIDs = probeLocalIDs)
+    FUs.append(RateAdaptation(functionalUnitName = names['ra'] + str(transceiverAddress),
+                              commandName = names['ra'] + 'Command',
+                              phyUserName = names['phyUser'] + str(transceiverAddress),
+                              managerName = names['manager'] + str(transceiverAddress),
+                              arqName = names['arq'] + str(transceiverAddress),
+                              sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
+                              perMIBServiceName = names['perMIB'] + str(transceiverAddress),
+                              config = config.ra,
+                              parentLogger = logger))
 
-    txop = TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
-                                 commandName = names['txop'] + 'Command',
-                                 managerName = names['manager'] +  str(transceiverAddress),
-                                 phyUserName =  names['phyUser'] + str(transceiverAddress),
-                                 nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
-                                 config = config.txop,
-                                 parentLogger = logger)
-
-    ## connect the common part for all FUs
-    # add created FUs to FUN
-    FUs.extend([arq, ra, nextFrame, txop])
+    FUs.append(TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
+                    commandName = names['txop'] + 'Command',
+                    managerName = names['manager'] +  str(transceiverAddress),
+                    protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                    nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
+                    raName = names['ra'] + str(transceiverAddress),
+                    config = config.txop,
+                    parentLogger = logger))
 
     for fu in FUs:
             myFUN.add(fu)
@@ -121,7 +119,7 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
             FUs[num].connect(FUs[num+1])
 
     bottomFU = None
-    bottomFU = __appendBasicTimingBlock__(myFUN, txop, config, names, transceiverAddress, logger, probeLocalIDs)
+    bottomFU = __appendBasicTimingBlock__(myFUN, FUs[-1], config, names, transceiverAddress, logger, probeLocalIDs)
 
     # Final FU: FlowGate -> Filter all frames not addressed to me
     gate = openwns.FlowSeparator.FlowGate(fuName = names['rxFilter'] + str(transceiverAddress),
@@ -168,6 +166,7 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
                     commandName = names['rtscts'] + 'Command',
                     managerName = names['manager'] + str(transceiverAddress),
                     phyUserName = names['phyUser'] + str(transceiverAddress),
+		    protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                     arqName = names['arq'] + str(transceiverAddress),
                     navName = names['channelState'] + str(transceiverAddress),
                     rxStartName = names['frameSynchronization'] + str(transceiverAddress),

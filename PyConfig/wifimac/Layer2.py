@@ -215,7 +215,8 @@ class dllMP(MeshLayer2):
 		self.stationType = "FRS"
 		self.ring = 2
 
-		upperConvergence = dll.UpperConvergence.No(self.logger, commandName = self.upperConvergenceName)
+		upperConvergence = dll.UpperConvergence.UT(parent = self.logger,
+							   commandName = self.upperConvergenceName)		
 		upperConvergence.logger.moduleName = 'WiFiMAC'
 		self.fun.add(upperConvergence)
 		upperConvergence.connect(self.throughputProbe)
@@ -242,8 +243,6 @@ class Config(Sealed):
 	bufferSize = 10*1000*8
 	bufferSizeUnit = 'Bit'
 
-	queueSelector= 'ConstantRRSelector'
-	useMultiSendBuffer = True
 	headerBits = 30*8
 	crcBits = 4*8
 

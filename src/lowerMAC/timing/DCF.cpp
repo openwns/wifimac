@@ -45,7 +45,6 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
 
 DCF::DCF(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     wns::ldk::fu::Plain<DCF, wns::ldk::EmptyCommand>(fun),
-    currentFrame(),
     csName(config_.get<std::string>("csName")),
     arqCommandName(config_.get<std::string>("arqCommandName")),
     backoff(this, config_),
@@ -67,57 +66,60 @@ void DCF::onFUNCreated()
         (getFUN()->findFriend<wifimac::convergence::ChannelStateNotification*>(csName));
 } // DCF::onFUNCreated
 
-void DCF::processIncoming(const wns::ldk::CompoundPtr& compound)
+void
+DCF::doSendData(const wns::ldk::CompoundPtr& compound)
 {
+    assure(sendNow,
+           "called doSendData, but sendNow is false");
+    sendNow = false;
+
+    assure(getConnector()->hasAcceptor(compound),
+           "lower FU is not accepting");
+
+    getConnector()->getAcceptor(compound)->sendData(compound);
+
+}
+
+void
+DCF::doOnData(const wns::ldk::CompoundPtr& compound)
+{
+    // simply forward to the upper FU
     getDeliverer()->getAcceptor(compound)->onData(compound);
-} // DCF::processIncoming
+}
 
-void DCF::processOutgoing(const wns::ldk::CompoundPtr& compound)
+bool
+DCF::doIsAccepting(const wns::ldk::CompoundPtr& compound) const
 {
-    assure(hasCapacity(), "called processOutgoing although not capacity");
-
-    this->currentFrame = compound;
-    this->sendNow = false;
+    if(sendNow and getConnector()->hasAcceptor(compound))
+    {
+        return true;
+    }
     if(getFUN()->getCommandReader(arqCommandName)->commandIsActivated(compound->getCommandPool()))
     {
         int numTransmissions = getFUN()->getCommandReader(arqCommandName)->
             readCommand<wns::ldk::arq::ARQCommand>(compound->getCommandPool())->localTransmissionCounter;
-        backoff.transmissionRequest(numTransmissions);
+        sendNow = backoff.transmissionRequest(numTransmissions);
     }
     else
     {
-        backoff.transmissionRequest(1);
+        sendNow = backoff.transmissionRequest(1);
     }
-} // DCF::processOutgoing
 
-bool DCF::hasCapacity() const
-{
-    return(this->currentFrame == wns::ldk::CompoundPtr());
-} // DCF::hasCapacity
+    MESSAGE_SINGLE(NORMAL, logger, "backoff asked, sendNow is " << sendNow);
 
-const wns::ldk::CompoundPtr DCF::hasSomethingToSend() const
-{
-    if(this->sendNow)
-    {
-        return this->currentFrame;
-    }
-    else
-    {
-        return wns::ldk::CompoundPtr();
-    }
-} // DCF::hasSomethingToSend
+    return(sendNow and getConnector()->hasAcceptor(compound));
+}
 
-wns::ldk::CompoundPtr DCF::getSomethingToSend()
+void
+DCF::doWakeup()
 {
-    assure(hasSomethingToSend(), "Called getSomethingToSend without something to send");
-    this->sendNow = false;
-    wns::ldk::CompoundPtr it = this->currentFrame;
-    this->currentFrame = wns::ldk::CompoundPtr();
-    return it;
-} // DCF::getSomethingToSend
+    getReceptor()->wakeup();
+}
+
 
 void DCF::backoffExpired()
 {
+    MESSAGE_SINGLE(NORMAL, logger, "Backoff expired, send wakeup");
     this->sendNow = true;
-    this->tryToSend();
+    getReceptor()->wakeup();
 }

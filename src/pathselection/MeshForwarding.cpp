@@ -87,6 +87,10 @@ MeshForwarding::doIsAccepting(const wns::ldk::CompoundPtr& _compound) const
     else
     {
         wns::service::dll::UnicastAddress mpDst = uc->peer.targetMACAddress;
+	if (!mpDst.isValid())
+	{
+	  mpDst = ps->getPortalFor(uc->peer.sourceMACAddress);
+	}
         uc->peer.targetMACAddress = ps->getNextHop(uc->peer.sourceMACAddress, mpDst);
         if(layer2->isTransceiverMAC(uc->peer.targetMACAddress))
         {
@@ -404,9 +408,9 @@ bool MeshForwarding::doOnDataFRS(const wns::ldk::CompoundPtr& compound, Forwardi
 void
 MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
 {
-    if(layer2->getStationType() != wns::service::dll::StationTypes::AP())
+    if(layer2->getStationType() != dll::StationTypes::AP() and layer2->getStationType() != wns::service::dll::StationTypes::FRS())
     {
-        throw wns::Exception("doSendData not valid for node types other than AP");
+        throw wns::Exception("doSendData not valid for node types other than AP and FRS");
     }
 
     // Received fresh packet from upper layer -> activate command
@@ -417,7 +421,12 @@ MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
 
     // this frame comes from the upperConvergence
     assure(uc->peer.sourceMACAddress.isValid(), "uc->peer.sourceMACAddress is not a valid MAC address");
-    assure(uc->peer.targetMACAddress.isValid(), "uc->peer.sourceMACAddress is not a valid MAC address");
+
+    // locally generated traffic, destination not known
+    if (!uc->peer.targetMACAddress.isValid())
+    {
+	uc->peer.targetMACAddress = ps->getPortalFor(uc->peer.sourceMACAddress);
+    }
 
     fc->magic.isUplink = false;
 

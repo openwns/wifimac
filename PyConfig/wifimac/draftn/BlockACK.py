@@ -39,8 +39,10 @@ class BlockACKConfig(object):
     expectedACKDuration = 68E-6
     """ expected ACK duration for a BA is higher than the legacy ACK"""
 
-    capacity = 100e3*8
-    """ total storage size for BlockACK FU: Bits queued for transmissions + waiting for ACK + rx-reordering """
+    sizeUnit = 'PDU'
+    """ size unit for all size calculations (e.g. capacity, maxOnAir)"""
+    capacity = 100
+    """ total storage size for BlockACK FU: <sizeUnit> queued for transmissions + waiting for ACK + rx-reordering """
 
     maxOnAir = 10
     """ transmission window link of any link """
@@ -52,7 +54,7 @@ class BlockACKConfig(object):
     """ Size of BlockACK """
     blockACKRequestBits = 24*8
     """ Size of BlockACKrequest """
-    impatientBAreqTransmission = True
+    impatient = True
     """ Transmission of the BAreq can be done according to two strategies:
     a) impatient: Send BAreq as soon as no other frames are in the reception queue, i.e. after a minimum of
     one frame has been send.

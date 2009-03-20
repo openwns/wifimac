@@ -270,33 +270,6 @@ void PhyUser::setFrequency(double frequency)
     }
 }
 
-wns::simulator::Time PhyUser::getPreambleDuration() const
-{
-    return(preambleDuration + phyModes.getSymbolDuration());
-}
-
-wns::simulator::Time PhyUser::getPSDUDuration(const wns::ldk::CompoundPtr& compound) const
-{
-    Bit length = compound->getLengthInBits();
-    wifimac::convergence::PhyMode mcs = friends.manager->getPhyMode(compound->getCommandPool());
-
-    // get the PSDU size
-    int numSymbols = mcs.getNumSymbols(length + service + tail);
-
-    wns::simulator::Time duration = phyModes.getSymbolDuration() * numSymbols;
-
-    MESSAGE_BEGIN(NORMAL, logger, m, "calcDuration: ");
-    m << "psduSize = " << length;
-    m << "+" << service+tail;
-    m << " @ " << mcs << ", " << mcs.getNumberOfSpatialStreams() << " stream(s)";
-    m << " -> " << numSymbols << " symbols";
-    m << " a " << phyModes.getSymbolDuration();
-    m << " -> " << duration;
-    MESSAGE_END();
-
-    return(duration);
-}
-
 PhyModeProvider* PhyUser::getPhyModeProvider()
 {
     return &phyModes;

@@ -38,7 +38,7 @@ SINRwithMIMO::SINRwithMIMO(
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    SINR(_per, _manager, _phyUser, _logger),
+    OpportunisticwithMIMO(_per, _manager, _phyUser, _logger),
     logger(_logger)
 {
     friends.phyUser = _phyUser;
@@ -49,81 +49,78 @@ SINRwithMIMO::SINRwithMIMO(
 wifimac::convergence::PhyMode
 SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio lqm)
 {
+    unsigned int numTx = friends.manager->getNumAntennas();
+    unsigned int numRx = 1;
     if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
     {
+        numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(receiver, "numAntennas");
+    }
 
-        // Reduce lqm by 3dB for every retransmission
-        wns::Ratio myLQM = wns::Ratio::from_dB(lqm.get_dB() - (numTransmissions-1)*3.0);
+    // Reduce lqm by 3dB for every retransmission
+    wns::Ratio myLQM = wns::Ratio::from_dB(lqm.get_dB() - (numTransmissions-1)*3.0);
 
-        // find the number of streams which maximizes the number of data bits
-        // per symbol
-        unsigned int numTx = friends.manager->getNumAntennas();
-        unsigned int numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(receiver, "numAntennas");
-        unsigned int maxNumSS = (numTx < numRx) ? numTx : numRx;
-        int bestDBPS = 0;
-        wifimac::convergence::PhyMode bestPM;
-        unsigned int bestNumSS = 0;
-        unsigned int numSS = maxNumSS;
+    // find the number of streams which maximizes the number of data bits per
+    // symbol
+    unsigned int maxNumSS = (numTx < numRx) ? numTx : numRx;
+    int bestDBPS = 0;
+    wifimac::convergence::PhyMode bestPM;
+    unsigned int bestNumSS = 0;
+    unsigned int numSS = maxNumSS;
 
-        while(numSS > 0)
+    while(numSS > 0)
+    {
+        wns::Ratio postSINR = lqm
+            - friends.phyUser->getExpectedPostSINRFactor(1, numRx)
+            + friends.phyUser->getExpectedPostSINRFactor(numSS, numRx);
+        if(friends.phyUser->getPhyModeProvider()->getMinSINR() < postSINR)
         {
-            wns::Ratio postSINR = lqm
-                - friends.phyUser->getExpectedPostSINRFactor(1, numRx)
-                + friends.phyUser->getExpectedPostSINRFactor(numSS, numRx);
-            if(friends.phyUser->getPhyModeProvider()->getMinSINR() < postSINR)
+            wifimac::convergence::PhyMode pm = friends.phyUser->getPhyModeProvider()->getPhyMode(postSINR);
+            pm.setNumberOfSpatialStreams(numSS);
+
+            // check performance of numSS
+            if(pm.getDataBitsPerSymbol() > bestDBPS)
             {
-                wifimac::convergence::PhyMode pm = friends.phyUser->getPhyModeProvider()->getPhyMode(postSINR);
-                pm.setNumberOfSpatialStreams(numSS);
-
-                // check performance of numSS
-                if(pm.getDataBitsPerSymbol() > bestDBPS)
-                {
-                    bestDBPS = pm.getDataBitsPerSymbol();
-                    bestNumSS = numSS;
-                    bestPM = pm;
-                }
+                bestDBPS = pm.getDataBitsPerSymbol();
+                bestNumSS = numSS;
+                bestPM = pm;
             }
-            --numSS;
         }
+        --numSS;
+    }
 
-        if(bestNumSS == 0)
-        {
-            MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
-            m << " to receiver " << receiver;
-            m << " lqm: " << lqm;
-            m << " transmissions: " << numTransmissions;
-            m << " numTx: " << numTx;
-            m << " numRx: " << numRx;
-            m << " postSINR with 1 stream: " << lqm;
-            m << " too bad for any transmission, selecting lowest phy mode";
-            MESSAGE_END();
-            bestPM = friends.phyUser->getPhyModeProvider()->getLowest();
-            bestPM.setNumberOfSpatialStreams(1);
-            return(bestPM);
-        }
-
-        MESSAGE_BEGIN(NORMAL, *logger, m, "RA getPhyMode with");
+    if(bestNumSS == 0)
+    {
+        MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
+        m << " to receiver " << receiver;
         m << " lqm: " << lqm;
         m << " transmissions: " << numTransmissions;
         m << " numTx: " << numTx;
         m << " numRx: " << numRx;
-        m << " -> numSS: " << bestNumSS;
-        m << " postSINR: " << lqm
-            - friends.phyUser->getExpectedPostSINRFactor(1, numRx)
-            + friends.phyUser->getExpectedPostSINRFactor(bestNumSS, numRx);
-        m << " -> " << bestPM;
+        m << " postSINR with 1 stream: " << lqm;
+        m << " too bad for any transmission, selecting lowest phy mode";
         MESSAGE_END();
-
+        bestPM = friends.phyUser->getPhyModeProvider()->getLowest();
+        bestPM.setNumberOfSpatialStreams(1);
         return(bestPM);
     }
-    else
-    {
-        return(SINR::getPhyMode(receiver, numTransmissions, lqm));
-    }
+
+    MESSAGE_BEGIN(NORMAL, *logger, m, "RA getPhyMode with");
+    m << " lqm: " << lqm;
+    m << " transmissions: " << numTransmissions;
+    m << " numTx: " << numTx;
+    m << " numRx: " << numRx;
+    m << " -> numSS: " << bestNumSS;
+    m << " postSINR: " << lqm
+        - friends.phyUser->getExpectedPostSINRFactor(1, numRx)
+        + friends.phyUser->getExpectedPostSINRFactor(bestNumSS, numRx);
+    m << " -> " << bestPM;
+    MESSAGE_END();
+
+    return(bestPM);
 }
 
 wifimac::convergence::PhyMode
 SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions)
 {
-    return(SINR::getPhyMode(receiver, numTransmissions));
+    return(OpportunisticwithMIMO::getPhyMode(receiver, numTransmissions));
 }

@@ -62,15 +62,21 @@ srcFiles = [
     'src/convergence/DeAggregation.cpp',
     'src/lowerMAC/BlockUntilReply.cpp',
     'src/lowerMAC/Aggregation.cpp',
+    'src/lowerMAC/NextAggFrameGetter.cpp',
     'src/lowerMAC/MultiBuffer.cpp',
     'src/lowerMAC/BlockACK.cpp',
     'src/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.cpp',
+    'src/lowerMAC/rateAdaptationStrategies/OpportunisticwithMIMO.cpp',
 
-    # (Virtual) Management stuff
+    # Management stuff
     'src/management/Beacon.cpp',
     'src/management/SINRInformationBase.cpp',
     'src/management/PERInformationBase.cpp',
     'src/management/VirtualCapabilityInformationBase.cpp',
+    'src/management/ProtocolCalculator.cpp',
+    'src/management/protocolCalculatorPlugins/ErrorProbability.cpp',
+    'src/management/protocolCalculatorPlugins/FrameLength.cpp',
+    'src/management/protocolCalculatorPlugins/Duration.cpp',
 
     # Pathselection
     'src/pathselection/VirtualPathSelection.cpp',
@@ -122,6 +128,7 @@ hppFiles = [
     'src/lowerMAC/ITransmissionCounter.hpp',
     'src/lowerMAC/Manager.hpp',
     'src/lowerMAC/NextFrameGetter.hpp',
+    'src/lowerMAC/NextAggFrameGetter.hpp',
     'src/lowerMAC/RTSCTS.hpp',
     'src/lowerMAC/RateAdaptation.hpp',
     'src/lowerMAC/StopAndWaitARQ.hpp',
@@ -131,6 +138,7 @@ hppFiles = [
     'src/lowerMAC/rateAdaptationStrategies/Opportunistic.hpp',
     'src/lowerMAC/rateAdaptationStrategies/SINR.hpp',
     'src/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.hpp',
+    'src/lowerMAC/rateAdaptationStrategies/OpportunisticwithMIMO.hpp',
     'src/lowerMAC/timing/Backoff.hpp',
     'src/lowerMAC/timing/DCF.hpp',
     'src/lowerMAC/timing/tests/BackoffTest.hpp',
@@ -139,6 +147,10 @@ hppFiles = [
     'src/management/PERInformationBase.hpp',
     'src/management/SINRInformationBase.hpp',
     'src/management/VirtualCapabilityInformationBase.hpp',
+    'src/management/ProtocolCalculator.hpp',
+    'src/management/protocolCalculatorPlugins/ErrorProbability.hpp',
+    'src/management/protocolCalculatorPlugins/FrameLength.hpp',
+    'src/management/protocolCalculatorPlugins/Duration.hpp',
     'src/pathselection/BeaconLinkQualityMeasurement.hpp',
     'src/pathselection/ForwardingCommand.hpp',
     'src/pathselection/IPathSelection.hpp',
@@ -148,7 +160,7 @@ hppFiles = [
     'src/pathselection/NovelCheck.hpp',
     'src/pathselection/PathSelectionOverVPS.hpp',
     'src/pathselection/StationForwarding.hpp',
-    'src/pathselection/VirtualPathSelection.hpp',
+    'src/pathselection/VirtualPathSelection.hpp'
 ]
 pyconfigs = [
     'wifimac/FUNModes.py',
@@ -169,6 +181,7 @@ pyconfigs = [
     'wifimac/draftn/MultiBuffer.py',
     'wifimac/draftn/BlockACK.py',
     'wifimac/draftn/BlockUntilReply.py',
+    'wifimac/draftn/NextAggFrameGetter.py',
     'wifimac/draftn/__init__.py',
     'wifimac/evaluation/__init__.py',
     'wifimac/evaluation/default.py',
@@ -198,6 +211,15 @@ pyconfigs = [
     'wifimac/support/Rang.py',
     'wifimac/support/Transceiver.py',
     'wifimac/support/__init__.py',
+
+    'wifimac/protocolCalculator/__init__.py',
+    'wifimac/protocolCalculator/Duration.py',
+    'wifimac/protocolCalculator/ErrorProbability.py',
+    'wifimac/protocolCalculator/MIMO.py',
+    'wifimac/protocolCalculator/PhyMode.py',
+    'wifimac/protocolCalculator/FrameLength.py',
+    'wifimac/protocolCalculator/Throughput.py',
+
 ]
 dependencies = []
 Return('libname srcFiles hppFiles pyconfigs dependencies')
