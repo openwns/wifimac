@@ -408,7 +408,7 @@ bool MeshForwarding::doOnDataFRS(const wns::ldk::CompoundPtr& compound, Forwardi
 void
 MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
 {
-    if(layer2->getStationType() != dll::StationTypes::AP() and layer2->getStationType() != wns::service::dll::StationTypes::FRS())
+    if(layer2->getStationType() != wns::service::dll::StationTypes::AP() and layer2->getStationType() != wns::service::dll::StationTypes::FRS())
     {
         throw wns::Exception("doSendData not valid for node types other than AP and FRS");
     }
