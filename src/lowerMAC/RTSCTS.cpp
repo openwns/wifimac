@@ -65,7 +65,7 @@ RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
 
     pendingRTS(),
     pendingCTS(),
-    pendingMSDU(),
+    pendingMPDU(),
 
     state(idle)
 {
@@ -153,7 +153,7 @@ RTSCTS::processIncoming(const wns::ldk::CompoundPtr& compound)
         {
             // received CTS on transmitted RTS --> successfully reserved the channel
             // for data
-            assure(this->pendingMSDU, "Received CTS, but no pending MSDU");
+            assure(this->pendingMPDU, "Received CTS, but no pending MPDU");
             if(state == idle)
             {
                 MESSAGE_BEGIN(NORMAL, this->logger, m, "received CTS although state is idle, now: ");
@@ -173,14 +173,14 @@ RTSCTS::processIncoming(const wns::ldk::CompoundPtr& compound)
             if((state == idle)
                 or
                (friends.manager->getTransmitterAddress(compound->getCommandPool())
-                != friends.manager->getReceiverAddress(this->pendingMSDU->getCommandPool())))
+                != friends.manager->getReceiverAddress(this->pendingMPDU->getCommandPool())))
             {
                 MESSAGE_SINGLE(NORMAL, this->logger,
-                               "Incoming CTS does not match the receiver's address on the pending MSDU -> do nothing");
+                               "Incoming CTS does not match the receiver's address on the pending MPDU -> do nothing");
             }
             else
             {
-                assure(this->pendingMSDU, "Received CTS, but no pending MSDU");
+                assure(this->pendingMPDU, "Received CTS, but no pending MPDU");
                 MESSAGE_SINGLE(NORMAL, this->logger,
                                "Incoming awaited CTS -> send data");
                 state = idle;
@@ -202,12 +202,12 @@ RTSCTS::processIncoming(const wns::ldk::CompoundPtr& compound)
 void
 RTSCTS::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
-    assure(this->pendingMSDU == wns::ldk::CompoundPtr(),
-           "Cannot have two MSDUs");
+    assure(this->pendingMPDU == wns::ldk::CompoundPtr(),
+           "Cannot have two MPDUs");
     assure(this->pendingRTS == wns::ldk::CompoundPtr(),
            "Cannot have two RTSs");
 
-    this->pendingMSDU = compound;
+    this->pendingMPDU = compound;
 
     switch(friends.manager->getFrameType(compound->getCommandPool()))
     {
@@ -227,11 +227,11 @@ RTSCTS::processOutgoing(const wns::ldk::CompoundPtr& compound)
         {
             MESSAGE_SINGLE(NORMAL, this->logger,
                            "Outgoing DATA with size " << compound->getLengthInBits() << "-> Save and send RTS");
-            this->pendingRTS = this->prepareRTS(this->pendingMSDU);
+            this->pendingRTS = this->prepareRTS(this->pendingMPDU);
 
             // RTS/CTS initializes mini-TXOP for compound, it can be send
             // directly after SIFS
-            friends.manager->setFrameType(this->pendingMSDU->getCommandPool(), DATA_TXOP);
+            friends.manager->setFrameType(this->pendingMPDU->getCommandPool(), DATA_TXOP);
         }
         break;
     default:
@@ -254,7 +254,7 @@ RTSCTS::hasSomethingToSend() const
     }
     if(state == idle)
     {
-        return(this->pendingMSDU);
+        return(this->pendingMPDU);
     }
     return wns::ldk::CompoundPtr();
 
@@ -284,16 +284,16 @@ RTSCTS::getSomethingToSend()
         return(it);
     }
 
-    it = this->pendingMSDU;
-    this->pendingMSDU = wns::ldk::CompoundPtr();
-    MESSAGE_SINGLE(NORMAL, this->logger, "Send MSDU to "<< friends.manager->getReceiverAddress(it->getCommandPool()));
+    it = this->pendingMPDU;
+    this->pendingMPDU = wns::ldk::CompoundPtr();
+    MESSAGE_SINGLE(NORMAL, this->logger, "Send MPDU to "<< friends.manager->getReceiverAddress(it->getCommandPool()));
     return(it);
 }
 
 bool
 RTSCTS::hasCapacity() const
 {
-    return(this->pendingMSDU == wns::ldk::CompoundPtr());
+    return(this->pendingMPDU == wns::ldk::CompoundPtr());
 }
 
 void
@@ -305,7 +305,7 @@ RTSCTS::onTxStart(const wns::ldk::CompoundPtr& /*compound*/)
 void
 RTSCTS::onTxEnd(const wns::ldk::CompoundPtr& compound)
 {
-    if(this->pendingMSDU and
+    if(this->pendingMPDU and
        (getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this)) and
        (getCommand(compound->getCommandPool())->peer.isRTS) and
        (state == transmitRTS))
@@ -375,11 +375,11 @@ RTSCTS::onTimeout()
     // reception of cts has failed --> frame has failed
     MESSAGE_SINGLE(NORMAL, this->logger, "No CTS received -> transmission has failed");
 
-    // re-convert MSDU type from DATA_TXOP to DATA
-    friends.manager->setFrameType(this->pendingMSDU->getCommandPool(), DATA);
-    friends.arq->transmissionHasFailed(this->pendingMSDU);
+    // re-convert MPDU type from DATA_TXOP to DATA
+    friends.manager->setFrameType(this->pendingMPDU->getCommandPool(), DATA);
+    friends.arq->transmissionHasFailed(this->pendingMPDU);
 
-    this->pendingMSDU = wns::ldk::CompoundPtr();
+    this->pendingMPDU = wns::ldk::CompoundPtr();
     state = idle;
 
     this->lastTimeout = wns::simulator::getEventScheduler()->getTime();
@@ -388,12 +388,12 @@ RTSCTS::onTimeout()
 }
 
 wns::ldk::CompoundPtr
-RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& msdu)
+RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& mpdu)
 {
-    // Calculate duration of the msdu for NAV setting
+    // Calculate duration of the mpdu for NAV setting
 	wifimac::convergence::PhyMode phyMode = friends.phyUser->getPhyModeProvider()->getPhyMode(phyModeId);
 	wns::simulator::Time duration = 
-	protocolCalculator->getDuration()->getMSDU_PPDU(msdu->getLengthInBits(),phyMode.getDataBitsPerSymbol(), 
+	protocolCalculator->getDuration()->getMPDU_PPDU(mpdu->getLengthInBits(),phyMode.getDataBitsPerSymbol(), 
 							phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
 
     wns::simulator::Time nav = sifsDuration
@@ -404,9 +404,9 @@ RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& msdu)
         + expectedACKDuration;
 
     wns::ldk::CompoundPtr rts =
-        friends.manager->createCompound(friends.manager->getTransmitterAddress(msdu->getCommandPool()),   // tx address
-                                        friends.manager->getReceiverAddress(msdu->getCommandPool()),      // rx address
-                                        friends.manager->getFrameType(msdu->getCommandPool()),            // frame type
+        friends.manager->createCompound(friends.manager->getTransmitterAddress(mpdu->getCommandPool()),   // tx address
+                                        friends.manager->getReceiverAddress(mpdu->getCommandPool()),      // rx address
+                                        friends.manager->getFrameType(mpdu->getCommandPool()),            // frame type
                                         nav,                                                              // NAV
                                         true);                                                            // requires direct reply
 
@@ -415,8 +415,8 @@ RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& msdu)
     RTSCTSCommand* rtsctsC = this->activateCommand(rtsCP);
     rtsctsC->peer.isRTS = true;
 
-    /* set the transmission counter to the same value as the msdu */
-    friends.arq->copyTransmissionCounter(msdu, rts);
+    /* set the transmission counter to the same value as the mpdu */
+    friends.arq->copyTransmissionCounter(mpdu, rts);
 
     MESSAGE_BEGIN(NORMAL, this->logger, m, "Prepare RTS frame");
     m << " to " << friends.manager->getReceiverAddress(rtsCP);

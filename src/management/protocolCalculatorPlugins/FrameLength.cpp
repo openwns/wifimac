@@ -54,29 +54,30 @@ FrameLength::getPSDU(Bit msduFrameSize) const
 }
 
 Bit
-FrameLength::getA_MPDU_PSDU(Bit msduFrameSize, unsigned int n_aggFrames) const
+FrameLength::getA_MPDU_PSDU(Bit mpduFrameSize, unsigned int n_aggFrames) const
 {
     // n-1 frames with padding, last one without
-    Bit len = (n_aggFrames - 1) * pad(this->ampdu_delimiter + this->macDataHdr + msduFrameSize + this->macDataFCS, 32);
-    return(len + this->ampdu_delimiter + this->macDataHdr + msduFrameSize + this->macDataFCS);
+    Bit len = n_aggFrames * pad(this->ampdu_delimiter + mpduFrameSize, 32);
+    len += blockACKreq;
+    return(len + this->ampdu_delimiter + mpduFrameSize);
 }
 
 Bit
-FrameLength::getA_MPDU_PSDU(const std::vector<Bit>& msduFrameSize) const
+FrameLength::getA_MPDU_PSDU(const std::vector<Bit>& mpduFrameSize) const
 {
-    assure(not msduFrameSize.empty(), "vector must have at least one entry");
+    assure(not mpduFrameSize.empty(), "vector must have at least one entry");
 
     Bit len = 0;
     Bit last = 0;
 
-    for(std::vector<Bit>::const_iterator it = msduFrameSize.begin();
-        it != msduFrameSize.end();
+    for(std::vector<Bit>::const_iterator it = mpduFrameSize.begin();
+        it != mpduFrameSize.end();
         ++it)
     {
-        last = pad(this->ampdu_delimiter + this->macDataHdr + (*it) + this->macDataFCS, 32);
+        last = pad(this->ampdu_delimiter + (*it), 32);
         len += last;
     }
-    len += this->ampdu_delimiter + this->macDataHdr + msduFrameSize.back() + this->macDataFCS - last;
+    len += blockACKreq;
     return(len);
 }
 
@@ -108,14 +109,14 @@ FrameLength::getA_MSDU_PSDU(const std::vector<Bit>& msduFrameSize) const
 }
 
 Bit
-FrameLength::pad(Bit msduFrameSize, Bit multiple) const
+FrameLength::pad(Bit frameSize, Bit multiple) const
 {
-    if((msduFrameSize % multiple) == 0)
+    if((frameSize % multiple) == 0)
     {
-        return msduFrameSize;
+        return frameSize;
     }
     else
     {
-        return (msduFrameSize + (multiple - (msduFrameSize % multiple)));
+        return (frameSize + (multiple - (frameSize % multiple)));
     }
 }

@@ -29,6 +29,11 @@
 #ifndef WIFIMAC_LOWERMAC_MULTIBUFFER_HPP
 #define WIFIMAC_LOWERMAC_MULTIBUFFER_HPP
 
+#include <WIFIMAC/lowerMAC/Manager.hpp>
+#include <WIFIMAC/lowerMAC/RateAdaptation.hpp>
+#include <WIFIMAC/management/ProtocolCalculator.hpp>
+#include <WIFIMAC/lowerMAC/ITXOPWindow.hpp>
+
 #include <WNS/ldk/FunctionalUnit.hpp>
 #include <WNS/ldk/FUNConfigCreator.hpp>
 #include <WNS/ldk/Delayed.hpp>
@@ -93,6 +98,7 @@ namespace wifimac { namespace lowerMAC {
         wns::logger::Logger* logger;
     };
 
+
     /**
      * @brief Multi queue buffer
      *
@@ -109,7 +115,8 @@ namespace wifimac { namespace lowerMAC {
     class MultiBuffer :
         public wns::ldk::fu::Plain<MultiBuffer, wns::ldk::EmptyCommand>,
         public wns::ldk::Delayed<MultiBuffer>,
-        public wns::events::CanTimeout
+        public wns::events::CanTimeout,
+	public wifimac::lowerMAC::ITXOPWindow
     {
     public:
         MultiBuffer(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& /*config*/);
@@ -117,7 +124,6 @@ namespace wifimac { namespace lowerMAC {
         /// Copy constructor required if std::auto_ptr are used
         MultiBuffer(const MultiBuffer& other);
 
-        /// Delayed interface
         virtual bool
         hasCapacity() const
             { return true;}
@@ -140,26 +146,47 @@ namespace wifimac { namespace lowerMAC {
         unsigned int
         getSize(const ContainerType& buffer) const;
 
-        std::vector<Bit>
-        getCurrentBufferSizes() const;
-
         // CanTimeout interface
         virtual void
         onTimeout();
 
+		virtual void
+		setDuration(wns::simulator::Time duration);
+		virtual wns::simulator::Time 
+		getActualDuration(wns::simulator::Time duration);
+
     private:
+		void onFUNCreated();
+
+        unsigned int getCurrentSendBuffer();
+		void calculateSendParameters();
+
+        const std::string managerName;
+        const std::string raName;
+        const std::string protocolCalculatorName;
+        wifimac::management::ProtocolCalculator* protocolCalculator;
+
+        struct Friends
+        {
+	    wifimac::lowerMAC::RateAdaptation* ra;
+            wifimac::lowerMAC::Manager* manager;
+        } friends;
+
         std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
+	// indicates new round for TXOP
+	bool isActive;
         DestinationBuffers sendBuffers;
         wns::logger::Logger logger;
         const int bufferSendSize;
         const int maxSize;
         int currentSize;
         int currentBuffer;
-        int stillToBeSend;
+        int stilltoBeSent;
         const bool impatient;
-        unsigned int getCurrentSendBuffer();
         std::auto_ptr<IQueuing> queueSelector;
         const wns::simulator::Time incomingTimeout;
+	wns::simulator::Time maxDuration;
+	wns::simulator::Time actualDuration;
     };
 
 

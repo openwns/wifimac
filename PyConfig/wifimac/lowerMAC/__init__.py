@@ -27,12 +27,12 @@
 
 from DCF import *
 from Manager import *
-from NextFrameGetter import *
 from RTSCTS import *
 from RateAdaptation import *
 from StopAndWaitARQ import *
 from TXOP import *
 from DuplicateFilter import *
+from SingleBuffer import *
 
 import wifimac.helper.Keys
 import wifimac.helper.Filter
@@ -63,22 +63,20 @@ names['txop']  = 'TXOP'
 def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = __getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
-    FUs.append(openwns.Buffer.Dropping(functionalUnitName = names['buffer'] + str(transceiverAddress),
-                                       commandName = names['buffer'] + 'Command',
+    FUs.append(SingleBuffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
+				       commandName = names['buffer'] + 'Command',
                                        sizeUnit = config.bufferSizeUnit,
                                        size = config.bufferSize,
-                                       localIDs = probeLocalIDs,
-                                       probingEnabled = False))
+				       localIDs = probeLocalIDs,
+                                       probingEnabled = False,
+       				       raName = names['ra'] + str(transceiverAddress),
+			   	       protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress)))
 
     FUs.append(DuplicateFilter(functionalUnitName = names['DuplicateFilter'] + str(transceiverAddress),
                                commandName =  names['DuplicateFilter'] + 'Command',
                                managerName = names['manager'] + str(transceiverAddress),
                                arqCommandName = names['arq'] + 'Command',
                                parentLogger = logger))
-
-    FUs.append(NextFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
-                               protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-			       commandName = names['nextFrame'] + 'Command'))
 
     FUs.append(StopAndWaitARQ(fuName = names['arq'] + str(transceiverAddress),
                               commandName = names['arq'] + 'Command',
@@ -103,13 +101,15 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                               parentLogger = logger))
 
     FUs.append(TXOP(functionalUnitName = names['txop'] + str(transceiverAddress),
-                    commandName = names['txop'] + 'Command',
-                    managerName = names['manager'] +  str(transceiverAddress),
-                    protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-                    nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
-                    raName = names['ra'] + str(transceiverAddress),
-                    config = config.txop,
-                    parentLogger = logger))
+                                 commandName = names['txop'] + 'Command',
+                                 managerName = names['manager'] +  str(transceiverAddress),
+                                 protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                                 txopWindowName = names['buffer'] + str(transceiverAddress),
+                                 raName = names['ra'] + str(transceiverAddress),
+                                 probePrefix = 'wifimac.txop',
+				 localIDs = probeLocalIDs,
+				 config = config.txop,
+                                 parentLogger = logger))
 
     for fu in FUs:
             myFUN.add(fu)

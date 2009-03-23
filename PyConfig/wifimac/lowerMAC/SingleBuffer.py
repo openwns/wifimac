@@ -2,9 +2,9 @@
 # This file is part of openWNS (open Wireless Network Simulator)
 # _____________________________________________________________________________
 #
-# Copyright (C) 2004-2008
+# Copyright (C) 2004-2007
 # Chair of Communication Networks (ComNets)
-# Kopernikusstr. 16, D-52074 Aachen, Germany
+# Kopernikusstr. 5, D-52074 Aachen, Germany
 # phone: ++49-241-80-27910,
 # fax: ++49-241-80-22242
 # email: info@openwns.org
@@ -25,19 +25,21 @@
 #
 ###############################################################################
 
+from openwns.pyconfig import attrsetter
+import openwns.logger
 import openwns.FUN
-import openwns.pyconfig
+import openwns.Buffer
 
-import wifimac.Logger
-
-class NextAggFrameGetter(openwns.FUN.FunctionalUnit):
-    __plugin__ = 'wifimac.lowerMAC.NextAggFrameGetter'
-
-    bufferName = None
+class SingleBuffer(openwns.Buffer.Buffer):
+    __plugin__ = 'wifimac.lowerMAC.SingleBuffer'
+    name = "SingleBuffer"
     protocolCalculatorName = None
-    
-    def __init__(self, functionalUnitName, commandName, bufferName, protocolCalculatorName, **kw):
-        super(NextAggFrameGetter, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
-	self.bufferName = bufferName
+    raName = None
+
+    drop = 'Tail'
+    def __init__(self, protocolCalculatorName, raName, **kw):
+        super(SingleBuffer, self).__init__(**kw)
+	self.raName = raName
 	self.protocolCalculatorName = protocolCalculatorName
-        openwns.pyconfig.attrsetter(self, kw)
+
+

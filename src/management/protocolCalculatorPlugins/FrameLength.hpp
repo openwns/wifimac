@@ -41,11 +41,11 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
         virtual ~FrameLength() {};
 
         Bit getPSDU(Bit msduFrameSize) const;
-        Bit getA_MPDU_PSDU(Bit msduFrameSize, unsigned int n_aggFrames) const;
-        Bit getA_MPDU_PSDU(const std::vector<Bit>& msduFrameSize) const;
+        Bit getA_MPDU_PSDU(Bit mpduFrameSize, unsigned int n_aggFrames) const;
+        Bit getA_MPDU_PSDU(const std::vector<Bit>& mpduFrameSize) const;
         Bit getA_MSDU_PSDU(Bit msduFrameSize, unsigned int n_aggFrames) const;
         Bit getA_MSDU_PSDU(const std::vector<Bit>& msduFrameSize) const;
-        Bit pad(Bit msduFrameSize, Bit multiple) const;
+        Bit pad(Bit frameSize, Bit multiple) const;
 
         const Bit macDataHdr;
         const Bit macDataFCS;

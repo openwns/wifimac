@@ -136,7 +136,7 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
     if(networkProbes):
         #  * Unicast & received by me
         #  * Table with source | target | MCS
-        for sourceName in ['wifimac.linkQuality.msduSuccessRate', 'wifimac.linkQuality.sinr', 'wifimac.linkQuality.per']:
+        for sourceName in ['wifimac.linkQuality.msduSuccessRate', 'wifimac.linkQuality.sinr']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))
             node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundIsForMe', ifIn = [1]))
@@ -178,7 +178,7 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
 
         # * Probes that are not packet related --> no source or target to test on!
         # * Table with Transceiver Address
-        for sourceName in ['wifimac.txUpper.window.outgoing.bitThroughput', 'wifimac.channelState.busy']:
+        for sourceName in ['wifimac.txUpper.window.outgoing.bitThroughput', 'wifimac.channelState.busy', 'wifimac.txop.duration']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))
             # limit to APs/MPs on demand
@@ -189,4 +189,3 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
             node.getLeafs().appendChildren(Table(axis1 = 'MAC.TransceiverAddress', minValue1 = minAdr, maxValue1 = maxAdr+1, resolution1 = maxAdr+1-minAdr,
                                                  values = ['mean', 'trials', 'variance'],
                                                  formats = ['MatlabReadableSparse']))
-

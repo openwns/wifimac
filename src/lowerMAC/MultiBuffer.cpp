@@ -29,6 +29,7 @@
 #include <WIFIMAC/lowerMAC/MultiBuffer.hpp>
 #include <WIFIMAC/pathselection/ForwardingCommand.hpp>
 #include <WNS/ldk/CommandReaderInterface.hpp>
+#include <DLL/Layer2.hpp>
 #include <DLL/UpperConvergence.hpp>
 
 using namespace wifimac::lowerMAC;
@@ -150,9 +151,15 @@ MultiBuffer::MultiBuffer(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& con
     bufferSendSize(config.get<int>("myConfig.sendSize")),
     incomingTimeout(config.get<wns::simulator::Time>("myConfig.timeout")),
     impatient(config.get<bool>("myConfig.impatient")),
-    stillToBeSend(0),
+    managerName(config.get<std::string>("managerName")),
+    raName(config.get<std::string>("raName")),
+    protocolCalculatorName(config.get<std::string>("protocolCalculatorName")),
+    stilltoBeSent(0),
     currentSize(0),
     currentBuffer(-1),
+    maxDuration(),
+    actualDuration(),
+    isActive(false),
     queueSelector()
 {
     std::string pluginName = config.get<std::string>("sizeUnit");
@@ -161,6 +168,10 @@ MultiBuffer::MultiBuffer(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& con
     pluginName = config.get<std::string>("myConfig.queueSelector");
     queueSelector = std::auto_ptr<IQueuing>(IQueuing::Factory::creator(pluginName)->create());
     queueSelector->setMultiBuffer(this, &(this->logger));
+
+    friends.manager = NULL;
+    friends.ra  = NULL;
+    protocolCalculator = NULL;
 }
 
 MultiBuffer::MultiBuffer(const MultiBuffer& other) :
@@ -180,13 +191,25 @@ MultiBuffer::MultiBuffer(const MultiBuffer& other) :
     sendBuffers(other.sendBuffers),
     currentSize(other.currentSize),
     currentBuffer(other.currentBuffer),
-    stillToBeSend(other.stillToBeSend),
+    stilltoBeSent(other.stilltoBeSent),
     bufferSendSize(other.bufferSendSize),
     queueSelector(wns::clone(other.queueSelector)),
     sizeCalculator(wns::clone(other.sizeCalculator)),
     incomingTimeout(other.incomingTimeout),
-    impatient(other.impatient)
+    maxDuration(other.maxDuration),
+    actualDuration(other.actualDuration),
+    impatient(other.impatient),
+    isActive(other.isActive)
 {
+}
+
+void MultiBuffer::onFUNCreated()
+{
+    MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
+
+    friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
+    friends.ra = getFUN()->findFriend<wifimac::lowerMAC::RateAdaptation*>(raName);
+    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
 
 
@@ -231,24 +254,16 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
             this->setTimeout(this->incomingTimeout);
         }
     }
-
     // no send buffer met the "flush" criteria so far, maybe after we (tried to) add this new compound
     if (currentBuffer == -1)
     {
         currentBuffer = queueSelector->getSendBuffer(sendBuffers,
                                                      (not bufferFull and not impatient));
+
         if (currentBuffer != -1)
         {
-            if (getSize(*(sendBuffers.find(currentBuffer))) >= bufferSendSize)
-            {
-                stillToBeSend = bufferSendSize;
-            }
-            else
-            {
-                stillToBeSend = getSize(*(sendBuffers.find(currentBuffer)));
-            }
+			calculateSendParameters();
         }
-        MESSAGE_SINGLE(NORMAL, this->logger, "CurrentBuffer changed to " << currentBuffer);
     }
 } // processOutgoing
 
@@ -256,7 +271,7 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
 const wns::ldk::CompoundPtr
 MultiBuffer::hasSomethingToSend() const
 {
-   if (currentBuffer == -1)
+   if ((currentBuffer == -1) || (stilltoBeSent == 0))// || (isActive == false))
    {
        return (wns::ldk::CompoundPtr());
    }
@@ -268,33 +283,19 @@ wns::ldk::CompoundPtr
 MultiBuffer::getSomethingToSend()
 {
    assure(hasSomethingToSend(), "Called getSomethingToSend, but nothing to send");
-
    // remove the head of the current send buffer queue
    ContainerType* buffer = sendBuffers.find(currentBuffer);
    wns::ldk::CompoundPtr it = buffer->front();
    buffer->pop_front();
    currentSize -= (*sizeCalculator)(it);
-   stillToBeSend -= (*sizeCalculator)(it);
 
-   MESSAGE_SINGLE(NORMAL, this->logger, "getSomethingToSend, stilltoBeSend becomes " << stillToBeSend);
+   stilltoBeSent -= (*sizeCalculator)(it);
 
    // if all packages for the current "run" have been sent, call strategy for the next buffer (id)
-   if (stillToBeSend <= 0)
+   if (stilltoBeSent <= 0)
    {
-       currentBuffer = queueSelector->getSendBuffer(sendBuffers, not impatient);
-       if (currentBuffer != -1)
-       {
-           if (getSize(*(sendBuffers.find(currentBuffer))) >= bufferSendSize)
-           {
-               stillToBeSend = bufferSendSize;
-           }
-           else
-           {
-               stillToBeSend = getSize(*(sendBuffers.find(currentBuffer)));
-           }
-
-           MESSAGE_SINGLE(NORMAL, this->logger, "Strategy selected new buffer, stilltoBeSend set to " << stillToBeSend);
-       }
+       isActive = false;
+       currentBuffer = queueSelector->getSendBuffer(sendBuffers,!impatient);
    }
    return it;
 } // getSomethingToSend
@@ -318,53 +319,92 @@ MultiBuffer::getSize(const ContainerType& buffer) const
     return size;
 }
 
-std::vector<Bit>
-MultiBuffer::getCurrentBufferSizes() const
-{
-    std::vector<Bit> sizes;
-    ContainerType *buffer = NULL;
-    int32_t counter =0;
-    if (currentBuffer != -1)
-    {
-        buffer = sendBuffers.find(currentBuffer);
-        if (buffer->size() != 0)
-        {
-            for(ContainerType::const_iterator it=buffer->begin();it != buffer->end();++it)
-            {
-                sizes.push_back( (*it)->getLengthInBits());
-                counter++;
-                if (counter == stillToBeSend)
-                {
-                    break;
-                }
-            }
-        }
-    }
-    return sizes;
-}
-
 
 void
 MultiBuffer::onTimeout()
 {
+	if (currentBuffer == -1) // no buffer meets the strategy criteria
+	{
+		// get the buffer with the most compounds, to be sent next
+		currentBuffer = queueSelector->getSendBuffer(sendBuffers, false);
 
-    if (currentBuffer == -1) // no buffer meets the strategy criteria
-    {
-        // get the buffer with the most compounds, to be sent next
-        currentBuffer = queueSelector->getSendBuffer(sendBuffers, false);
-        if (currentBuffer != -1)
-        {
-            stillToBeSend = this->getSize(*(sendBuffers.find(currentBuffer)));
-        }
-        else // no waiting compounds at all no new timer setting needed
-        {
-            MESSAGE_SINGLE(NORMAL, this->logger, "Timeout, but no waiting compounds");
-            return;
-        }
-    }
-    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout, stillToBeSend set to " << stillToBeSend);
-    // restart countdown
-    this->setTimeout(this->incomingTimeout);
+		if (currentBuffer != -1)
+		{
+			calculateSendParameters();
+		}
+		else // no waiting compounds at all no new timer setting needed
+		{
+			MESSAGE_SINGLE(NORMAL, this->logger, "Timeout, but no waiting compounds");
+			return;
+		}
+	}
+	// restart countdown
+	this->setTimeout(this->incomingTimeout);
 
-    tryToSend();
+	tryToSend();
+}
+
+void MultiBuffer::setDuration(wns::simulator::Time duration) 
+{
+	maxDuration = duration;
+	if (currentBuffer != -1)
+	{
+		calculateSendParameters();
+	}
+	isActive = true;
+}
+
+wns::simulator::Time MultiBuffer::getActualDuration(wns::simulator::Time duration) 
+{
+	maxDuration = duration;
+	if (currentBuffer != -1)
+	{
+		calculateSendParameters();
+		return actualDuration;
+	}
+	return 0;
+}
+
+void MultiBuffer::calculateSendParameters()
+{
+	assure(currentBuffer != -1,"calculating sending size but currently no buffer selected");
+	std::vector<Bit> sizes;
+	wns::simulator::Time duration = 0;
+	wifimac::convergence::PhyMode phyMode;
+	wns::simulator::Time APPDUDuration;
+	ContainerType buffer;
+
+// with TXOP
+	if (maxDuration > 0)
+	{
+		phyMode = friends.ra->getPhyMode(sendBuffers.find(currentBuffer)->front());
+		for(ContainerType::const_iterator it=sendBuffers.find(currentBuffer)->begin();it != 	sendBuffers.find(currentBuffer)->end();++it)
+		{
+			sizes.push_back((*it)->getLengthInBits());
+			APPDUDuration = protocolCalculator->getDuration()->getA_MPDU_PPDU(sizes,phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
+			if (APPDUDuration > maxDuration) 
+			{
+				break;
+			}
+			buffer.push_back((*it));
+			if (getSize(buffer) > bufferSendSize)
+			{
+				buffer.pop_back();
+				break;
+			}
+			duration = APPDUDuration;
+		}
+		actualDuration = duration;
+		stilltoBeSent = getSize(buffer);
+		return;
+	}
+// no TXOP	
+	if (getSize(*(sendBuffers.find(currentBuffer))) >= bufferSendSize)
+	{
+		stilltoBeSent = bufferSendSize;
+	}
+	else
+	{
+		stilltoBeSent = getSize(*(sendBuffers.find(currentBuffer)));
+	}
 }

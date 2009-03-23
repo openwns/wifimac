@@ -114,7 +114,7 @@ namespace wifimac { namespace lowerMAC {
         void onTimeout();
 
         wns::ldk::CompoundPtr
-        prepareRTS(const wns::ldk::CompoundPtr& msdu);
+        prepareRTS(const wns::ldk::CompoundPtr& mpdu);
 
         wns::ldk::CompoundPtr
         prepareCTS(const wns::ldk::CompoundPtr& rts);
@@ -148,7 +148,7 @@ namespace wifimac { namespace lowerMAC {
 
         wns::ldk::CompoundPtr pendingRTS;
         wns::ldk::CompoundPtr pendingCTS;
-        wns::ldk::CompoundPtr pendingMSDU;
+        wns::ldk::CompoundPtr pendingMPDU;
 
 	wifimac::management::ProtocolCalculator *protocolCalculator;
         struct Friends

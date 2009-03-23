@@ -225,9 +225,9 @@ Duration::getMPDU_PPDU(Bit mpduSize, unsigned int dbps, unsigned int streams, un
 
 
 wns::simulator::Time
-Duration::getA_MPDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::getA_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->getA_MPDU_PSDU(msduFrameSize, n_aggFrames),
+    return(getFrame(pc->getFrameLength()->getA_MPDU_PSDU(mpduFrameSize, n_aggFrames),
                     dbps,
                     streams,
                     bandwidth,
@@ -236,9 +236,9 @@ Duration::getA_MPDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, unsigned i
 
 
 wns::simulator::Time
-Duration::getA_MPDU_PPDU(const std::vector<Bit>& msduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::getA_MPDU_PPDU(const std::vector<Bit>& mpduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->getA_MPDU_PSDU(msduFrameSize),
+    return(getFrame(pc->getFrameLength()->getA_MPDU_PSDU(mpduFrameSize),
                     dbps,
                     streams,
                     bandwidth,

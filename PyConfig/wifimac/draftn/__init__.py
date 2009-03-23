@@ -48,15 +48,13 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
     FUs.append(MultiBuffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
                            commandName = 'queueCommand',
                            config = config.multiBuffer,
+			   raName = names['ra'] + str(transceiverAddress),
+			   managerName = names['manager'] + str(transceiverAddress),
+			   protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                            sizeUnit = config.bufferSizeUnit,
                            size = config.bufferSize,
                            parentLogger = logger))
 
-    FUs.append(NextAggFrameGetter(functionalUnitName = names['nextFrame'] + str(transceiverAddress),
-                               bufferName = names['buffer'] + str(transceiverAddress),
-			       protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-			       commandName = names['nextFrame'] + 'Command'))
-			       
     FUs.append(BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
                         commandName = names['arq'] + 'Command',
                         managerName = names['manager'] + str(transceiverAddress),
@@ -97,9 +95,11 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                  commandName = names['txop'] + 'Command',
                                  managerName = names['manager'] +  str(transceiverAddress),
                                  protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-                                 nextFrameHolderName = names['nextFrame'] + str(transceiverAddress),
+                                 txopWindowName = names['buffer'] + str(transceiverAddress),
                                  raName = names['ra'] + str(transceiverAddress),
-                                 config = config.txop,
+                                 probePrefix = 'wifimac.txop',
+				 localIDs = probeLocalIDs,
+				 config = config.txop,
                                  parentLogger = logger)
 
     rtscts = wifimac.lowerMAC.RTSCTS(functionalUnitName = names['rtscts'] + str(transceiverAddress),

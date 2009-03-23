@@ -36,7 +36,7 @@ class TXOPConfig(object):
     txopLimit = 0
     singleReceiver = False
 
-class TXOP(openwns.FUN.FunctionalUnit):
+class TXOP(openwns.Probe.Probe):
 
     __plugin__ = 'wifimac.lowerMAC.TXOP'
     """ Name in FU Factory """
@@ -45,19 +45,21 @@ class TXOP(openwns.FUN.FunctionalUnit):
 
     protocolCalculatorName = None
     managerName = None
-    nextFrameHolderName = None
     raName = None
-
+    txopWindowName = None
     myConfig = None
 
-    def __init__(self, functionalUnitName, commandName, managerName, protocolCalculatorName, nextFrameHolderName, raName, config, parentLogger = None, **kw):
-        super(TXOP, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
+    TXOPDurationProbeName = None
+
+    def __init__(self, functionalUnitName, commandName, managerName, probePrefix, protocolCalculatorName, txopWindowName, raName, config, parentLogger = None, **kw):
+        super(TXOP, self).__init__(name = functionalUnitName, commandName = commandName)
         self.managerName = managerName
         self.protocolCalculatorName = protocolCalculatorName
-        self.nextFrameHolderName = nextFrameHolderName
+        self.txopWindowName = txopWindowName
         self.raName = raName
         assert(config.__class__ == TXOPConfig)
         self.myConfig = config
         self.logger = wifimac.Logger.Logger(name = "TXOP", parent = parentLogger)
-        openwns.pyconfig.attrsetter(self, kw)
+        self.TXOPDurationProbeName = probePrefix + '.duration'
+	openwns.pyconfig.attrsetter(self, kw)
 

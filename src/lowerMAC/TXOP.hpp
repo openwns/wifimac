@@ -31,15 +31,17 @@
 
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
-#include <WIFIMAC/lowerMAC/NextFrameGetter.hpp>
+#include <WIFIMAC/lowerMAC/ITXOPWindow.hpp>
 #include <WIFIMAC/lowerMAC/RateAdaptation.hpp>
 #include <WIFIMAC/management/ProtocolCalculator.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Processor.hpp>
 #include <WNS/ldk/Delayed.hpp>
+#include <WNS/ldk/probe/Probe.hpp>
 
 #include <WNS/events/CanTimeout.hpp>
+#include <WNS/probe/bus/ContextCollector.hpp>
 
 #include <WNS/Observer.hpp>
 
@@ -47,7 +49,8 @@ namespace wifimac { namespace lowerMAC {
 
     class TXOP:
         public wns::ldk::fu::Plain<TXOP, wns::ldk::EmptyCommand>,
-        public wns::ldk::Processor<TXOP>
+        public wns::ldk::Processor<TXOP>,
+	public wns::ldk::probe::Probe
     {
     public:
 
@@ -73,7 +76,7 @@ namespace wifimac { namespace lowerMAC {
 
         const std::string managerName;
         const std::string protocolCalculatorName;
-        const std::string nextFrameHolderName;
+        const std::string txopWindowName;
         const std::string raName;
 
         /** @brief Duration of the Short InterFrame Space */
@@ -91,10 +94,11 @@ namespace wifimac { namespace lowerMAC {
         struct Friends
         {
             wifimac::lowerMAC::Manager* manager;
-            wifimac::lowerMAC::NextFrameGetter* nextFrameHolder;
+            wifimac::lowerMAC::ITXOPWindow* txopWindow;
             wifimac::lowerMAC::RateAdaptation* ra;
         } friends;
 
+	wns::probe::bus::ContextCollectorPtr TXOPDurationProbe;
     };
 
 
