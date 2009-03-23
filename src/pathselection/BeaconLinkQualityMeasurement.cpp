@@ -29,7 +29,7 @@
 #include <WIFIMAC/pathselection/BeaconLinkQualityMeasurement.hpp>
 #include <WIFIMAC/convergence/PhyUserCommand.hpp>
 #include <WIFIMAC/FrameType.hpp>
-#include <WNS/service/dll/StationTypes.hpp>
+
 #include <DLL/Layer2.hpp>
 
 #include <WNS/probe/bus/utils.hpp>
@@ -145,13 +145,13 @@ BroadcastLinkQuality::newPeerMeasurement(double peerSuccessRate, wns::Ratio peer
         ps->createPeerLink(myAddress, peerAddress, m);
         linkCreated = true;
     }
+
     if ( ps->getNextHop(myAddress, peerAddress) != wns::service::dll::UnicastAddress() and ps->getProxyFor(parent->getFUN()->getLayer<dll::Layer2*>()->getDLLAddress()) == wns::service::dll::UnicastAddress())
     {
 
-		MESSAGE_SINGLE(NORMAL, parent->logger,"Registering mesh point as proxy for itself at VPS");
- 		ps->registerProxy(myAddress,parent->getFUN()->getLayer<dll::Layer2*>()->getDLLAddress());	
+        MESSAGE_SINGLE(NORMAL, parent->logger,"Registering mesh point as proxy for itself at VPS");
+        ps->registerProxy(myAddress,parent->getFUN()->getLayer<dll::Layer2*>()->getDLLAddress());
     }
-
     return(m);
 }
 
@@ -266,7 +266,7 @@ BeaconLinkQualityMeasurement::onFUNCreated()
     friends.manager =  getFUN()->findFriend<wifimac::lowerMAC::Manager*>(config.get<std::string>("managerName"));
     assure(friends.manager, "Management entity not found");
 
-    if(friends.manager->getStationType() != wns::service::dll::StationTypes::UT())
+    if(friends.manager->getStationType() != dll::StationTypes::UT())
     {
         ps = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::pathselection::IPathSelection>
             (config.get<std::string>("pathSelectionServiceName"));
@@ -286,7 +286,7 @@ void
 BeaconLinkQualityMeasurement::doSendData(const wns::ldk::CompoundPtr& compound)
 {
     assure(compound, "doSendData called with an invalid compound.");
-    assure(friends.manager->getStationType() != wns::service::dll::StationTypes::UT(), "Only non-UT are allowed to send beacons");
+    assure(friends.manager->getStationType() != dll::StationTypes::UT(), "Only non-UT are allowed to send beacons");
     assure(friends.manager->getFrameType(compound->getCommandPool()) == BEACON,
            "Frame type is no beacon, but " << friends.manager->getFrameType(compound->getCommandPool()));
 
@@ -329,7 +329,7 @@ BeaconLinkQualityMeasurement::doOnData(const wns::ldk::CompoundPtr& compound)
 {
     assure(compound, "doOnData called with an invalid compound.");
 
-    if(friends.manager->getStationType() == wns::service::dll::StationTypes::UT())
+    if(friends.manager->getStationType() == dll::StationTypes::UT())
     {
         // UT->nothing to do
         getDeliverer()->getAcceptor(compound)->onData(compound);
