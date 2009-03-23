@@ -136,7 +136,7 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
     if(networkProbes):
         #  * Unicast & received by me
         #  * Table with source | target | MCS
-        for sourceName in ['wifimac.linkQuality.msduSuccessRate', 'wifimac.linkQuality.sinr']:
+        for sourceName in ['wifimac.linkQuality.msduSuccessRate', 'wifimac.linkQuality.sinr', 'wifimac.linkQuality.per']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))
             node.getLeafs().appendChildren(Accept(by = 'MAC.CompoundIsForMe', ifIn = [1]))

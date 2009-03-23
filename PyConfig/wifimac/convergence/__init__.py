@@ -100,6 +100,7 @@ def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalID
                                     managerName = names['manager'] + str(transceiverAddress),
                                     crcCommandName = names['crc'] + 'Command',
                                     phyUserCommandName = names['phyUser'] + 'Command',
+                                    errorModellingCommandName = names['errorModelling'] + 'Command',
                                     probePrefix = 'wifimac.linkQuality',
                                     sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
                                     config = config.frameSynchronization,

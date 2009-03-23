@@ -115,14 +115,18 @@ namespace wifimac { namespace convergence {
         const std::string managerName;
 		const std::string crcCommandName;
 		const std::string phyUserCommandName;
+        const std::string errorModellingCommandName;
         const std::string sinrMIBServiceName;
 
 		/**
 		 * @brief Probing of the PSDU success rate
 		 */
 		wns::probe::bus::ContextCollectorPtr successRateProbe;
-        /** @brief Probing of the PSDU sinr */
+        /** @brief Probing the sinr of received MPDUs */
         wns::probe::bus::ContextCollectorPtr sinrProbe;
+
+        /** @brief Probing the per of received MPDUs */
+        wns::probe::bus::ContextCollectorPtr perProbe;
 
         wifimac::management::SINRInformationBase* sinrMIB;
 

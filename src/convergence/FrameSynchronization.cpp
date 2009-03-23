@@ -29,6 +29,7 @@
 #include <WIFIMAC/convergence/FrameSynchronization.hpp>
 #include <WIFIMAC/convergence/PhyUserCommand.hpp>
 #include <WIFIMAC/convergence/PreambleGenerator.hpp>
+#include <WIFIMAC/convergence/ErrorModelling.hpp>
 
 #include <WNS/ldk/Layer.hpp>
 #include <WNS/ldk/crc/CRC.hpp>
@@ -65,6 +66,7 @@ FrameSynchronization::FrameSynchronization(wns::ldk::fun::FUN* fun, const wns::p
     managerName(config.get<std::string>("managerName")),
     crcCommandName(config.get<std::string>("crcCommandName")),
     phyUserCommandName(config.get<std::string>("phyUserCommandName")),
+    errorModellingCommandName(config.get<std::string>("errorModellingCommandName")),
     sinrMIBServiceName(config.get<std::string>("sinrMIBServiceName"))
 {
     // read the localIDs from the config
@@ -78,7 +80,7 @@ FrameSynchronization::FrameSynchronization(wns::ldk::fun::FUN* fun, const wns::p
     }
     successRateProbe = wns::probe::bus::collector(localContext, config, "successRateProbeName");
     sinrProbe = wns::probe::bus::collector(localContext, config, "sinrProbeName");
-
+    perProbe = wns::probe::bus::collector(localContext, config, "perProbeName");
 }
 
 FrameSynchronization::~FrameSynchronization()
@@ -305,6 +307,10 @@ void FrameSynchronization::processPSDU(const wns::ldk::CompoundPtr& compound)
     wns::Ratio sinr = getFUN()->getCommandReader(phyUserCommandName)->
         readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool())->getCIR();
     sinrProbe->put(compound, sinr.get_dB());
+
+    double per = getFUN()->getCommandReader(errorModellingCommandName)->
+        readCommand<wifimac::convergence::ErrorModellingCommand>(compound->getCommandPool())->getErrorRate();
+    perProbe->put(compound, per);
 
     if((curState == Synchronized or curState == waitForFinalDelivery) and
        (friends.manager->getTransmitterAddress(compound->getCommandPool()) == this->synchronizedToAddress) and
