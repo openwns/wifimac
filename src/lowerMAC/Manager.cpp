@@ -179,21 +179,21 @@ Manager::getAssociatedTo() const
 wns::ldk::CommandPool*
 Manager::createReply(const wns::ldk::CommandPool* original) const
 {
-    wns::ldk::CommandPool* reply = this->getFUN()->getProxy()->createReply(original, this);
+	wns::ldk::CommandPool* reply = this->getFUN()->getProxy()->createReply(original, this);
 
-    dll::UpperCommand* ucReply = getFUN()->getProxy()->getCommand<dll::UpperCommand>(reply, ucName_);
-    dll::UpperCommand* ucOriginal = getFUN()->getCommandReader(ucName_)->readCommand<dll::UpperCommand>(original);
+	dll::UpperCommand* ucReply = getFUN()->getProxy()->getCommand<dll::UpperCommand>(reply, ucName_);
+	dll::UpperCommand* ucOriginal = getFUN()->getCommandReader(ucName_)->readCommand<dll::UpperCommand>(original);
 
-    // this cannot be set to this->myAddress_, because it is not defined which
-    // Manager-entity will be asked for createReply
-    ucReply->peer.sourceMACAddress = ucOriginal->peer.targetMACAddress;
+	// this cannot be set to this->myAddress_, because it is not defined which
+	// Manager-entity will be asked for createReply
+	ucReply->peer.sourceMACAddress = ucOriginal->peer.targetMACAddress;
 
     ManagerCommand* mc = activateCommand(reply);
     mc->peer.type = DATA;
 
-    MESSAGE_SINGLE(NORMAL, logger_, "create reply done, set sourceMACAddress to " << ucReply->peer.sourceMACAddress);
+	MESSAGE_SINGLE(NORMAL, logger_, "create reply done, set sourceMACAddress to " << ucReply->peer.sourceMACAddress);
 
-    return(reply);
+	return(reply);
 }
 
 wns::service::dll::UnicastAddress
@@ -230,10 +230,10 @@ Manager::getFrameType(const wns::ldk::CommandPool* commandPool) const
 
 wns::ldk::CompoundPtr
 Manager::createCompound(const wns::service::dll::UnicastAddress transmitterAddress,
-                        const wns::service::dll::UnicastAddress receiverAddress,
-                        const FrameType type,
-                        const wns::simulator::Time frameExchangeDuration,
-                        const bool requiresDirectReply)
+                                const wns::service::dll::UnicastAddress receiverAddress,
+                                const FrameType type,
+                                const wns::simulator::Time frameExchangeDuration,
+                                const bool requiresDirectReply)
 {
     wns::ldk::CompoundPtr compound(new wns::ldk::Compound(getFUN()->getProxy()->createCommandPool()));
     ManagerCommand* mc = activateCommand(compound->getCommandPool());

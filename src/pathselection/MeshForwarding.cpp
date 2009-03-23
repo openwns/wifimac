@@ -29,7 +29,6 @@
 #include <WIFIMAC/pathselection/MeshForwarding.hpp>
 
 #include <WNS/ldk/CommandPool.hpp>
-//#include <WNS/ldk/Layer.hpp>
 #include <WNS/Exception.hpp>
 
 using namespace wifimac::pathselection;
@@ -87,10 +86,10 @@ MeshForwarding::doIsAccepting(const wns::ldk::CompoundPtr& _compound) const
     else
     {
         wns::service::dll::UnicastAddress mpDst = uc->peer.targetMACAddress;
-	if (!mpDst.isValid())
-	{
-	  mpDst = ps->getPortalFor(uc->peer.sourceMACAddress);
-	}
+        if (!mpDst.isValid())
+        {
+            mpDst = ps->getPortalFor(uc->peer.sourceMACAddress);
+        }
         uc->peer.targetMACAddress = ps->getNextHop(uc->peer.sourceMACAddress, mpDst);
         if(layer2->isTransceiverMAC(uc->peer.targetMACAddress))
         {
@@ -408,10 +407,9 @@ bool MeshForwarding::doOnDataFRS(const wns::ldk::CompoundPtr& compound, Forwardi
 void
 MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
 {
-
     if(layer2->getStationType() != dll::StationTypes::AP() and layer2->getStationType() != dll::StationTypes::FRS())
     {
-        throw wns::Exception("doSendData not valid for node types other than AP and FRS");
+        throw wns::Exception("doSendData not valid for node types other than AP");
     }
 
     // Received fresh packet from upper layer -> activate command
@@ -426,7 +424,7 @@ MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
     // locally generated traffic, destination not known
     if (!uc->peer.targetMACAddress.isValid())
     {
-	uc->peer.targetMACAddress = ps->getPortalFor(uc->peer.sourceMACAddress);
+        uc->peer.targetMACAddress = ps->getPortalFor(uc->peer.sourceMACAddress);
     }
 
     fc->magic.isUplink = false;
