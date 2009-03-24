@@ -229,7 +229,18 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
     unsigned int compoundSize = (*sizeCalculator)(compound);
     bool bufferFull = false;
 
-    MESSAGE_SINGLE(NORMAL, this->logger, "process outgoing command to " <<  ucCommand->peer.targetMACAddress << " with size " << compoundSize);
+    MESSAGE_BEGIN(NORMAL, this->logger, m, "Outgoing command to " <<  ucCommand->peer.targetMACAddress);
+    m << " with size " << compoundSize;
+    m << " currentSize is " << currentSize;
+    if(sendBuffers.knows(address))
+    {
+        m << " size of sendBuffer is " << getSize(*(sendBuffers.find(address)));
+    }
+    else
+    {
+        m << " sendBuffer is not existent";
+    }
+    MESSAGE_END();
 
     // aggregated sizes of all send buffers would exceed the overall limit
     if (currentSize + compoundSize > maxSize)
@@ -262,7 +273,7 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
 
         if (currentBuffer != -1)
         {
-			calculateSendParameters();
+            calculateSendParameters();
         }
     }
 } // processOutgoing
@@ -367,38 +378,44 @@ wns::simulator::Time MultiBuffer::getActualDuration(wns::simulator::Time duratio
 
 void MultiBuffer::calculateSendParameters()
 {
-	assure(currentBuffer != -1,"calculating sending size but currently no buffer selected");
-	std::vector<Bit> sizes;
-	wns::simulator::Time duration = 0;
-	wifimac::convergence::PhyMode phyMode;
-	wns::simulator::Time APPDUDuration;
-	ContainerType buffer;
+    assure(currentBuffer != -1,"calculating sending size but currently no buffer selected");
+    std::vector<Bit> sizes;
+    wns::simulator::Time duration = 0;
+    wifimac::convergence::PhyMode phyMode;
+    wns::simulator::Time APPDUDuration;
+    ContainerType buffer;
 
 // with TXOP
-	if (maxDuration > 0)
-	{
-		phyMode = friends.ra->getPhyMode(sendBuffers.find(currentBuffer)->front());
-		for(ContainerType::const_iterator it=sendBuffers.find(currentBuffer)->begin();it != 	sendBuffers.find(currentBuffer)->end();++it)
-		{
-			sizes.push_back((*it)->getLengthInBits());
-			APPDUDuration = protocolCalculator->getDuration()->getA_MPDU_PPDU(sizes,phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
-			if (APPDUDuration > maxDuration) 
-			{
-				break;
-			}
-			buffer.push_back((*it));
-			if (getSize(buffer) > bufferSendSize)
-			{
-				buffer.pop_back();
-				break;
-			}
-			duration = APPDUDuration;
-		}
-		actualDuration = duration;
-		stilltoBeSent = getSize(buffer);
-		return;
-	}
-// no TXOP	
+    if (maxDuration > 0)
+    {
+        phyMode = friends.ra->getPhyMode(sendBuffers.find(currentBuffer)->front());
+        for(ContainerType::const_iterator it = sendBuffers.find(currentBuffer)->begin();
+            it != sendBuffers.find(currentBuffer)->end();
+            ++it)
+        {
+            sizes.push_back((*it)->getLengthInBits());
+            APPDUDuration = protocolCalculator->getDuration()->getA_MPDU_PPDU(sizes,
+                                                                              phyMode.getDataBitsPerSymbol(),
+                                                                              phyMode.getNumberOfSpatialStreams(),
+                                                                              20,
+                                                                              std::string("Basic"));
+            if (APPDUDuration > maxDuration)
+            {
+                break;
+            }
+            buffer.push_back((*it));
+            if (getSize(buffer) > bufferSendSize)
+            {
+                buffer.pop_back();
+                break;
+            }
+            duration = APPDUDuration;
+        }
+        actualDuration = duration;
+        stilltoBeSent = getSize(buffer);
+        return;
+    }
+    // no TXOP
 	if (getSize(*(sendBuffers.find(currentBuffer))) >= bufferSendSize)
 	{
 		stilltoBeSent = bufferSendSize;

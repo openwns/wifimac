@@ -116,8 +116,8 @@ namespace wifimac {
             void
             processIncomingACK(std::set<BlockACKCommand::SequenceNumber> ackSNs);
 
-            void
-            missingACK();
+            //void
+            //missingACK();
 
             const size_t getNumOnAirPDUs() const
                 { return onAirQueue.size(); }
@@ -245,6 +245,7 @@ namespace wifimac {
             void calculateSizes(const wns::ldk::CommandPool* commandPool, Bit& commandPoolSize, Bit& dataSize) const;
 
     private:
+            void processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs);
             void printTxQueueStatus() const;
             unsigned int storageSize() const;
 

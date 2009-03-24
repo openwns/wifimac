@@ -259,84 +259,100 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
         assure(this->baState == waitForACK or this->baState == receiving,
                "Received ACK but not waiting for one");
 
-        if(hasTimeoutSet())
-        {
-            cancelTimeout();
-        }
-        this->baState = idle;
-        txQueue->processIncomingACK(getCommand(compound->getCommandPool())->peer.ackSNs);
-        if ((txQueue->getNumWaitingPDUs()+txQueue->getNumOnAirPDUs()) != 0)
-        {
-            // either not all compounds of the current send block have been
-            // transmitted successfully or compounds for the same receiver
-            // arrived while the current send block retransmitted unsuccessfully
-            // sent compounds
-            return;
-        }
+        this->processIncomingACKSNs(getCommand(compound->getCommandPool())->peer.ackSNs);
+        return;
 
-        // txQueue is empty -> store SN and delete it
-        nextTransmissionSN.update(currentReceiver,txQueue->getNextSN());
-        delete txQueue;
-        txQueue = NULL;
-
-        if (nextReceiver != currentReceiver)
+    } // if compound is ACK
+    else
+    {
+        if(getCommand(compound->getCommandPool())->isACKreq())
         {
-            // there is a compound for a different receiver waiting, temporarily
-            // stored. Store the current SN of the txQueue for current receiver
-            // and prepare transmission queue for next send block using the
-            // temporarily stored compound as head and the next SN to be used
-            // for this link
-            if (!nextTransmissionSN.knows(nextReceiver))
+            if(not rxQueues.knows(transmitter))
             {
-                nextTransmissionSN.insert(nextReceiver,0);
-            }
-            txQueue = new TransmissionQueue(this,this->maxOnAir, nextReceiver, nextTransmissionSN.find(nextReceiver), perMIB);
-            MESSAGE_BEGIN(NORMAL, this->logger, m, "First frame in a (possible) row  processed for receiver: ");
-            m << nextReceiver;
-            m << " with StartSN: " << nextTransmissionSN.find(nextReceiver);
-            MESSAGE_END();
+                MESSAGE_BEGIN(NORMAL, this->logger, m, "Received BA-REQ from unknown transmitter ");
+                m << transmitter << " (this would not happen with correct BA-init)";
+                m << " -> new rxQueue";
+                MESSAGE_END();
 
-            txQueue->processOutgoing(nextFirstCompound, (*sizeCalculator)(nextFirstCompound));
-            nextFirstCompound = wns::ldk::CompoundPtr();
-            currentReceiver = nextReceiver;
-        }
+                assure(not hasACKfor.isValid(), "Received BA-REQ from " << transmitter << ", but already existing BA for " << hasACKfor);
+
+                rxQueues.insert(transmitter, new ReceptionQueue(this, getCommand(compound->getCommandPool())->peer.sn, transmitter));
+            }
+            rxQueues.find(transmitter)->processIncomingACKreq(compound);
+            hasACKfor = transmitter;
+            return;
+        } // compound is ACK req
         else
         {
-            // no compound is waiting -> no current receiver
-            assure(nextFirstCompound == wns::ldk::CompoundPtr(),
-                   "nextReceiver is equal to currentReceiver, but a compound is stored");
-            currentReceiver = wns::service::dll::UnicastAddress();
-            nextReceiver = wns::service::dll::UnicastAddress();
-            MESSAGE_SINGLE(NORMAL, this->logger, "No more waiting frames -> delete txQueue");
-        }
-        return;
-    }
-
-    if(getCommand(compound->getCommandPool())->isACKreq())
-    {
-        if(not rxQueues.knows(transmitter))
-        {
-            MESSAGE_BEGIN(NORMAL, this->logger, m, "Received BA-REQ from unknown transmitter ");
-            m << transmitter << " (this would not happen with correct BA-init)";
-            m << " -> new rxQueue";
-            MESSAGE_END();
-
-            assure(not hasACKfor.isValid(), "Received BA-REQ from " << transmitter << ", but already existing BA for " << hasACKfor);
-
-            rxQueues.insert(transmitter, new ReceptionQueue(this, getCommand(compound->getCommandPool())->peer.sn, transmitter));
-        }
-        rxQueues.find(transmitter)->processIncomingACKreq(compound);
-        hasACKfor = transmitter;
-        return;
-    }
-
-    if(not rxQueues.knows(transmitter))
-    {
-        MESSAGE_SINGLE(NORMAL, this->logger, "First frame from " << transmitter << " -> new rxQueue");
-        rxQueues.insert(transmitter, new ReceptionQueue(this, getCommand(compound->getCommandPool())->peer.sn, transmitter));
-    }
-    rxQueues.find(transmitter)->processIncomingData(compound, (*sizeCalculator)(compound));
+            if(not rxQueues.knows(transmitter))
+            {
+                MESSAGE_SINGLE(NORMAL, this->logger, "First frame from " << transmitter << " -> new rxQueue");
+                rxQueues.insert(transmitter, new ReceptionQueue(this, getCommand(compound->getCommandPool())->peer.sn, transmitter));
+            }
+            rxQueues.find(transmitter)->processIncomingData(compound, (*sizeCalculator)(compound));
+        } // is not ACK req
+    } // is not ACK
 } // BlockACK::processIncoming
+
+void
+BlockACK::processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs)
+{
+    if(hasTimeoutSet())
+    {
+        cancelTimeout();
+    }
+    this->baState = idle;
+
+    // forward SNs to txQueue
+    txQueue->processIncomingACK(ackSNs);
+
+    if ((txQueue->getNumWaitingPDUs()+txQueue->getNumOnAirPDUs()) != 0)
+    {
+        // either not all compounds of the current send block have been
+        // transmitted successfully or compounds for the same receiver
+        // arrived while the current send block retransmitted unsuccessfully
+        // sent compounds
+        return;
+    }
+
+    // txQueue is empty -> store SN and delete it
+    nextTransmissionSN.update(currentReceiver,txQueue->getNextSN());
+    delete txQueue;
+    txQueue = NULL;
+
+    if (nextReceiver != currentReceiver)
+    {
+        // there is a compound for a different receiver waiting, temporarily
+        // stored. Store the current SN of the txQueue for current receiver
+        // and prepare transmission queue for next send block using the
+        // temporarily stored compound as head and the next SN to be used
+        // for this link
+        if (!nextTransmissionSN.knows(nextReceiver))
+        {
+            nextTransmissionSN.insert(nextReceiver,0);
+        }
+        txQueue = new TransmissionQueue(this,this->maxOnAir, nextReceiver, nextTransmissionSN.find(nextReceiver), perMIB);
+        MESSAGE_BEGIN(NORMAL, this->logger, m, "First frame in a (possible) row  processed for receiver: ");
+        m << nextReceiver;
+        m << " with StartSN: " << nextTransmissionSN.find(nextReceiver);
+        MESSAGE_END();
+
+        txQueue->processOutgoing(nextFirstCompound, (*sizeCalculator)(nextFirstCompound));
+        nextFirstCompound = wns::ldk::CompoundPtr();
+        currentReceiver = nextReceiver;
+    }
+    else
+    {
+        // no compound is waiting -> no current receiver
+        assure(nextFirstCompound == wns::ldk::CompoundPtr(),
+               "nextReceiver is equal to currentReceiver, but a compound is stored");
+        currentReceiver = wns::service::dll::UnicastAddress();
+        nextReceiver = wns::service::dll::UnicastAddress();
+        MESSAGE_SINGLE(NORMAL, this->logger, "No more waiting frames -> deleted txQueue");
+    }
+    return;
+}
+
 
 const wns::ldk::CompoundPtr
 BlockACK::hasACK() const
@@ -422,8 +438,11 @@ BlockACK::onTimeout()
 
     MESSAGE_SINGLE(NORMAL, this->logger, "Timeout -> failed transmission to " << currentReceiver)
 
-    txQueue->missingACK();
-    this->baState = idle;
+    // no ACK'ed SNs have arrived, use pseudo-vector
+    std::set<BlockACKCommand::SequenceNumber> none;
+    none.clear();
+    this->processIncomingACKSNs(none);
+
     this->tryToSend();
 }
 
@@ -438,13 +457,12 @@ BlockACK::transmissionHasFailed(const wns::ldk::CompoundPtr& compound)
     MESSAGE_SINGLE(NORMAL, this->logger, "Indication of failed transmission to " << friends.manager->getReceiverAddress(compound->getCommandPool()));
     this->printTxQueueStatus();
 
-    if(hasTimeoutSet())
-    {
-        cancelTimeout();
-    }
 
-    txQueue->missingACK();
-    this->baState = idle;
+    // no ACK'ed SNs have arrived, use pseudo-vector
+    std::set<BlockACKCommand::SequenceNumber> none;
+    none.clear();
+    this->processIncomingACKSNs(none);
+
     this->tryToSend();
 }
 
@@ -732,7 +750,8 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
             {
                 MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
                 m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
-                m << " -> reached max transmissions, drop";
+                m << " -> reached " << txCounter;
+                m << " transmissions, drop";
                 MESSAGE_END();
                 parent->numTxAttemptsProbe->put(onAirIt->first, txCounter);
             }
@@ -740,7 +759,8 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
             {
                  MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
                  m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
-                 m << " -> retransmit";
+                 m << " -> " << txCounter;
+                 m << " transmissions, retransmit";
                  MESSAGE_END();
 
                 if(insertBack)
@@ -796,12 +816,12 @@ bool TransmissionQueue::isSortedBySN(const std::deque<CompoundPtrWithSize> q) co
 
 }
 
-void TransmissionQueue::missingACK()
-{
-    std::set<BlockACKCommand::SequenceNumber> none;
-    none.clear();
-    this->processIncomingACK(none);
-} // TransmissionQueue::missingACK
+//void TransmissionQueue::missingACK()
+//{
+//    std::set<BlockACKCommand::SequenceNumber> none;
+//    none.clear();
+//    this->processIncomingACK(none);
+//} // TransmissionQueue::missingACK
 
 const bool TransmissionQueue::waitsForACK() const
 {

@@ -29,7 +29,6 @@ from BlockUntilReply import *
 from BlockACK import *
 from Aggregation import *
 from MultiBuffer import *
-from NextAggFrameGetter import *
 import wifimac.lowerMAC
 import wifimac.convergence
 
