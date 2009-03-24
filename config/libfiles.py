@@ -54,7 +54,7 @@ srcFiles = [
     'src/lowerMAC/timing/DCF.cpp',
     'src/lowerMAC/timing/Backoff.cpp',
 
-    'src/lowerMAC/rateAdaptationStrategies/ConstantLow.cpp',
+    'src/lowerMAC/rateAdaptationStrategies/Constant.cpp',
     'src/lowerMAC/rateAdaptationStrategies/SINR.cpp',
     'src/lowerMAC/rateAdaptationStrategies/Opportunistic.cpp',
 
@@ -132,7 +132,7 @@ hppFiles = [
     'src/lowerMAC/RateAdaptation.hpp',
     'src/lowerMAC/StopAndWaitARQ.hpp',
     'src/lowerMAC/TXOP.hpp',
-    'src/lowerMAC/rateAdaptationStrategies/ConstantLow.hpp',
+    'src/lowerMAC/rateAdaptationStrategies/Constant.hpp',
     'src/lowerMAC/rateAdaptationStrategies/IRateAdaptationStrategy.hpp',
     'src/lowerMAC/rateAdaptationStrategies/Opportunistic.hpp',
     'src/lowerMAC/rateAdaptationStrategies/SINR.hpp',

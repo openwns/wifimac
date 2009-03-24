@@ -43,7 +43,8 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
     class IRateAdaptationStrategy
     {
     public:
-        IRateAdaptationStrategy(wifimac::management::PERInformationBase*,
+        IRateAdaptationStrategy(const wns::pyconfig::View&,
+                                wifimac::management::PERInformationBase*,
                                 wifimac::lowerMAC::Manager*,
                                 wifimac::convergence::PhyUser*,
                                 wns::logger::Logger*)
@@ -68,12 +69,13 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
     {
     public:
         virtual
-        KIND* create(wifimac::management::PERInformationBase* _per,
+        KIND* create(const wns::pyconfig::View& _config,
+                     wifimac::management::PERInformationBase* _per,
                      wifimac::lowerMAC::Manager* _manager,
                      wifimac::convergence::PhyUser* _phyUser,
                      wns::logger::Logger* _logger)
             {
-                return new T(_per, _manager, _phyUser, _logger);
+                return new T(_config, _per, _manager, _phyUser, _logger);
             }
     };
 
@@ -85,7 +87,8 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         ~IRateAdaptationStrategyCreator() {};
 
         virtual KIND*
-        create(wifimac::management::PERInformationBase* _per,
+        create(const wns::pyconfig::View& _config,
+               wifimac::management::PERInformationBase* _per,
                wifimac::lowerMAC::Manager* _manager,
                wifimac::convergence::PhyUser* _phyUser,
                wns::logger::Logger* _logger) = 0;

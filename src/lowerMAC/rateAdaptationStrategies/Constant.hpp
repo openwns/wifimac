@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_CONSTANTLOW_HPP
-#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_CONSTANTLOW_HPP
+#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_CONSTANT_HPP
+#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_CONSTANT_HPP
 
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/IRateAdaptationStrategy.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
@@ -38,11 +38,12 @@
 
 namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
-    class ConstantLow :
+    class Constant :
         public IRateAdaptationStrategy
     {
     public:
-        ConstantLow(
+        Constant(
+            const wns::pyconfig::View& config_,
             wifimac::management::PERInformationBase*,
             wifimac::lowerMAC::Manager*,
             wifimac::convergence::PhyUser*,
@@ -59,6 +60,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
                    const wns::Ratio lqm);
 
     private:
+        wifimac::convergence::PhyMode myPM;
 
         struct Friends
         {
@@ -66,4 +68,4 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         } friends;
     };
 }}}
-#endif // #ifndef WIFIMAC_LOWERMAC_RATEADAPTIONSTRATEGIES_CONSTANTLOW_HPP
+#endif // #ifndef WIFIMAC_LOWERMAC_RATEADAPTIONSTRATEGIES_CONSTANT_HPP

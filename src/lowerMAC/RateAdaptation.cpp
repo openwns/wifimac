@@ -48,6 +48,7 @@ RateAdaptation::RateAdaptation(wns::ldk::fun::FUN* fun, const wns::pyconfig::Vie
     raForACKFrames(config_.get<bool>("myConfig.raForACKFrames")),
     ackFramesRateId(config_.get<int>("myConfig.ackFramesRateId")),
 
+    config(config_),
     logger(config_.get("logger"))
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "created");
@@ -55,7 +56,7 @@ RateAdaptation::RateAdaptation(wns::ldk::fun::FUN* fun, const wns::pyconfig::Vie
     friends.phyUser = NULL;
     friends.manager = NULL;
 
-    raCreator = rateAdaptationStrategies::RateAdaptationStrategyFactory::creator(config_.get<std::string>("myConfig.raStrategy"));
+
 }
 
 
@@ -113,12 +114,18 @@ RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver, size_t nu
 
     if(not rateAdaptation.knows(receiver) )
     {
-        MESSAGE_SINGLE(NORMAL, logger, "No matching RA found for receiver " << receiver << ", create new");
+        MESSAGE_BEGIN(NORMAL, logger, m, "No matching RA found for receiver ");
+        m << receiver;
+        m << ", create new of type " << config.get<std::string>("myConfig.raStrategy.__plugin__");
+        MESSAGE_END();
+
         rateAdaptation.insert(receiver,
-                              raCreator->create(perMIB,
-                                                friends.manager,
-                                                friends.phyUser,
-                                                &logger));
+                              rateAdaptationStrategies::RateAdaptationStrategyFactory::creator
+                              (config.get<std::string>("myConfig.raStrategy.__plugin__"))->create(config.getView("myConfig.raStrategy"),
+                                                                                                  perMIB,
+                                                                                                  friends.manager,
+                                                                                                  friends.phyUser,
+                                                                                                  &logger));
     }
 
     if(sinrMIB->knowsPeerSINR(receiver))

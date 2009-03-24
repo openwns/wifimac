@@ -36,12 +36,17 @@ using namespace wifimac::lowerMAC::rateAdaptationStrategies;
 STATIC_FACTORY_REGISTER_WITH_CREATOR(OpportunisticwithMIMO, IRateAdaptationStrategy, "OpportunisticwithMIMO", IRateAdaptationStrategyCreator);
 
 OpportunisticwithMIMO::OpportunisticwithMIMO(
+    const wns::pyconfig::View& _config,
     wifimac::management::PERInformationBase* _per,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_per, _manager, _phyUser, _logger),
+    IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger),
     per(_per),
+    perForGoingDown(_config.get<double>("perForGoingDown")),
+    perForGoingUp(_config.get<double>("perForGoingUp")),
+    phyModeIncreaseOnAntennaDecrease(_config.get<unsigned int>("phyModeIncreaseOnAntennaDecrease")),
+    phyModeDecreaseOnAntennaIncrease(_config.get<unsigned int>("phyModeDecreaseOnAntennaIncrease")),
     logger(_logger)
 {
     friends.phyUser = _phyUser;
@@ -118,7 +123,7 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
     unsigned int nextSpatialStreams = curSpatialStreams;
 
 
-    if(curPER > 0.25)
+    if(curPER > perForGoingDown)
     {
         // loose more than 1/4 of all frames -> go down
         if(curPhyModeId > friends.phyUser->getPhyModeProvider()->getLowestId())
@@ -132,12 +137,12 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
             {
                 nextSpatialStreams = curSpatialStreams - 1;
                 // increase phy mode again
-                nextPhyModeId += 3;
+                nextPhyModeId += phyModeIncreaseOnAntennaDecrease;
             }
         }
     }
 
-    if(curPER < 0.01)
+    if(curPER < perForGoingUp)
     {
         // nearly all frames are successful -> go up
         if(curPhyModeId < friends.phyUser->getPhyModeProvider()->getHighestId())
@@ -151,7 +156,7 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
             {
                 nextSpatialStreams = curSpatialStreams + 1;
                 // decrease phy mode
-                nextPhyModeId -= 3;
+                nextPhyModeId -= phyModeDecreaseOnAntennaIncrease;
             }
         }
     }
