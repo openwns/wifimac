@@ -92,10 +92,10 @@ namespace wifimac { namespace lowerMAC {
             wifimac::lowerMAC::ITransmissionCounter* arq;
         } friends;
 
-        wifimac::lowerMAC::rateAdaptationStrategies::RateAdaptationStrategyCreator* raCreator;
         wifimac::management::SINRInformationBase* sinrMIB;
         wifimac::management::PERInformationBase* perMIB;
 
+        const wns::pyconfig::View config;
         wns::logger::Logger logger;
 
     }; // RateAdaptation

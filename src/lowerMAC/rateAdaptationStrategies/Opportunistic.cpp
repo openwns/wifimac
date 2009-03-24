@@ -36,12 +36,15 @@ using namespace wifimac::lowerMAC::rateAdaptationStrategies;
 STATIC_FACTORY_REGISTER_WITH_CREATOR(Opportunistic, IRateAdaptationStrategy, "Opportunistic", IRateAdaptationStrategyCreator);
 
 Opportunistic::Opportunistic(
+    const wns::pyconfig::View& _config,
     wifimac::management::PERInformationBase* _per,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_per, _manager, _phyUser, _logger),
+    IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger),
     per(_per),
+    perForGoingDown(_config.get<double>("perForGoingDown")),
+    perForGoingUp(_config.get<double>("perForGoingUp")),
     logger(_logger)
 {
     friends.phyUser = _phyUser;
@@ -72,15 +75,15 @@ Opportunistic::getPhyMode(const wns::service::dll::UnicastAddress receiver, size
     int nextPhyModeId = curPhyModeId;
 
 
-    if(curPER > 0.25)
+    if(curPER > perForGoingDown)
     {
-        // loose more than 1/4 of all frames -> go down
+        // loose more than perForGoingDown of all frames -> go down
         if(curPhyModeId > friends.phyUser->getPhyModeProvider()->getLowestId())
         {
             nextPhyModeId = curPhyModeId-1;
         }
     }
-    if(curPER < 0.05)
+    if(curPER < perForGoingUp)
     {
         // nearly all frames are successful -> go up
         if(curPhyModeId < friends.phyUser->getPhyModeProvider()->getHighestId())

@@ -50,6 +50,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
     {
     public:
         Opportunistic(
+            const wns::pyconfig::View& config_,
             wifimac::management::PERInformationBase* _per,
             wifimac::lowerMAC::Manager* _manager,
             wifimac::convergence::PhyUser* _phyUser,
@@ -71,6 +72,9 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         {
             wifimac::convergence::PhyUser* phyUser;
         } friends;
+
+        const double perForGoingDown;
+        const double perForGoingUp;
 
         wns::logger::Logger* logger;
 

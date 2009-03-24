@@ -30,12 +30,38 @@ import openwns.pyconfig
 
 import wifimac.Logger
 
+class Constant:
+    __plugin__ = 'Constant'
+    phyModeId = None
+
+    def __init__(self, phyModeId = 0):
+        self.phyModeId = phyModeId
+
+class Opportunistic:
+    __plugin__ = 'Opportunistic'
+
+    perForGoingDown = 0.25
+    """ if the per is above this value, then the next lower phy mode will be used """
+    perForGoingUp = 0.05
+    """ if the per is below this value, then the next higher phy mode will be used """
+
+class SINR(Opportunistic):
+    __plugin__ = 'SINR'
+
+    retransmissionLQMReduction = 3.0
+    """ Reduce the expected lqm by this value [in dB] for every retransmission of the packet """
+
+class SINRwithMIMO(SINR):
+    __plugin__ = 'SINRwithMIMO'
+
+
 class RateAdaptationConfig(object):
-    raStrategy = 'ConstantLow'
+    raStrategy = None
     raForACKFrames = False
     ackFramesRateId = 0
 
     def __init__(self, **kw):
+        self.raStrategy = Constant()
         openwns.pyconfig.attrsetter(self, kw)
 
 class RateAdaptation(openwns.FUN.FunctionalUnit):

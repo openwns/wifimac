@@ -34,11 +34,13 @@ using namespace wifimac::lowerMAC::rateAdaptationStrategies;
 STATIC_FACTORY_REGISTER_WITH_CREATOR(SINRwithMIMO, IRateAdaptationStrategy, "SINRwithMIMO", IRateAdaptationStrategyCreator);
 
 SINRwithMIMO::SINRwithMIMO(
+    const wns::pyconfig::View& _config,
     wifimac::management::PERInformationBase* _per,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    SINR(_per, _manager, _phyUser, _logger),
+    SINR(_config, _per, _manager, _phyUser, _logger),
+    retransmissionLQMReduction(_config.get<double>("retransmissionLQMReduction")),
     logger(_logger)
 {
     friends.phyUser = _phyUser;
@@ -52,8 +54,8 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_
     if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
     {
 
-        // Reduce lqm by 3dB for every retransmission
-        wns::Ratio myLQM = wns::Ratio::from_dB(lqm.get_dB() - (numTransmissions-1)*3.0);
+        // Reduce lqm by retransmissionLQMReduction dB for every retransmission
+        wns::Ratio myLQM = wns::Ratio::from_dB(lqm.get_dB() - (numTransmissions-1)*retransmissionLQMReduction);
 
         // find the number of streams which maximizes the number of data bits
         // per symbol
