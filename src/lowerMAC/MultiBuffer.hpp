@@ -227,13 +227,6 @@ namespace wifimac { namespace lowerMAC {
     private:
 	void onFUNCreated();
 
-	/** @brief returns the currently selected sending queue ID
-	* if no sending queue is currently selected, this method returns
-	* -1, otherwise the ID of the queue which PDUs are passed to the lower
-	* FUs is returned. This ID corresponds to MAC address of the PDUs' receiver
-	*/
-        int getCurrentSendBuffer();
-
 	/** @brief sets internal parameters for outgoing PDUs
 	*
 	* this method is called internally to calculate the size of data

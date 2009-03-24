@@ -269,7 +269,7 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
     if (currentBuffer == -1)
     {
         currentBuffer = queueSelector->getSendBuffer(sendBuffers,
-                                                     not bufferFull or not impatient);
+                                                     not (bufferFull or impatient));
 
         if (currentBuffer != -1)
         {
@@ -426,6 +426,3 @@ void MultiBuffer::calculateSendParameters()
 	}
 }
 
-int MultiBuffer::getCurrentSendBuffer() {
-	return currentBuffer;
-}

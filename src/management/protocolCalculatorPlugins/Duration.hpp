@@ -38,7 +38,13 @@ namespace wifimac { namespace management {
 }}
 
 namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
-
+	/** @brief plugin to determine transmission duration for different PDUs
+	*
+	* this class calculates the actual duration of different PDUs under given
+	* phy parameters like data bits per symbol, number of streams etc
+	* the (A)M(S/P)DU duration functions expect the proper size(s) of the PDU(s)
+	* e.g. a vector with frame sizes for an aggregated MPDU
+	*/
     class Duration
     {
     public:

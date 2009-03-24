@@ -33,18 +33,32 @@
 #include <WNS/simulator/Bit.hpp>
 
 namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
-
+	/** @brief plugin to determine PSDU sizes for different MAC data units
+	*
+	* this class calculates the resulting PSDU length in bits for
+	* MSDUs, A-MPDUs, A-MSDUs
+	*/
     class FrameLength
     {
     public:
         FrameLength( const wns::pyconfig::View& config );
         virtual ~FrameLength() {};
 
+	// @brief returns size of the resulting PSDU
         Bit getPSDU(Bit msduFrameSize) const;
+
+ 	// @brief calculates PSDU size of A-MPDU with fixed sized frames
         Bit getA_MPDU_PSDU(Bit mpduFrameSize, unsigned int n_aggFrames) const;
+
+ 	// @brief calculates PSDU size of A-MPDU with arbitrary sized frames
         Bit getA_MPDU_PSDU(const std::vector<Bit>& mpduFrameSize) const;
+
+ 	// @brief calculates PSDU size of A-MSDU with fixed sized frames
         Bit getA_MSDU_PSDU(Bit msduFrameSize, unsigned int n_aggFrames) const;
+
+ 	// @brief calculates PSDU size of A-MSDU with arbitrary sized frames
         Bit getA_MSDU_PSDU(const std::vector<Bit>& msduFrameSize) const;
+
         Bit pad(Bit frameSize, Bit multiple) const;
 
         const Bit macDataHdr;
