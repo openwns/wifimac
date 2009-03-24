@@ -408,7 +408,3 @@ void MultiBuffer::calculateSendParameters()
 		stilltoBeSent = getSize(*(sendBuffers.find(currentBuffer)));
 	}
 }
-
-int MultiBuffer::getCurrentSendBuffer() {
-	return currentBuffer;
-}

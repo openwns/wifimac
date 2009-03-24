@@ -38,6 +38,11 @@
 
 namespace wifimac { namespace management {
 
+	/** @brief provides calculation capabilities to reduces inter-FU dependencies
+	* using the ProtocolCalculator services enables calculations of values for
+	* which information of other FUs would be necessary, e.g. PPDU size or transmission
+	* duration for a compound in a MAC FU
+	*/
     class ProtocolCalculator:
         public wns::ldk::ManagementService
     {
@@ -47,12 +52,22 @@ namespace wifimac { namespace management {
             delete errorProbability;
         };
 
+	/** @brief returns error probability calculator
+	*/
         protocolCalculatorPlugins::ErrorProbability*
         getErrorProbability() const;
 
+	/** @brief returns size calculator
+	* the frame length plugin provides several calculations for determine PDU sizes on different
+	* layer levels (PSDU, PPDU, aggregated)
+	*/
         protocolCalculatorPlugins::FrameLength*
         getFrameLength() const;
 
+	/** @brief returns duration calculator
+	* the duration plugin provides several calculations to determine the duration of different
+	* PDUs on phy level (as PPDU), data, ACK, A-MSDU (as PPDU) / A-MPDU
+	*/
         protocolCalculatorPlugins::Duration*
         getDuration() const;
 
