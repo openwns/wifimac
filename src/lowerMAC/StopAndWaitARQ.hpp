@@ -81,9 +81,9 @@ namespace wifimac { namespace lowerMAC {
 
         // implementation of ITransmissionCounter
         void
-        transmissionHasFailed(const wns::ldk::CompoundPtr& compound);
+        onTransmissionHasFailed(const wns::ldk::CompoundPtr& compound);
 
-        size_t
+        unsigned int
         getTransmissionCounter(const wns::ldk::CompoundPtr& compound) const;
 
         void
@@ -95,7 +95,11 @@ namespace wifimac { namespace lowerMAC {
 
         wns::ldk::CompoundPtr getData();
 
+        void
+        transmissionHasFailed(const wns::ldk::CompoundPtr& compound);
+
         void onTimeout();
+        void processOutgoing(const wns::ldk::CompoundPtr& compound);
         void processIncoming(const wns::ldk::CompoundPtr& compound);
         bool hasCapacity() const;
 
@@ -107,6 +111,11 @@ namespace wifimac { namespace lowerMAC {
         const int shortRetryLimit;
         const int longRetryLimit;
         const Bit rtsctsThreshold;
+
+        int stationShortRetryCounter;
+        int stationLongRetryCounter;
+        int shortRetryCounter;
+        int longRetryCounter;
 
         const wns::simulator::Time sifsDuration;
         const wns::simulator::Time expectedACKDuration;

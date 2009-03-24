@@ -34,6 +34,9 @@ class ManagerConfig(object):
 	sifsDuration = 16E-6
 	expectedACKDuration = 44E-6
 	numAntennas = 1
+	""" number of antennas for MIMO """
+	msduLifetimeLimit = 0
+	""" maximum msdu lifetime, set to zero for unlimited lifetime """
 
 class Manager(openwns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.lowerMAC.Manager'

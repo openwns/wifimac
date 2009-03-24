@@ -194,6 +194,12 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
     assure(this->hasCapacity(), "processOutgoing although no capacity");
 
+    if(friends.manager->lifetimeExpired(compound->getCommandPool()))
+    {
+        MESSAGE_SINGLE(NORMAL, logger, "outgoing compound has expired lifetime -> drop");
+        return;
+    }
+
     wns::service::dll::UnicastAddress receiver = friends.manager->getReceiverAddress(compound->getCommandPool());
     if (receiver == currentReceiver)
     {
@@ -447,7 +453,7 @@ BlockACK::onTimeout()
 }
 
 void
-BlockACK::transmissionHasFailed(const wns::ldk::CompoundPtr& compound)
+BlockACK::onTransmissionHasFailed(const wns::ldk::CompoundPtr& compound)
 {
     assure(friends.manager->getReceiverAddress(compound->getCommandPool()) == this->currentReceiver,
            "transmissionHasFailed has different rx address than current receiver");
@@ -526,7 +532,7 @@ void BlockACK::printTxQueueStatus() const
     }
 }
 
-size_t
+unsigned int
 BlockACK::getTransmissionCounter(const wns::ldk::CompoundPtr& compound) const
 {
     if(getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this))
@@ -746,22 +752,25 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
             int txCounter = ++(parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
             perMIB->onFailedTransmission(adr);
 
-            if(txCounter > parent->maximumTransmissions)
+            if(parent->getManager()->lifetimeExpired((onAirIt->first)->getCommandPool()))
             {
                 MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
                 m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
-                m << " -> reached " << txCounter;
-                m << " transmissions, drop";
+                m << " -> " << txCounter;
+                m << " transmissions, lifetime expired --> drop!";
                 MESSAGE_END();
+
                 parent->numTxAttemptsProbe->put(onAirIt->first, txCounter);
-            }
+            } // lifetime expired
             else
             {
-                 MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
-                 m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
-                 m << " -> " << txCounter;
-                 m << " transmissions, retransmit";
-                 MESSAGE_END();
+                // BlockACK does not drop frames due to their number of
+                // retransmissions, see IEEE 802.11-2007, 9.10.3
+                MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
+                m << ", ackSN " << ((snIt == ackSNs.end()) ? -1 : (*snIt));
+                m << " -> " << txCounter;
+                m << " transmissions, retransmit";
+                MESSAGE_END();
 
                 if(insertBack)
                 {
@@ -771,8 +780,8 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
                 {
                     txQueue.insert(txQueueFirst, *onAirIt);
                 }
-            }
-        }
+            } // lifetime not expired
+        } // SN does not match
         else
         {
             // *snIt is equal to sn from *onAirIt --> success, go to next sn
@@ -783,8 +792,8 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
 
             perMIB->onSuccessfullTransmission(adr);
             parent->numTxAttemptsProbe->put(onAirIt->first, parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
-        }
-    }
+        } // SN matches
+    } // for-loop over onAirQueue
 
     // nothing is onAir now
     onAirQueue.clear();

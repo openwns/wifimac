@@ -30,6 +30,7 @@
 
 #include <WIFIMAC/lowerMAC/ITXOPWindow.hpp>
 #include <WIFIMAC/lowerMAC/RateAdaptation.hpp>
+#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/management/ProtocolCalculator.hpp>
 
 #include <WNS/ldk/buffer/Dropping.hpp>
@@ -148,6 +149,8 @@ namespace wifimac { namespace lowerMAC {
 	private:
 		void onFUNCreated();
 		wns::simulator::Time firstCompoundDuration() const;	
+        void checkLifetime();
+
 		uint32_t maxSize;
 		uint32_t currentSize;
 		bool isActive;
@@ -157,19 +160,20 @@ namespace wifimac { namespace lowerMAC {
 		PDUCounter totalPDUs;
 		PDUCounter droppedPDUs;
 
-	        const std::string raName;
-	        const std::string protocolCalculatorName;
-	        wifimac::management::ProtocolCalculator* protocolCalculator;
+        const std::string raName;
+        const std::string protocolCalculatorName;
+        const std::string managerName;
+        wifimac::management::ProtocolCalculator* protocolCalculator;
 
-	        struct Friends
-	        {
-		    wifimac::lowerMAC::RateAdaptation* ra;
-	            wifimac::lowerMAC::Manager* manager;
-	        } friends;
+        struct Friends
+        {
+            wifimac::lowerMAC::RateAdaptation* ra;
+            wifimac::lowerMAC::Manager* manager;
+        } friends;
 
-		wns::logger::Logger logger;
-		wns::simulator::Time maxDuration;
-	};
+        wns::logger::Logger logger;
+        wns::simulator::Time maxDuration;
+    };
 
 }}
 

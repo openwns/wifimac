@@ -54,6 +54,10 @@ StopAndWaitARQ::StopAndWaitARQ(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::V
     perMIBServiceName(config.get<std::string>("perMIBServiceName")),
     shortRetryLimit(config.get<int>("shortRetryLimit")),
     longRetryLimit(config.get<int>("longRetryLimit")),
+    stationShortRetryCounter(0),
+    stationLongRetryCounter(0),
+    shortRetryCounter(0),
+    longRetryCounter(0),
     rtsctsThreshold(config.get<Bit>("rtsctsThreshold")),
     sifsDuration(config.get<wns::simulator::Time>("sifsDuration")),
     expectedACKDuration(config.get<wns::simulator::Time>("expectedACKDuration")),
@@ -129,8 +133,28 @@ void StopAndWaitARQ::onRxError()
 }
 
 void
-StopAndWaitARQ::onTxStart(const wns::ldk::CompoundPtr& /*compound*/)
+StopAndWaitARQ::onTxStart(const wns::ldk::CompoundPtr& compound)
 {
+    // this is just for the resetting of the short retry counters in the case
+    // that a long frame used RTS/CTS for its transmission. If the tx starts AND
+    // the data is long, the CTS was received and hence the counters can be
+    // reset
+    if(this->activeCompound and
+       ((friends.manager->getFrameType(compound->getCommandPool()) == DATA) or (friends.manager->getFrameType(compound->getCommandPool()) == DATA_TXOP)) and
+       (compound->getBirthmark() == this->activeCompound->getBirthmark()))
+    {
+        Bit commandPoolSize;
+        Bit dataSize;
+        this->calculateSizes(compound->getCommandPool(), commandPoolSize, dataSize);
+        Bit psduSize = commandPoolSize + dataSize;
+
+        if(psduSize > rtsctsThreshold)
+        {
+            MESSAGE_SINGLE(NORMAL, logger, "Data is sent --> CTS received successfully --> reset short retry counters");
+            shortRetryCounter = 0;
+            stationShortRetryCounter = 0;
+        }
+    }
 
 }
 
@@ -156,6 +180,18 @@ StopAndWaitARQ::onTxEnd(const wns::ldk::CompoundPtr& compound)
     }
 }
 
+void StopAndWaitARQ::processOutgoing(const wns::ldk::CompoundPtr& compound)
+{
+    if(friends.manager->lifetimeExpired(compound->getCommandPool()))
+    {
+        MESSAGE_SINGLE(NORMAL, logger, "outgoing compound has expired lifetime -> drop");
+    }
+    else
+    {
+        wns::ldk::arq::StopAndWait::processOutgoing(compound);
+    }
+}
+
 void StopAndWaitARQ::processIncoming(const wns::ldk::CompoundPtr& compound)
 {
     wns::ldk::arq::StopAndWaitCommand* command = this->getCommand(compound->getCommandPool());
@@ -167,11 +203,26 @@ void StopAndWaitARQ::processIncoming(const wns::ldk::CompoundPtr& compound)
         assure(this->ackState == waitForACK or this->ackState == receiving, "Received ACK but not waiting for ack");
         assure(this->activeCompound, "Received ACK but no active compound");
 
-        // received acknowledgement frame for the current compound
-
         this->statusCollector->onSuccessfullTransmission(this->activeCompound);
         this->perMIB->onSuccessfullTransmission(friends.manager->getReceiverAddress(this->activeCompound->getCommandPool()));
-        numTxAttemptsProbe->put(this->activeCompound, getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter);
+        numTxAttemptsProbe->put(this->activeCompound, shortRetryCounter + longRetryCounter + 1);
+
+        // received acknowledgement frame for the current compound --> reset counters
+        Bit commandPoolSize;
+        Bit dataSize;
+        this->calculateSizes(activeCompound->getCommandPool(), commandPoolSize, dataSize);
+        Bit psduSize = commandPoolSize + dataSize;
+
+        if(psduSize > rtsctsThreshold)
+        {
+            longRetryCounter = 0;
+            stationLongRetryCounter = 0;
+        }
+        else
+        {
+            shortRetryCounter = 0;
+            stationShortRetryCounter = 0;
+        }
 
         this->activeCompound = wns::ldk::CompoundPtr();
         this->ackState = none;
@@ -209,6 +260,60 @@ StopAndWaitARQ::hasCapacity() const
 }
 
 void
+StopAndWaitARQ::onTransmissionHasFailed(const wns::ldk::CompoundPtr& compound)
+{
+    // indication from RTS/CTS that the CTS was not received
+    ++shortRetryCounter;
+    ++stationShortRetryCounter;
+
+    MESSAGE_BEGIN(NORMAL, logger, m, "Missing CTS, retry counters now:");
+    m << " src " << shortRetryCounter;
+    m << " ssrc " << stationShortRetryCounter;
+    m << " (limit " << shortRetryLimit << ")";
+    m << " lrc " << longRetryCounter;
+    m << " slrc " << stationLongRetryCounter;
+    m << " (limit " << longRetryLimit << ")";
+    MESSAGE_END();
+
+    this->transmissionHasFailed(compound);
+}
+
+void StopAndWaitARQ::onTimeout()
+{
+    // ACK was not received before timeout
+    assure(this->activeCompound, "no active compound, no failed transmission");
+
+    // get the PSDU size
+    Bit commandPoolSize;
+    Bit dataSize;
+    this->calculateSizes(activeCompound->getCommandPool(), commandPoolSize, dataSize);
+    Bit psduSize = commandPoolSize + dataSize;
+
+    if(psduSize <= rtsctsThreshold)
+    {
+        ++shortRetryCounter;
+        ++stationShortRetryCounter;
+    }
+    else
+    {
+        ++longRetryCounter;
+        ++stationLongRetryCounter;
+    }
+
+    MESSAGE_BEGIN(NORMAL, logger, m, "Timeout of ACK, retry counters now:");
+    m << " src " << shortRetryCounter;
+    m << " ssrc " << stationShortRetryCounter;
+    m << " (limit " << shortRetryLimit << ")";
+    m << " lrc " << longRetryCounter;
+    m << " slrc " << stationLongRetryCounter;
+    m << " (limit " << longRetryLimit << ")";
+    MESSAGE_END();
+
+    this->perMIB->onFailedTransmission(friends.manager->getReceiverAddress(activeCompound->getCommandPool()));
+    this->transmissionHasFailed(activeCompound);
+}
+
+void
 StopAndWaitARQ::transmissionHasFailed(const wns::ldk::CompoundPtr& compound)
 {
     assure(this->activeCompound, "no active compound, no failed transmission");
@@ -224,25 +329,16 @@ StopAndWaitARQ::transmissionHasFailed(const wns::ldk::CompoundPtr& compound)
 
     wns::ldk::arq::StopAndWaitCommand* command = this->getCommand(this->activeCompound);
 
-    // get the PSDU size
-    Bit commandPoolSize;
-    Bit dataSize;
-    this->calculateSizes(activeCompound->getCommandPool(), commandPoolSize, dataSize);
-    Bit psduSize = commandPoolSize + dataSize;
-
-    // number of retries depends on the psduSize
-    uint32_t retryLimit = (psduSize <= rtsctsThreshold) ? shortRetryLimit : longRetryLimit;
-
-    // we count the transmissions (starting from 1), whereas the retry limit
-    // counts the retries --> +1
-    assure(command->localTransmissionCounter <= (retryLimit + 1),
-           "localTransmissionCounter " << command->localTransmissionCounter << " is > retryLimit+1 " << (retryLimit+1));
-
-    if(command->localTransmissionCounter == (retryLimit+1))
+    if((shortRetryCounter == shortRetryLimit) or
+       (longRetryCounter == longRetryLimit) or
+       (friends.manager->lifetimeExpired(compound->getCommandPool())))
     {
-        MESSAGE_SINGLE(NORMAL, logger, "Failed transmission, txCounter has reached limit of " << retryLimit << " retransmissions -> drop packet");
+        MESSAGE_SINGLE(NORMAL, logger, "Failed transmission, txCounter has reached limit -> drop packet");
         this->statusCollector->onFailedTransmission(this->activeCompound);
-        numTxAttemptsProbe->put(this->activeCompound, getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter);
+        numTxAttemptsProbe->put(this->activeCompound, shortRetryCounter + longRetryCounter + 1);
+        // reset retry counters, but NOT station retry counters!
+        shortRetryCounter = 0;
+        longRetryCounter = 0;
         this->sendNow = false;
         this->activeCompound = wns::ldk::CompoundPtr();
         this->tryToSend();
@@ -250,19 +346,13 @@ StopAndWaitARQ::transmissionHasFailed(const wns::ldk::CompoundPtr& compound)
     else
     {
         wns::ldk::arq::StopAndWait::onTimeout();
+        getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter = stationShortRetryCounter + stationLongRetryCounter + 1;
         MESSAGE_SINGLE(NORMAL, this->logger,
-                       "Failed transmission, increase transmission counter to " << getCommand(activeCompound)->localTransmissionCounter);
+                       "Failed transmission, retransmit");
     }
 }
 
-void StopAndWaitARQ::onTimeout()
-{
-    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout of ACK");
-    this->perMIB->onFailedTransmission(friends.manager->getReceiverAddress(activeCompound->getCommandPool()));
-    this->transmissionHasFailed(activeCompound);
-}
-
-size_t
+unsigned int
 StopAndWaitARQ::getTransmissionCounter(const wns::ldk::CompoundPtr& compound) const
 {
     if(getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this))

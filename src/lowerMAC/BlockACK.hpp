@@ -235,14 +235,20 @@ namespace wifimac {
 
             /// Interface to signal unexpected transmission failures
             void
-            transmissionHasFailed(const wns::ldk::CompoundPtr& compound);
-            size_t
+            onTransmissionHasFailed(const wns::ldk::CompoundPtr& compound);
+            unsigned int
             getTransmissionCounter(const wns::ldk::CompoundPtr& compound) const;
             void
             copyTransmissionCounter(const wns::ldk::CompoundPtr& src, const wns::ldk::CompoundPtr& dst);
 
             /// SDU and PCI size calculation
             void calculateSizes(const wns::ldk::CommandPool* commandPool, Bit& commandPoolSize, Bit& dataSize) const;
+
+            wifimac::lowerMAC::Manager*
+            getManager() const
+                {
+                    return friends.manager;
+                }
 
     private:
             void processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs);

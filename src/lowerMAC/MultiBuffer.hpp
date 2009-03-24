@@ -70,11 +70,10 @@ namespace wifimac { namespace lowerMAC {
    	/**
    	* @brief returns ID of the next queue to be sent
    	*
-   	* If strict, either this method returns the buffer that 
-	* meets the strategy requirements or -1 otherwise
-	* if non strict it returns the ID of the buffer with 
-	* most data if no other send queue meets the send size criteria
-   	* or -1 if all queues are empty
+   	* If strict, either this method returns the buffer that meets the strategy
+	* requirements or -1 otherwise if non strict it returns the ID of the buffer
+	* with most data if no other send queue meets the send size criteria or -1
+	* if all queues are empty
 	*/
        virtual int
        getSendBuffer(const DestinationBuffers& buffers, bool strict) = 0;
@@ -92,9 +91,9 @@ namespace wifimac { namespace lowerMAC {
 
    /**
     * @brief Round Robin queue selection strategy
-    * 
-    * this strategy selects the next send queue that has reached the send threshold
-    * of the MultiBuffer for transmission
+    *
+    * this strategy selects the next send queue that has reached the send
+    * threshold of the MultiBuffer for transmission
     */
     class ConstantRRSelector :
         public IQueuing,
@@ -225,7 +224,7 @@ namespace wifimac { namespace lowerMAC {
 	getActualDuration(wns::simulator::Time duration);
 
     private:
-	void onFUNCreated();
+        void onFUNCreated();
 
 	/** @brief sets internal parameters for outgoing PDUs
 	*
@@ -234,7 +233,12 @@ namespace wifimac { namespace lowerMAC {
 	* setDuration() as well as the transmission time for those data
 	* that fits into the set time window
 	*/
-	void calculateSendParameters();
+        void calculateSendParameters();
+
+        /** @brief Iterate over all queues and deletes MSDUs which have
+         * exceeded their lifetimes. */
+        void checkLifetime();
+
 
         const std::string managerName;
         const std::string raName;
@@ -248,8 +252,8 @@ namespace wifimac { namespace lowerMAC {
         } friends;
 
         std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
-	// indicates new round for TXOP
-	bool isActive;
+        // indicates new round for TXOP
+        bool isActive;
         DestinationBuffers sendBuffers;
         wns::logger::Logger logger;
         const int bufferSendSize;
@@ -260,8 +264,8 @@ namespace wifimac { namespace lowerMAC {
         const bool impatient;
         std::auto_ptr<IQueuing> queueSelector;
         const wns::simulator::Time incomingTimeout;
-	wns::simulator::Time maxDuration;
-	wns::simulator::Time actualDuration;
+        wns::simulator::Time maxDuration;
+        wns::simulator::Time actualDuration;
     };
 
 

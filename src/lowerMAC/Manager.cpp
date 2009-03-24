@@ -53,6 +53,7 @@ Manager::Manager(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config) :
     myMACAddress_(config.get<wns::service::dll::UnicastAddress>("myMACAddress")),
     ucName_(config_.get<std::string>("upperConvergenceCommandName")),
     numAntennas(config_.get<int>("myConfig.numAntennas")),
+    msduLifetimeLimit(config_.get<wns::simulator::Time>("myConfig.msduLifetimeLimit")),
     associatedTo()
 {
     MESSAGE_SINGLE(NORMAL, logger_, "created");
@@ -127,6 +128,36 @@ Manager::processOutgoing(const wns::ldk::CompoundPtr& compound)
     ManagerCommand* mc = activateCommand(compound->getCommandPool());
     mc->peer.type = DATA;
     mc->peer.frameExchangeDuration = this->sifsDuration + this->expectedACKDuration;
+    if(this->msduLifetimeLimit > 0)
+    {
+        mc->local.expirationTime =  wns::simulator::getEventScheduler()->getTime() + this->msduLifetimeLimit;
+        MESSAGE_SINGLE(NORMAL, logger_, "Outgoing command will expire at " << mc->local.expirationTime);
+    }
+    else
+    {
+        mc->local.expirationTime = 0.0;
+        MESSAGE_SINGLE(NORMAL, logger_, "Outgoing command, no expiration time");
+    }
+}
+
+bool
+Manager::lifetimeExpired(const wns::ldk::CommandPool* commandPool) const
+{
+    wns::simulator::Time exp = getCommand(commandPool)->local.expirationTime;
+    if(exp == 0)
+    {
+        return false;
+    }
+    else
+    {
+        return(wns::simulator::getEventScheduler()->getTime() > exp);
+    }
+}
+
+wns::simulator::Time
+Manager::getExpirationTime(const wns::ldk::CommandPool* commandPool) const
+{
+    return(getCommand(commandPool)->local.expirationTime);
 }
 
 wifimac::convergence::PhyUser*
@@ -190,6 +221,15 @@ Manager::createReply(const wns::ldk::CommandPool* original) const
 
     ManagerCommand* mc = activateCommand(reply);
     mc->peer.type = DATA;
+    if(this->msduLifetimeLimit > 0)
+    {
+        mc->local.expirationTime =  wns::simulator::getEventScheduler()->getTime() + this->msduLifetimeLimit;
+    }
+    else
+    {
+        mc->local.expirationTime = 0;
+    }
+
 
 	MESSAGE_SINGLE(NORMAL, logger_, "create reply done, set sourceMACAddress to " << ucReply->peer.sourceMACAddress);
 

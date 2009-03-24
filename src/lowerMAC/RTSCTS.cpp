@@ -377,7 +377,7 @@ RTSCTS::onTimeout()
 
     // re-convert MPDU type from DATA_TXOP to DATA
     friends.manager->setFrameType(this->pendingMPDU->getCommandPool(), DATA);
-    friends.arq->transmissionHasFailed(this->pendingMPDU);
+    friends.arq->onTransmissionHasFailed(this->pendingMPDU);
 
     this->pendingMPDU = wns::ldk::CompoundPtr();
     state = idle;

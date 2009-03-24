@@ -223,6 +223,9 @@ MultiBuffer::processIncoming(const wns::ldk::CompoundPtr& compound)
 void
 MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
+    // first check if some space can be made free
+    checkLifetime();
+
     wns::ldk::CommandReaderInterface* commandReader = getFUN()->getCommandReader("upperConvergence");
     dll::UpperCommand* ucCommand = commandReader->readCommand<dll::UpperCommand>(compound->getCommandPool());
     int address = ucCommand->peer.targetMACAddress.getInteger();;
@@ -282,7 +285,9 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
 const wns::ldk::CompoundPtr
 MultiBuffer::hasSomethingToSend() const
 {
-   if ((currentBuffer == -1) || (stilltoBeSent == 0) || (isActive == false))
+   if ((currentBuffer == -1) or
+       (stilltoBeSent == 0) or
+       (isActive == false))
    {
        return (wns::ldk::CompoundPtr());
    }
@@ -306,7 +311,8 @@ MultiBuffer::getSomethingToSend()
    if (stilltoBeSent <= 0)
    {
        isActive = false;
-       currentBuffer = queueSelector->getSendBuffer(sendBuffers,!impatient);
+       checkLifetime();
+       currentBuffer = queueSelector->getSendBuffer(sendBuffers, not impatient);
    }
    return it;
 } // getSomethingToSend
@@ -334,46 +340,48 @@ MultiBuffer::getSize(const ContainerType& buffer) const
 void
 MultiBuffer::onTimeout()
 {
-	if (currentBuffer == -1) // no buffer meets the strategy criteria
-	{
-		// get the buffer with the most compounds, to be sent next
-		currentBuffer = queueSelector->getSendBuffer(sendBuffers, false);
+    if (currentBuffer == -1) // no buffer meets the strategy criteria
+    {
+        // first clean up buffer
+        checkLifetime();
 
-		if (currentBuffer != -1)
-		{
-			calculateSendParameters();
-		}
-		else // no waiting compounds at all no new timer setting needed
-		{
-			MESSAGE_SINGLE(NORMAL, this->logger, "Timeout, but no waiting compounds");
-			return;
-		}
-	}
-	// restart countdown
-	this->setTimeout(this->incomingTimeout);
+        // get the buffer with the most compounds, to be sent next
+        currentBuffer = queueSelector->getSendBuffer(sendBuffers, false);
 
-	tryToSend();
+        if (currentBuffer != -1)
+        {
+            calculateSendParameters();
+        }
+        else // no waiting compounds at all no new timer setting needed
+        {
+            MESSAGE_SINGLE(NORMAL, this->logger, "Timeout, but no waiting compounds");
+            return;
+        }
+    }
+    this->setTimeout(this->incomingTimeout);
+
+    tryToSend();
 }
 
 void MultiBuffer::setDuration(wns::simulator::Time duration) 
 {
-	maxDuration = duration;
-	if (currentBuffer != -1)
-	{
-		calculateSendParameters();
-	}
-	isActive = true;
+    maxDuration = duration;
+    if (currentBuffer != -1)
+    {
+        calculateSendParameters();
+    }
+    isActive = true;
 }
 
 wns::simulator::Time MultiBuffer::getActualDuration(wns::simulator::Time duration) 
 {
-	maxDuration = duration;
-	if (currentBuffer != -1)
-	{
-		calculateSendParameters();
-		return actualDuration;
-	}
-	return 0;
+    maxDuration = duration;
+    if (currentBuffer != -1)
+    {
+        calculateSendParameters();
+        return actualDuration;
+    }
+    return 0;
 }
 
 void MultiBuffer::calculateSendParameters()
@@ -426,3 +434,32 @@ void MultiBuffer::calculateSendParameters()
 	}
 }
 
+void
+MultiBuffer::checkLifetime()
+{
+    for (DestinationBuffers::const_iterator destBufferIt = sendBuffers.begin();
+         destBufferIt != sendBuffers.end();
+         destBufferIt++)
+    {
+        for (ContainerType::iterator it = destBufferIt->second->begin();
+             it != destBufferIt->second->end();
+            )
+        {
+            ContainerType::iterator next = it;
+            ++next;
+            if(friends.manager->lifetimeExpired((*it)->getCommandPool()))
+            {
+                currentSize -= (*sizeCalculator)(*it);
+                destBufferIt->second->erase(it);
+
+                MESSAGE_BEGIN(NORMAL, logger, m, getFUN()->getName());
+                m << "PDU in queue to " << destBufferIt->first;
+                m << " has reached lifetime -> drop!";
+                m << " New queue size is " << getSize(*(destBufferIt->second));
+                m << " Overall size is " << currentSize;
+                MESSAGE_END();
+            }
+            it = next;
+        }
+    }
+}

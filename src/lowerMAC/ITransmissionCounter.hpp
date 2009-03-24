@@ -37,7 +37,7 @@ namespace wifimac { namespace lowerMAC {
         virtual ~ITransmissionCounter()
             {}
 
-        virtual size_t
+        virtual unsigned int
         getTransmissionCounter(const wns::ldk::CompoundPtr& compound) const = 0;
 
         virtual void
@@ -45,7 +45,7 @@ namespace wifimac { namespace lowerMAC {
 
         // indication from outside that the transmission has failed
         virtual void
-        transmissionHasFailed(const wns::ldk::CompoundPtr& compound) = 0;
+        onTransmissionHasFailed(const wns::ldk::CompoundPtr& compound) = 0;
 
     };
 }

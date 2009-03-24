@@ -55,7 +55,9 @@ namespace wifimac { namespace lowerMAC {
         public wifimac::IKnowsFrameTypeCommand
     {
     public:
-        struct { } local;
+        struct {
+            wns::simulator::Time expirationTime;
+        } local;
 
         struct {
             wifimac::FrameType type;
@@ -225,6 +227,15 @@ namespace wifimac { namespace lowerMAC {
         unsigned int
         getNumAntennas() const;
 
+        /** @brief Returns if the lifetime limit of the given msdu is expired */
+        bool
+        lifetimeExpired(const wns::ldk::CommandPool* commandPool) const;
+
+        /** @brief Returns the expiration time of the msdu*/
+        wns::simulator::Time
+        getExpirationTime(const wns::ldk::CommandPool* commandPool) const;
+
+
     private:
         virtual void
         onFUNCreated();
@@ -246,6 +257,9 @@ namespace wifimac { namespace lowerMAC {
 
         /** @brief Number of antennas of the receiver */
         const unsigned int numAntennas;
+
+        /** @brief Lifetime limit of MSDUs*/
+        const wns::simulator::Time msduLifetimeLimit;
 
         /** @brief In case of a STA, the AP to which the STA is associated */
         wns::service::dll::UnicastAddress associatedTo;

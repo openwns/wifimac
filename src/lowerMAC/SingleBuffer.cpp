@@ -45,27 +45,29 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
 	FUNConfigCreator);
 
 SingleBuffer::SingleBuffer(fun::FUN* fuNet, const wns::pyconfig::View& config) :
-		Buffer(fuNet, config),
+    Buffer(fuNet, config),
 
-		fu::Plain<SingleBuffer>(fuNet),
-		Delayed<SingleBuffer>(),
-	        raName(config.get<std::string>("raName")),
-    		protocolCalculatorName(config.get<std::string>("protocolCalculatorName")),
-		buffer(ContainerType()),
-		maxSize(config.get<int>("size")),
-		currentSize(0),
-		sizeCalculator(),
-		dropper(),
-		totalPDUs(),
-		droppedPDUs(),
-		maxDuration(0),
-		isActive(false),
-		logger("WNS", config.get<std::string>("name"))
+    fu::Plain<SingleBuffer>(fuNet),
+    Delayed<SingleBuffer>(),
+    raName(config.get<std::string>("raName")),
+    managerName(config.get<std::string>("managerName")),
+    protocolCalculatorName(config.get<std::string>("protocolCalculatorName")),
+    buffer(ContainerType()),
+    maxSize(config.get<int>("size")),
+    currentSize(0),
+    sizeCalculator(),
+    dropper(),
+    totalPDUs(),
+    droppedPDUs(),
+    maxDuration(0),
+    isActive(false),
+    logger("WNS", config.get<std::string>("name"))
 {
 	{
 		std::string pluginName = config.get<std::string>("sizeUnit");
 		sizeCalculator = std::auto_ptr<SizeCalculator>(SizeCalculator::Factory::creator(pluginName)->create());
 		friends.ra = NULL;
+        friends.manager = NULL;
 		protocolCalculator = NULL;
 	}
 
@@ -100,6 +102,7 @@ SingleBuffer::SingleBuffer(const SingleBuffer& other) :
 	logger(other.logger)
 {
 	friends.ra = other.friends.ra;
+    friends.manager = other.friends.manager;
 	protocolCalculator = other.protocolCalculator;
 }
 
@@ -107,6 +110,7 @@ void SingleBuffer::onFUNCreated()
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
     friends.ra = getFUN()->findFriend<wifimac::lowerMAC::RateAdaptation*>(raName);
+    friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
     protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
 
@@ -136,40 +140,42 @@ SingleBuffer::hasCapacity() const
 void
 SingleBuffer::processOutgoing(const CompoundPtr& compound)
 {
+    checkLifetime();
+
 	buffer.push_back(compound);
 	currentSize += (*sizeCalculator)(compound);
 
-	while(currentSize > maxSize) {
+	while(currentSize > maxSize)
+    {
+        MESSAGE_BEGIN(NORMAL, logger, m, getFUN()->getName());
+        m << " dropping a PDU! maxSize reached : " << maxSize;
+        m << " current size is " << currentSize;
+        MESSAGE_END();
 
-		MESSAGE_BEGIN(NORMAL, logger, m, getFUN()->getName());
-		m << " dropping a PDU! maxSize reached : " << maxSize;
-		m << " current size is " << currentSize;
-		MESSAGE_END();
+        CompoundPtr toDrop = (*dropper)(buffer);
+        int pduSize = (*sizeCalculator)(toDrop);
+        currentSize -= pduSize;
+        increaseDroppedPDUs(pduSize);
+    }
 
-		CompoundPtr toDrop = (*dropper)(buffer);
-		int pduSize = (*sizeCalculator)(toDrop);
-		currentSize -= pduSize;
-		increaseDroppedPDUs(pduSize);
-	}
-
-	increaseTotalPDUs();
-	probe();
+    increaseTotalPDUs();
+    probe();
 } // processOutgoing
 
 
 const CompoundPtr
 SingleBuffer::hasSomethingToSend() const
 {
-	if(buffer.empty() or (isActive == false))
-	{
-		return CompoundPtr();
-	}
-	if ((maxDuration > 0) and (firstCompoundDuration() > maxDuration))
-	{
-		return CompoundPtr();
-	}
-	
-	return buffer.front();
+    if(buffer.empty() or (isActive == false))
+    {
+        return CompoundPtr();
+    }
+    if ((maxDuration > 0) and (firstCompoundDuration() > maxDuration))
+    {
+        return CompoundPtr();
+    }
+
+    return buffer.front();
 } // somethingToSend
 
 
@@ -181,10 +187,41 @@ SingleBuffer::getSomethingToSend()
 
 	currentSize -= (*sizeCalculator)(compound);
 	probe();
+
+    checkLifetime();
+
 	isActive = false;
 	return compound;
 } // getSomethingToSend
 
+
+void
+SingleBuffer::checkLifetime()
+{
+    for (wns::ldk::buffer::dropping::ContainerType::iterator it = buffer.begin();
+         it != buffer.end();
+        )
+    {
+        wns::ldk::buffer::dropping::ContainerType::iterator next = it;
+        ++next;
+
+        if(friends.manager->lifetimeExpired((*it)->getCommandPool()))
+        {
+            int pduSize = (*sizeCalculator)(*it);
+            currentSize -= pduSize;
+            increaseDroppedPDUs(pduSize);
+            probe();
+
+            buffer.erase(it);
+
+            MESSAGE_BEGIN(NORMAL, logger, m, getFUN()->getName());
+            m << "PDU in queue has reached lifetime -> drop!";
+            m << "New size is " << currentSize;
+            MESSAGE_END();
+        }
+        it = next;
+    }
+}
 
 //
 // Buffer interface
@@ -204,28 +241,31 @@ SingleBuffer::getMaxSize()
 } // getMaxSize
 
 
-void SingleBuffer::setDuration(wns::simulator::Time duration) 
+void SingleBuffer::setDuration(wns::simulator::Time duration)
 {
-	maxDuration = duration;
-	isActive = true;
+    maxDuration = duration;
+    isActive = true;
 }
 
-wns::simulator::Time SingleBuffer::getActualDuration(wns::simulator::Time duration) 
+wns::simulator::Time SingleBuffer::getActualDuration(wns::simulator::Time duration)
 {
-	if (firstCompoundDuration() > duration)
-	{
-		return 0;
-	}
-	return firstCompoundDuration();
+    if (firstCompoundDuration() > duration)
+    {
+        return 0;
+    }
+    return firstCompoundDuration();
 }
-
 
 wns::simulator::Time SingleBuffer::firstCompoundDuration() const
 {
-	if (buffer.empty())
-	{
-		return 0;
-	}
-	wifimac::convergence::PhyMode phyMode = friends.ra->getPhyMode(buffer.front());
-	return(protocolCalculator->getDuration()->getMPDU_PPDU(buffer.front()->getLengthInBits(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic")));
+    if (buffer.empty())
+    {
+        return 0;
+    }
+    wifimac::convergence::PhyMode phyMode = friends.ra->getPhyMode(buffer.front());
+    return(protocolCalculator->getDuration()->getMPDU_PPDU(buffer.front()->getLengthInBits(),
+                                                           phyMode.getDataBitsPerSymbol(),
+                                                           phyMode.getNumberOfSpatialStreams(),
+                                                           20,
+                                                           std::string("Basic")));
 }

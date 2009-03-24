@@ -35,11 +35,13 @@ class SingleBuffer(openwns.Buffer.Buffer):
     name = "SingleBuffer"
     protocolCalculatorName = None
     raName = None
+    managerName = None
 
     drop = 'Tail'
-    def __init__(self, protocolCalculatorName, raName, **kw):
+    def __init__(self, protocolCalculatorName, raName, managerName, **kw):
         super(SingleBuffer, self).__init__(**kw)
 	self.raName = raName
+        self.managerName = managerName
 	self.protocolCalculatorName = protocolCalculatorName
 
 
