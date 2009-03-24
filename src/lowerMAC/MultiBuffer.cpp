@@ -258,7 +258,7 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
     if (currentBuffer == -1)
     {
         currentBuffer = queueSelector->getSendBuffer(sendBuffers,
-                                                     (not bufferFull and not impatient));
+                                                     not bufferFull or not impatient);
 
         if (currentBuffer != -1)
         {
@@ -271,7 +271,7 @@ MultiBuffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
 const wns::ldk::CompoundPtr
 MultiBuffer::hasSomethingToSend() const
 {
-   if ((currentBuffer == -1) || (stilltoBeSent == 0))// || (isActive == false))
+   if ((currentBuffer == -1) || (stilltoBeSent == 0) || (isActive == false))
    {
        return (wns::ldk::CompoundPtr());
    }
@@ -407,4 +407,8 @@ void MultiBuffer::calculateSendParameters()
 	{
 		stilltoBeSent = getSize(*(sendBuffers.find(currentBuffer)));
 	}
+}
+
+int MultiBuffer::getCurrentSendBuffer() {
+	return currentBuffer;
 }
