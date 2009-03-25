@@ -60,7 +60,7 @@ class AggregationConfig(object):
 
 class Aggregation(openwns.Probe.Probe):
 
-    __plugin__ = 'wifimac.lowerMAC.Aggregation'
+    __plugin__ = 'wifimac.draftn.Aggregation'
     """ Name in FU Factory """
 
     myConfig = None

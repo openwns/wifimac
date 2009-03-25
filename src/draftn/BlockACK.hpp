@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_BlockACK_HPP
-#define WIFIMAC_LOWERMAC_BlockACK_HPP
+#ifndef WIFIMAC_DRAFTN_BlockACK_HPP
+#define WIFIMAC_DRAFTN_BlockACK_HPP
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/management/PERInformationBase.hpp>
@@ -48,7 +48,7 @@
 #include <WNS/RoundRobin.hpp>
 
 namespace wifimac {
-    namespace lowerMAC {
+    namespace draftn {
 
         typedef enum {I, BA, BAREQ} BlockAckFrameType;
 

@@ -31,7 +31,6 @@ from TxDurationSetter import *
 from PreambleGenerator import *
 from FrameSynchronization import *
 from ErrorModelling import *
-from DeAggregation import *
 
 import openwns.Multiplexer
 import openwns.CRC
@@ -41,7 +40,6 @@ names['phyUser'] = 'PhyUser'
 names['channelState'] = 'ChannelState'
 names['frameSynchronization'] = 'FrameSynchronization'
 names['crc'] = 'CRC'
-names['deAggregation'] = 'DeAggregation'
 names['txDuration'] = 'TxDuration'
 names['errorModelling'] = 'ErrorModelling'
 

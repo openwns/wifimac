@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_BLOCKUNTILREPLY_HPP
-#define WIFIMAC_LOWERMAC_BLOCKUNTILREPLY_HPP
+#ifndef WIFIMAC_DRAFTN_BLOCKUNTILREPLY_HPP
+#define WIFIMAC_DRAFTN_BLOCKUNTILREPLY_HPP
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/IRxStartEnd.hpp>
@@ -36,7 +36,7 @@
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/events/CanTimeout.hpp>
 
-namespace wifimac { namespace lowerMAC {
+namespace wifimac { namespace draftn {
 
     class BlockUntilReply:
         public wns::ldk::fu::Plain<BlockUntilReply, wns::ldk::EmptyCommand>,
@@ -91,7 +91,7 @@ namespace wifimac { namespace lowerMAC {
             wifimac::lowerMAC::Manager* manager;
         } friends;
     };
-} // end namespace lowerMAC
+} // end namespace draftn
 } // end namespace wifimac
 
-#endif // ifndef WIFIMAC_LOWERMAC_BLOCKUNTILREPLY_HPP
+#endif // ifndef WIFIMAC_DRAFTN_BLOCKUNTILREPLY_HPP

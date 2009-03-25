@@ -28,7 +28,7 @@ import openwns.FUN
 import wifimac.Logger
 
 class DeAggregation(openwns.FUN.FunctionalUnit):
-	__plugin__ = 'wifimac.convergence.DeAggregation'
+	__plugin__ = 'wifimac.draftn.DeAggregation'
 	logger = None
 	phyUserName = None
 	protocolCalculatorName = None

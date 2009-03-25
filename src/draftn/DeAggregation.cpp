@@ -26,19 +26,19 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/convergence/DeAggregation.hpp>
+#include <WIFIMAC/draftn/DeAggregation.hpp>
 
 #include <DLL/Layer2.hpp>
 
 #include <WNS/ldk/concatenation/Concatenation.hpp>
 
 
-using namespace wifimac::convergence;
+using namespace wifimac::draftn;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    wifimac::convergence::DeAggregation,
+    wifimac::draftn::DeAggregation,
     wns::ldk::FunctionalUnit,
-    "wifimac.convergence.DeAggregation",
+    "wifimac.draftn.DeAggregation",
     wns::ldk::FUNConfigCreator);
 
 DeAggregation::DeAggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
@@ -301,7 +301,7 @@ DeAggregation::onTxStart(const wns::ldk::CompoundPtr& /*compound*/)
     if(this->doSignalTxStart)
     {
         this->doSignalTxStart = false;
-        this->wns::Subject<ITxStartEnd>::forEachObserver(OnTxStartEnd(this->currentTxCompound, start));
+        this->wns::Subject<ITxStartEnd>::forEachObserver(OnTxStartEnd(this->currentTxCompound, wifimac::convergence::start));
     }
 }
 
@@ -311,7 +311,7 @@ DeAggregation::onTxEnd(const wns::ldk::CompoundPtr& /*compound*/)
     if((this->txQueue.empty()) and (this->currentTxCompound != wns::ldk::CompoundPtr()))
     {
         // signal tx end of complete frame
-        this->wns::Subject<ITxStartEnd>::forEachObserver(OnTxStartEnd(this->currentTxCompound, end));
+        this->wns::Subject<ITxStartEnd>::forEachObserver(OnTxStartEnd(this->currentTxCompound, wifimac::convergence::end));
         this->currentTxCompound = wns::ldk::CompoundPtr();
     }
 }

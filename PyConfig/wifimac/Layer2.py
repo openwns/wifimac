@@ -277,7 +277,7 @@ class Config(Sealed):
 		self.manager = wifimac.lowerMAC.ManagerConfig()
 		self.txop = wifimac.lowerMAC.TXOPConfig()
 		self.aggregation = wifimac.draftn.AggregationConfig()
-		self.multiBuffer = wifimac.draftn.MultiBufferConfig()
+		#self.multiBuffer = wifimac.draftn.MultiBufferConfig()
 		self.blockACK = wifimac.draftn.BlockACKConfig()
 		self.blockUntilReply = wifimac.draftn.BlockUntilReplyConfig()
 		self.frameSynchronization = wifimac.convergence.FrameSynchronizationConfig()

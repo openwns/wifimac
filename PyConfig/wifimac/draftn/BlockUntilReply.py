@@ -35,7 +35,7 @@ class BlockUntilReplyConfig(object):
     preambleProcessingDelay = 21E-6
 
 class BlockUntilReply(openwns.FUN.FunctionalUnit):
-    __plugin__ = "wifimac.lowerMAC.BlockUntilReply"
+    __plugin__ = "wifimac.draftn.BlockUntilReply"
 
     logger = None
     managerName = None

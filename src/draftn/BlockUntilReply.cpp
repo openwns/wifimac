@@ -26,14 +26,14 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/lowerMAC/BlockUntilReply.hpp>
+#include <WIFIMAC/draftn/BlockUntilReply.hpp>
 
-using namespace wifimac::lowerMAC;
+using namespace wifimac::draftn;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    wifimac::lowerMAC::BlockUntilReply,
+    wifimac::draftn::BlockUntilReply,
     wns::ldk::FunctionalUnit,
-    "wifimac.lowerMAC.BlockUntilReply",
+    "wifimac.draftn.BlockUntilReply",
     wns::ldk::FUNConfigCreator);
 
 BlockUntilReply::BlockUntilReply(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config):

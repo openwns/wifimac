@@ -28,6 +28,7 @@
 import openwns.FUN
 import openwns.pyconfig
 import openwns.ARQ
+import openwns.Probe
 
 import wifimac.Logger
 
@@ -63,7 +64,7 @@ class BlockACKConfig(object):
     """
 class BlockACK(openwns.Probe.Probe):
 
-    __plugin__ = 'wifimac.lowerMAC.BlockACK'
+    __plugin__ = 'wifimac.draftn.BlockACK'
     """ Name in FU Factory """
 
     arqStatusCollector = None

@@ -28,7 +28,7 @@
 from BlockUntilReply import *
 from BlockACK import *
 from Aggregation import *
-from MultiBuffer import *
+from DeAggregation import *
 import wifimac.lowerMAC
 import wifimac.convergence
 
@@ -40,19 +40,21 @@ import openwns.ldk
 names = dict()
 names['aggregation'] = 'Aggregation'
 names['blockUntilReply'] = 'BlockUntilReply'
+names['deAggregation'] = 'DeAggregation'
 
 def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs =  wifimac.lowerMAC.__getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
-    FUs.append(MultiBuffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
-                           commandName = 'queueCommand',
-                           config = config.multiBuffer,
-			   raName = names['ra'] + str(transceiverAddress),
-			   managerName = names['manager'] + str(transceiverAddress),
-			   protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-                           sizeUnit = config.bufferSizeUnit,
-                           size = config.bufferSize,
-                           parentLogger = logger))
+    FUs.append(wifimac.lowerMAC.SingleBuffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
+                                             commandName = names['buffer'] + 'Command',
+                                             sizeUnit = config.bufferSizeUnit,
+                                             size = config.bufferSize,
+                                             localIDs = probeLocalIDs,
+                                             probingEnabled = False,
+                                             raName = names['ra'] + str(transceiverAddress),
+                                             managerName = names['manager'] + str(transceiverAddress),
+                                             protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                                             parentLogger = logger))
 
     FUs.append(BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
                         commandName = names['arq'] + 'Command',
@@ -240,13 +242,13 @@ def __appendDraftNTimingBlock__(myFUN, bottomFU, config, names, transceiverAddre
 def getConvergenceFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = wifimac.convergence.__upperPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
-    FUs.append(wifimac.convergence.DeAggregation(name = names['deAggregation'] + str(transceiverAddress),
-                                                 commandName = names['txDuration'] + 'Command',
-                                                 protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-                                                 managerName = names['manager'] + str(transceiverAddress),
-                                                 phyUserName = names['phyUser'] + str(transceiverAddress),
-                                                 aggregationCommandName = 'AggregationCommand',
-                                                 parentLogger = logger))
+    FUs.append(wifimac.draftn.DeAggregation(name = names['deAggregation'] + str(transceiverAddress),
+                                            commandName = names['txDuration'] + 'Command',
+                                            protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                                            managerName = names['manager'] + str(transceiverAddress),
+                                            phyUserName = names['phyUser'] + str(transceiverAddress),
+                                            aggregationCommandName = 'AggregationCommand',
+                                            parentLogger = logger))
     FUs.extend(wifimac.convergence.__lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs))
 
     # add created FUs to FUN

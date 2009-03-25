@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_CONVERGENCE_DEAGGREGATION_HPP
-#define WIFIMAC_CONVERGENCE_DEAGGREGATION_HPP
+#ifndef WIFIMAC_DRAFTN_DEAGGREGATION_HPP
+#define WIFIMAC_DRAFTN_DEAGGREGATION_HPP
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/management/ProtocolCalculator.hpp>
@@ -41,7 +41,7 @@
 #include <WNS/events/CanTimeout.hpp>
 #include <WNS/Observer.hpp>
 
-namespace wifimac { namespace convergence {
+namespace wifimac { namespace draftn {
 
     class DeAggregationCommand:
 		public wns::ldk::Command,
@@ -74,7 +74,7 @@ namespace wifimac { namespace convergence {
 		public wns::ldk::fu::Plain<DeAggregation, DeAggregationCommand>,
         public wns::ldk::Delayed<DeAggregation>,
         public wns::events::CanTimeout,
-        public TxStartEndNotification,
+        public wifimac::convergence::TxStartEndNotification,
         public wns::Observer<wifimac::convergence::ITxStartEnd>
 	{
 	public:
@@ -137,7 +137,7 @@ namespace wifimac { namespace convergence {
 	};
 
 
-} // mac
+} // draftn
 } // wifimac
 
-#endif // WIFIMAC_SCHEDULER_CONSTANTWAIT_HPP
+#endif // WIFIMAC_DRAFTN_DEAGGREGATION_HPP

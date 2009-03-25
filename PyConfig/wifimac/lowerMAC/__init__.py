@@ -71,7 +71,8 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                             probingEnabled = False,
                             raName = names['ra'] + str(transceiverAddress),
                             managerName = names['manager'] + str(transceiverAddress),
-                            protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress)))
+                            protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                            parentLogger = logger))
 
     FUs.append(DuplicateFilter(functionalUnitName = names['DuplicateFilter'] + str(transceiverAddress),
                                commandName =  names['DuplicateFilter'] + 'Command',

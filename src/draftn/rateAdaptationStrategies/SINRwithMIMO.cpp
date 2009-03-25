@@ -26,12 +26,15 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/SINRwithMIMO.hpp>
+#include <WIFIMAC/draftn/rateAdaptationStrategies/SINRwithMIMO.hpp>
 #include <WIFIMAC/management/VirtualCapabilityInformationBase.hpp>
 
-using namespace wifimac::lowerMAC::rateAdaptationStrategies;
+using namespace wifimac::draftn::rateAdaptationStrategies;
 
-STATIC_FACTORY_REGISTER_WITH_CREATOR(SINRwithMIMO, IRateAdaptationStrategy, "SINRwithMIMO", IRateAdaptationStrategyCreator);
+STATIC_FACTORY_REGISTER_WITH_CREATOR(SINRwithMIMO,
+                                     wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy, 
+                                     "SINRwithMIMO",
+                                     wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategyCreator);
 
 SINRwithMIMO::SINRwithMIMO(
     const wns::pyconfig::View& _config,

@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTICWITHMIMO_HPP
-#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTICWITHMIMO_HPP
+#ifndef WIFIMAC_DRAFTN_RATEADAPTATIONSTRATEGIES_OPPORTUNISTICWITHMIMO_HPP
+#define WIFIMAC_DRAFTN_RATEADAPTATIONSTRATEGIES_OPPORTUNISTICWITHMIMO_HPP
 
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/IRateAdaptationStrategy.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
@@ -38,7 +38,7 @@
 #include <WNS/distribution/Uniform.hpp>
 #include <WNS/logger/Logger.hpp>
 
-namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
+namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
 
     /**
 	 * @brief The Rate Adpation (RA) tries to select the optimal Modulation- and Coding-Scheme (MCS)
@@ -46,7 +46,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 	 */
 
     class OpportunisticwithMIMO:
-        public IRateAdaptationStrategy
+        public wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy
     {
     public:
         OpportunisticwithMIMO(

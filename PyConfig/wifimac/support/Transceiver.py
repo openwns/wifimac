@@ -27,6 +27,7 @@
 
 import openwns.pyconfig
 from openwns import dBm, dB
+from wifimac.lowerMAC.RateAdaptation import OpportunisticwithMIMO
 
 import wifimac.Layer2
 
@@ -63,14 +64,12 @@ class DraftN(Basic):
         super(DraftN, self).__init__(frequency)
         self.layer2.funTemplate = wifimac.FUNModes.DraftN
         self.layer2.expectedACKDuration = 68E-6
-        self.layer2.ra.raStrategy = 'SINRwithMIMO'
+        self.layer2.ra.raStrategy = OpportunisticwithMIMO()
         self.layer2.manager.numAntennas = numAntennas
 
         # resource usage strategy: Buffer, blockACK, aggregation, TxOP
         self.layer2.bufferSize = 50
         self.layer2.bufferSizeUnit = 'PDU'
-        self.layer2.multiBuffer.impatient = False
-        self.layer2.multiBuffer.sendSize = maxAggregation
         self.layer2.blockACK.capacity = 50
         self.layer2.blockACK.maxOnAir = maxAggregation
         self.layer2.blockACK.sizeUnit = 'PDU'
@@ -80,3 +79,11 @@ class DraftN(Basic):
         self.layer2.aggregation.impatient = False
         self.layer2.txop.txopLimit = 0.0
 
+class DraftNStation(DraftN):
+    def __init__(self, frequency, position, scanFrequencies, scanDuration, numAntennas, maxAggregation):
+        super(DraftNStation, self).__init__(frequency, numAntennas, maxAggregation)
+
+        self.position = position
+        self.layer2.beacon.enabled = False
+        self.layer2.beacon.scanFrequencies = scanFrequencies
+        self.layer2.beacon.scanDuration = scanDuration

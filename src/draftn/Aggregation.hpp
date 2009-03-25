@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_AGGREGATION_HPP
-#define WIFIMAC_LOWERMAC_AGGREGATION_HPP
+#ifndef WIFIMAC_DRAFTN_AGGREGATION_HPP
+#define WIFIMAC_DRAFTN_AGGREGATION_HPP
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 
@@ -36,7 +36,7 @@
 #include <WNS/ldk/probe/Probe.hpp>
 #include <WNS/probe/bus/ContextCollector.hpp>
 
-namespace wifimac { namespace lowerMAC {
+namespace wifimac { namespace draftn {
 
     class Aggregation:
         public wns::ldk::concatenation::Concatenation,

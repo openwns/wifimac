@@ -26,23 +26,23 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/lowerMAC/BlockACK.hpp>
+#include <WIFIMAC/draftn/BlockACK.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 
 #include <WNS/probe/bus/utils.hpp>
 
-using namespace wifimac::lowerMAC;
+using namespace wifimac::draftn;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    wifimac::lowerMAC::BlockACK,
+    wifimac::draftn::BlockACK,
     wns::ldk::FunctionalUnit,
-    "wifimac.lowerMAC.BlockACK",
+    "wifimac.draftn.BlockACK",
     wns::ldk::FUNConfigCreator);
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    wifimac::lowerMAC::BlockACK,
+    wifimac::draftn::BlockACK,
     wns::ldk::probe::Probe,
-    "wifimac.lowerMAC.BlockACK",
+    "wifimac.draftn.BlockACK",
     wns::ldk::FUNConfigCreator);
 
 BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
@@ -180,13 +180,23 @@ BlockACK::storageSize() const
 bool
 BlockACK::hasCapacity() const
 {
-    // if the last compound to be processed has a different receiver as the
-    // current one, don't accept further compounds till current send block is
-    // transmitted successfully OR buffer capacity has been reached
+    // conditions for accepting a new compound:
+    //
+    // 1. The capacity of the FU (size txQueue + sizes rxQueues) is not
+    // exhausted.
+    // 2. The last compound accepted has the same receiver as the current
+    // transmission queue (otherwise, a new send block has to start)
+    // 3. The transmission queue does not wait for an ACK, i.e. there are no
+    // frames "on the air"
+    // 4. The number of frames in the txQueue is below the number which can be
+    // send in the next round
+
     return((this->storageSize() < this->capacity) and 
            (currentReceiver == nextReceiver) and
            ((txQueue == NULL) or
-            (not txQueue->waitsForACK())));
+            (not txQueue->waitsForACK())) and
+           ((txQueue == NULL) or
+            (txQueue->txQueueSize() < this->maxOnAir)));
 }
 
 void
@@ -239,7 +249,7 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
     nextReceiver = receiver;
     MESSAGE_SINGLE(NORMAL, this->logger, "Stored outgoing frame, remaining capacity " << this->capacity - this->storageSize());
 
-    // try to get more frames before sending
+    // try to get more frames to be send before sending
     while(hasCapacity() and
           (not inWakeup) and
           (sendBuffer->hasSomethingToSend() != wns::ldk::CompoundPtr()))

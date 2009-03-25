@@ -26,23 +26,23 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/lowerMAC/Aggregation.hpp>
+#include <WIFIMAC/draftn/Aggregation.hpp>
 
 #include <WNS/probe/bus/ContextProvider.hpp>
 #include <WNS/probe/bus/utils.hpp>
 
-using namespace wifimac::lowerMAC;
+using namespace wifimac::draftn;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    wifimac::lowerMAC::Aggregation,
+    wifimac::draftn::Aggregation,
     wns::ldk::FunctionalUnit,
-    "wifimac.lowerMAC.Aggregation",
+    "wifimac.draftn.Aggregation",
     wns::ldk::FUNConfigCreator);
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    wifimac::lowerMAC::Aggregation,
+    wifimac::draftn::Aggregation,
     wns::ldk::probe::Probe,
-    "wifimac.lowerMAC.Aggregation",
+    "wifimac.draftn.Aggregation",
     wns::ldk::FUNConfigCreator);
 
 Aggregation::Aggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :

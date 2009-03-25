@@ -26,14 +26,17 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/OpportunisticwithMIMO.hpp>
+#include <WIFIMAC/draftn/rateAdaptationStrategies/OpportunisticwithMIMO.hpp>
 #include <WIFIMAC/management/VirtualCapabilityInformationBase.hpp>
 
 #include <algorithm>
 
-using namespace wifimac::lowerMAC::rateAdaptationStrategies;
+using namespace wifimac::draftn::rateAdaptationStrategies;
 
-STATIC_FACTORY_REGISTER_WITH_CREATOR(OpportunisticwithMIMO, IRateAdaptationStrategy, "OpportunisticwithMIMO", IRateAdaptationStrategyCreator);
+STATIC_FACTORY_REGISTER_WITH_CREATOR(OpportunisticwithMIMO,
+                                     wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy,
+                                     "OpportunisticwithMIMO",
+                                     wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategyCreator);
 
 OpportunisticwithMIMO::OpportunisticwithMIMO(
     const wns::pyconfig::View& _config,
@@ -41,7 +44,7 @@ OpportunisticwithMIMO::OpportunisticwithMIMO(
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger),
+    wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger),
     per(_per),
     perForGoingDown(_config.get<double>("perForGoingDown")),
     perForGoingUp(_config.get<double>("perForGoingUp")),

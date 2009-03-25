@@ -33,16 +33,16 @@ using namespace wns::ldk::buffer::dropping;
 using namespace wifimac::lowerMAC;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-	SingleBuffer,
-	Buffer,
-	"wifimac.lowerMAC.SingleBuffer",
-	FUNConfigCreator);
+    SingleBuffer,
+    Buffer,
+    "wifimac.lowerMAC.SingleBuffer",
+    FUNConfigCreator);
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-	SingleBuffer,
-	FunctionalUnit,
-	"wifimac.lowerMAC.SingleBuffer",
-	FUNConfigCreator);
+    SingleBuffer,
+    FunctionalUnit,
+    "wifimac.lowerMAC.SingleBuffer",
+    FUNConfigCreator);
 
 SingleBuffer::SingleBuffer(fun::FUN* fuNet, const wns::pyconfig::View& config) :
     Buffer(fuNet, config),
@@ -63,18 +63,17 @@ SingleBuffer::SingleBuffer(fun::FUN* fuNet, const wns::pyconfig::View& config) :
     isActive(false),
     logger("WNS", config.get<std::string>("name"))
 {
-	{
-		std::string pluginName = config.get<std::string>("sizeUnit");
-		sizeCalculator = std::auto_ptr<SizeCalculator>(SizeCalculator::Factory::creator(pluginName)->create());
-		friends.ra = NULL;
-        friends.manager = NULL;
-		protocolCalculator = NULL;
-	}
-
-	{
-		std::string pluginName = config.get<std::string>("drop");
-		dropper = std::auto_ptr<Drop>(Drop::Factory::creator(pluginName)->create());
-	}
+    {
+        std::string pluginName = config.get<std::string>("sizeUnit");
+        sizeCalculator = std::auto_ptr<SizeCalculator>(SizeCalculator::Factory::creator(pluginName)->create());
+    }
+    friends.ra = NULL;
+    friends.manager = NULL;
+    protocolCalculator = NULL;
+    {
+        std::string pluginName = config.get<std::string>("drop");
+        dropper = std::auto_ptr<Drop>(Drop::Factory::creator(pluginName)->create());
+    }
 } // SingleBuffer
 
 SingleBuffer::SingleBuffer(const SingleBuffer& other) :
@@ -157,7 +156,7 @@ SingleBuffer::processOutgoing(const CompoundPtr& compound)
         currentSize -= pduSize;
         increaseDroppedPDUs(pduSize);
     }
-
+    MESSAGE_SINGLE(NORMAL, this->logger, "Store outgoing compound, size is now " << currentSize);
     increaseTotalPDUs();
     probe();
 } // processOutgoing
@@ -190,7 +189,12 @@ SingleBuffer::getSomethingToSend()
 
     checkLifetime();
 
-	isActive = false;
+    if(maxDuration > 0)
+    {
+        isActive = false;
+    }
+
+    MESSAGE_SINGLE(NORMAL, this->logger, "Send compound, size is now " << currentSize);
 	return compound;
 } // getSomethingToSend
 
@@ -245,6 +249,7 @@ void SingleBuffer::setDuration(wns::simulator::Time duration)
 {
     maxDuration = duration;
     isActive = true;
+    MESSAGE_SINGLE(NORMAL, this->logger, "Got setDuration with duration " << duration);
 }
 
 wns::simulator::Time SingleBuffer::getActualDuration(wns::simulator::Time duration)
