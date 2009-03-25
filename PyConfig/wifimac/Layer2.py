@@ -240,8 +240,8 @@ class Config(Sealed):
 	beaconLQM = None
 	# end example
 	# begin example "wifimac.pyconfig.layer2.config.variables"
-	bufferSize = 10*1000*8
-	bufferSizeUnit = 'Bit'
+	bufferSize = 10
+	bufferSizeUnit = 'PDU'
 
 	headerBits = 30*8
 	crcBits = 4*8
