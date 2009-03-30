@@ -33,7 +33,7 @@
 #include <WIFIMAC/Layer2.hpp>
 
 #include <DLL/Layer2.hpp>
-
+#include <WNS/service/dll/StationTypes.hpp>
 #include <WNS/ldk/FlowGate.hpp>
 
 using namespace wifimac::lowerMAC;
@@ -189,7 +189,7 @@ Manager::getMACAddress() const
 void
 Manager::associateWith(wns::service::dll::UnicastAddress svrAddress)
 {
-	assure(this->getFUN()->getLayer<dll::Layer2*>()->getStationType() == dll::StationTypes::UT(),
+	assure(this->getFUN()->getLayer<dll::Layer2*>()->getStationType() == wns::service::dll::StationTypes::UT(),
 		   "Called associateWith by non-UT");
 
 	// the association links the layer2 of this STA and the layer2 of the AP -
