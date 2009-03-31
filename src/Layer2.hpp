@@ -58,7 +58,6 @@ namespace wifimac
 	 * transceivers and provides methods to get the appropriate MAC address
 	 * and to build frames emerging from this transceiver.
 	 *
-	 * \pyco{wifimac.Layer2}
 	 */
     class Layer2:
         public dll::Layer2

@@ -41,10 +41,14 @@
 namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
     /**
-	 * @brief The Rate Adpation (RA) tries to select the optimal Modulation- and Coding-Scheme (MCS)
-	 *    for the upcomming transmission.
+	 * @brief The Opportunistic Rate Adpation tries to find the maximum MCS with
+     *   a packet error rate below a given value.
+     *
+     * Opportunistic RA works only using the statistics of received ACKs as a
+     * reply to the used MCS. Hence, it slowly increases the rate by selecting
+     * high-rate MCSs, until the PER exceeds a given value. Then, it stays at
+     * the next lower MCS until the percieved PER changes again.
 	 */
-
     class Opportunistic:
         public IRateAdaptationStrategy
     {

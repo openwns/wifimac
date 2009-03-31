@@ -43,10 +43,10 @@ namespace wifimac { namespace convergence {
 	 * @brief Holder for all necessary information about a PhyMode
 	 *
 	 * - Data-bits / Symbol
-	 * - SINR to BER mapping
 	 * - Method to compute the PER out of rss, sinr, length
 	 * - Method to compute the number of symbols for a given number of data bits
 	 * - Description (modulation, codingRate, index)
+     * - Number of spatial streams
 	 */
 	class PhyMode {
 	public:

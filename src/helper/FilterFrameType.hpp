@@ -34,6 +34,8 @@
 
 namespace wifimac { namespace helper {
 
+    /** @brief Filters compounds by the frame type (which is configurable), to
+     * be used by the compound switch */
     class FilterFrameType:
         public dll::compoundSwitch::Filter
     {

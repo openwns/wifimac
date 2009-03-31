@@ -27,4 +27,4 @@
 import openwns
 import wifimac.WiFiMac
 
-openwns.simulator.OpenWNS.modules.wifimac = WiFiMac.WiFiMac()
+openwns.simulator.OpenWNS.modules.wifimac = wifimac.WiFiMac.WiFiMac()

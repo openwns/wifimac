@@ -31,6 +31,9 @@
 
 namespace wifimac { namespace lowerMAC {
 
+    /**
+     * @brief Interface for FUs that are responsible for retransmissions
+     */
     class ITransmissionCounter
     {
     public:

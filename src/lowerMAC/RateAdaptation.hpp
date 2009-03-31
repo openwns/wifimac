@@ -44,6 +44,13 @@
 
 namespace wifimac { namespace lowerMAC {
 
+    /**
+     * @brief Setting of the rate which is used to transmit the compound
+     *
+     * The rate adaptation FU has, for each receiver, a
+     * wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy
+     * that is used to determine the rate for the current compound.
+     */
     class RateAdaptation:
         public wns::ldk::fu::Plain<RateAdaptation, wns::ldk::EmptyCommand>,
         public wns::ldk::Processor<RateAdaptation>

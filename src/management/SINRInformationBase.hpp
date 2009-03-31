@@ -39,49 +39,95 @@
 
 namespace wifimac { namespace management {
 
-	class SINRInformationBase:
-		public wns::ldk::ManagementService
-	{
-	public:
-		SINRInformationBase( wns::ldk::ManagementServiceRegistry*, const wns::pyconfig::View& config );
-		virtual ~SINRInformationBase() {};
+    /**
+     * @brief Storage and retrieval of SINR measurements
+     *
+     * This information base provides a central point in a node to store and
+     * access SINR measurements. Two kind of measurements must be
+     * differentiated:
+     *
+     * -# Direct measurements at the node (done e.g. by the PHY layer by
+     *    comparing known symbols with received symbols). Methods to store an to
+     *    access these measurements are
+     *    - putMeasurement()
+     *    - knowsMeasuredSINR()
+     *    - getAverageMeasuredSINR()
+     *    As indicated by the last function, the SINR information base performs
+     *    an averaging of the stored SINR values.
+     * -# Measurements done at a peer node and transmitted as management
+     *    information to this node. Methods for this are
+     *    - putPeerSINR()
+     *    - knowsPeerSINR()
+     *    - getAveragePeerSINR()
+     *    Averaging of the peer SINR values is not performed at the node, but at
+     *    the peer node.
+     */
+    class SINRInformationBase:
+        public wns::ldk::ManagementService
+    {
+    public:
+        /** @brief Constructor */
+        SINRInformationBase( wns::ldk::ManagementServiceRegistry*, const wns::pyconfig::View& config );
+
+        /** @brief Destructor */
+        virtual ~SINRInformationBase() {};
 
 
-        /** @brief SINR for peer -> me (measured here) */
+        /** @brief Store SINR value measured here (link tx -> me) */
         void
         putMeasurement(const wns::service::dll::UnicastAddress tx,
                        const wns::Ratio sinr);
 
+        /** @brief Ask if SINR value of link tx -> me is known */
         bool
         knowsMeasuredSINR(const wns::service::dll::UnicastAddress tx);
 
+        /** @brief Returns the averaged SINR of the link tx -> me */
         wns::Ratio
         getAverageMeasuredSINR(const wns::service::dll::UnicastAddress tx);
 
 
-        /** @brief SINR for me -> peer (measured at peer) */
+        /**
+         * @brief Store received SINR measurement of link me -> peer
+         *
+         * This link measurement must have been transported to me by regular
+         * management data exchange.
+         */
         void
         putPeerSINR(const wns::service::dll::UnicastAddress peer,
                     const wns::Ratio sinr);
 
+        /** @brief Query if SINR of link me -> peer is known */
         bool
         knowsPeerSINR(const wns::service::dll::UnicastAddress peer);
 
+        /** @brief Get the averaged SINR of link me -> peer */
         wns::Ratio
         getAveragePeerSINR(const wns::service::dll::UnicastAddress peer);
 
 
-	private:
-		void
-		onMSRCreated();
+    private:
 
+        /** @brief Initialization */
+        void
+        onMSRCreated();
+
+        /** @brief Measurement holder type: Maps address to sliding window */
         typedef wns::container::Registry<wns::service::dll::UnicastAddress, wns::SlidingWindow*, wns::container::registry::DeleteOnErase> slidingWindowMap;
+
+        /** @brief Holds SINR values measured here */
         slidingWindowMap measuredSINRHolder;
 
+        /** @brief SINR information holder type: Maps peer address to SINR */
         typedef wns::container::Registry<wns::service::dll::UnicastAddress, wns::Ratio*> ratioMap;
+
+        /** @brief Holds SINR values received by peers */
         ratioMap peerSINRHolder;
 
+        /** @brief The logger */
 		wns::logger::Logger logger;
+
+        /** @brief Duration of the sliding window for averaging the SINR values */
         const simTimeType windowSize;
 
 	};

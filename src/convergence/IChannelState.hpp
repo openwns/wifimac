@@ -23,13 +23,12 @@ namespace wifimac { namespace convergence {
         busy
     };
 
-
+    /** @brief Notification of the channel state (busy/idle) */
     class IChannelState
     {
     public:
         virtual ~IChannelState(){};
 
-        /*** @brief called by ChannelState, implemented by observers on cs ***/
         virtual void onChannelBusy() = 0;
         virtual void onChannelIdle() = 0;
     };

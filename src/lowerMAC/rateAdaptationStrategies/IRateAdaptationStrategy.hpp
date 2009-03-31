@@ -40,6 +40,9 @@
 
 namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
+    /**
+     * @brief Interface for all Rate Adaptation Strategies
+     */
     class IRateAdaptationStrategy
     {
     public:

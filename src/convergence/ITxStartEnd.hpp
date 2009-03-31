@@ -23,15 +23,23 @@ namespace wifimac { namespace convergence {
         end
     };
 
-	class ITxStartEnd
-	{
-	public:
-		virtual ~ITxStartEnd()
-			{}
+    /**
+     * @brief Notification of transmission start and end
+     *
+     * A lower convergence FU notifies for every MPDU the start and the end of
+     * the transmission.
+     */
+    class ITxStartEnd
+    {
+    public:
+        virtual ~ITxStartEnd()
+            {}
 
-		virtual void onTxStart(const wns::ldk::CompoundPtr& compound) = 0;
+        /** @brief Called when the transmission starts */
+        virtual void onTxStart(const wns::ldk::CompoundPtr& compound) = 0;
+        /** @brief Called when the transmission ends */
         virtual void onTxEnd(const wns::ldk::CompoundPtr& compound) = 0;
-	};
+    };
 
 	class TxStartEndNotification :
 		virtual public wns::Subject<ITxStartEnd>

@@ -36,7 +36,7 @@
 using namespace wifimac::lowerMAC;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    wifimac::lowerMAC::TXOP,
+    TXOP,
     wns::ldk::FunctionalUnit,
     "wifimac.lowerMAC.TXOP",
     wns::ldk::FUNConfigCreator);
@@ -89,9 +89,9 @@ void TXOP::onFUNCreated()
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
 
-    friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
-    friends.txopWindow = getFUN()->findFriend<wifimac::lowerMAC::ITXOPWindow*>(txopWindowName);
-    friends.ra = getFUN()->findFriend<wifimac::lowerMAC::RateAdaptation*>(raName);
+    friends.manager = getFUN()->findFriend<Manager*>(managerName);
+    friends.txopWindow = getFUN()->findFriend<ITXOPWindow*>(txopWindowName);
+    friends.ra = getFUN()->findFriend<RateAdaptation*>(raName);
     protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 
     // initial triggering of timeWindow FU letting thru compounds

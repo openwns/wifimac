@@ -125,7 +125,7 @@ BroadcastLinkQuality::newPeerMeasurement(double peerSuccessRate, wns::Ratio peer
     // compute and send new metric for link me->peer to ps
 
     // Convert optSINR to frametime + PLCP preamble + ACK + SIFS
-    // TODO: This should be a function provided by the PhyUser!
+    // TODO: This should be a function provided by the protocol calculator
     double frameTxTime = (this->meanFrameSize)/this->getBestRate(peerSINR) + this->preambleDuration + this->sifsDuration + this->expectedAckDuration;
 
     // Convert rate to expected transmission time

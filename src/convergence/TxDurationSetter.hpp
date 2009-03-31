@@ -64,7 +64,11 @@ namespace wifimac { namespace convergence {
         wns::simulator::Time getDuration() const { return local.txDuration; }
     };
 
-
+    /**
+     * @brief Sets the transmission duration in any outgoing compound.
+     *
+     * Works for both preambles and PSDUs.
+     */
     class TxDurationSetter :
         public wns::ldk::fu::Plain<TxDurationSetter, TxDurationSetterCommand>,
         public wns::ldk::Processor<TxDurationSetter>

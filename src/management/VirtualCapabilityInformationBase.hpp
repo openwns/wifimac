@@ -42,6 +42,23 @@
 
 namespace wifimac { namespace management {
 
+    /**
+     * @brief Allows "magic" (simulation-only) information exchange about the
+     * node's capabilities
+     *
+     * The virtual capability information base is a global blackboard accessible
+     * by any node in the simulation. It can be used to easily exchange
+     * information about capabilities without the (regular) way of exchanging
+     * management information requests and replies.
+     *
+     * One example of the usage of this information base is the exchange of the
+     * number of antennas for MIMO transmissions: To determine the optimal
+     * number of streams, the transmitter has to know the number of antennas at
+     * the receiver. In reality, this information is exchanged via management
+     * frames. If for a particular evaluation this information exchange is not
+     * relevant for the simulation results itself, it can be made "magic",
+     * i.e. use this information base instead transmitting packets.
+     */
 	class VirtualCapabilityInformationBase:
 		virtual public wns::ldk::Layer,
 		public wns::node::component::Component

@@ -45,16 +45,16 @@ names['deAggregation'] = 'DeAggregation'
 def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs =  wifimac.lowerMAC.__getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
-    FUs.append(wifimac.lowerMAC.SingleBuffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
-                                             commandName = names['buffer'] + 'Command',
-                                             sizeUnit = config.bufferSizeUnit,
-                                             size = config.bufferSize,
-                                             localIDs = probeLocalIDs,
-                                             probingEnabled = False,
-                                             raName = names['ra'] + str(transceiverAddress),
-                                             managerName = names['manager'] + str(transceiverAddress),
-                                             protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-                                             parentLogger = logger))
+    FUs.append(wifimac.lowerMAC.Buffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
+                                       commandName = names['buffer'] + 'Command',
+                                       sizeUnit = config.bufferSizeUnit,
+                                       size = config.bufferSize,
+                                       localIDs = probeLocalIDs,
+                                       probingEnabled = False,
+                                       raName = names['ra'] + str(transceiverAddress),
+                                       managerName = names['manager'] + str(transceiverAddress),
+                                       protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                                       parentLogger = logger))
 
     FUs.append(BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
                         commandName = names['arq'] + 'Command',

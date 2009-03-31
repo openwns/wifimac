@@ -1,13 +1,29 @@
 /******************************************************************************
- * WIFIMAC                                                                    *
- * __________________________________________________________________________ *
- *                                                                            *
- * Copyright (C) 1999-2007                                                    *
- * Chair of Communication Networks (ComNets)                                  *
- * Kopernikusstr. 16, D-52074 Aachen, Germany                                 *
- * phone: ++49-241-80-27910 (phone), fax: ++49-241-80-22242                   *
- * email: rise@comnets.rwth-aachen.de                                         *
- * www: http://rise.comnets.rwth-aachen.de                                    *
+ * WiFiMac                                                                    *
+ * This file is part of openWNS (open Wireless Network Simulator)
+ * _____________________________________________________________________________
+ *
+ * Copyright (C) 2004-2007
+ * Chair of Communication Networks (ComNets)
+ * Kopernikusstr. 16, D-52074 Aachen, Germany
+ * phone: ++49-241-80-27910,
+ * fax: ++49-241-80-22242
+ * email: info@openwns.org
+ * www: http://www.openwns.org
+ * _____________________________________________________________________________
+ *
+ * openWNS is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License version 2 as published by the
+ * Free Software Foundation;
+ *
+ * openWNS is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  ******************************************************************************/
 
 #ifndef WIFIMAC_CONVERGENCE_INETWORKALLOCATIONVECTOR_HPP
@@ -18,6 +34,18 @@
 
 namespace wifimac { namespace convergence {
 
+    /**
+     * @brief Indication of the Network Allocation Vector status (busy/idle)
+     *
+     * The NAV might have a different value than the channel status
+     * notification! A NAV is set to true only for "overheared" transmissions,
+     * i.e. nor for own transmissions neither for transmissions for which the
+     * node is the receiver!
+     *
+     * Application example is e.g. the RTS/CTS: According to the standard, the
+     * receiver replies with the CTS only if the NAV is not set. Hence, it must
+     * not set the NAV upon the reception of the RTS which is addressed to it.
+     */
 	class INetworkAllocationVector
 	{
 	public:

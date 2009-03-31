@@ -62,9 +62,9 @@ namespace wifimac { namespace management {
 	 * @brief Beacon transmission and reception
 	 *
 	 * The periodical beacon transmission and reception is required for several functions
-	 *  - APs broadcast their presence
-	 *  - STAs learn about active APs, select one and associate to it
-	 *  - All nodes learn about their neighboring nodes and thus of possible links
+	 * - APs broadcast their presence
+	 * - STAs learn about active APs, select one and associate to it
+	 * - All nodes learn about their neighboring nodes and thus of possible links
 	 */
 	class Beacon :
 		public wns::ldk::fu::Plain<Beacon, BeaconCommand>,

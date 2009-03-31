@@ -24,12 +24,14 @@ namespace wifimac { namespace convergence {
             virtual ~IRxStartEnd()
                 {}
 
-            /*** @brief called by ChannelState, implemented by observers ***/
             virtual void onRxStart(const wns::simulator::Time expRxDuration) = 0;
             virtual void onRxEnd() = 0;
             virtual void onRxError() = 0;
         };
 
+        /**
+         * @brief Notification of the Start and End of a reception
+         */
         class RxStartEndNotification :
         virtual public wns::Subject<IRxStartEnd>
         {

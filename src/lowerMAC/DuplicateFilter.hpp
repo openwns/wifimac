@@ -49,6 +49,9 @@ namespace wifimac { namespace lowerMAC {
         struct {} magic;
 	};
 
+    /**
+     * @brief Filters duplicate compounds by a sequence number
+     */
 	class DuplicateFilter:
 		public wns::ldk::fu::Plain<DuplicateFilter, DuplicateFilterCommand>
 	{

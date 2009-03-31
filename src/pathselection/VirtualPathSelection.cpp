@@ -68,7 +68,7 @@ VirtualPathSelectionService::getVPS()
 VirtualPathSelection::VirtualPathSelection(wns::node::Interface* _node,	const wns::pyconfig::View& _config) :
 	wns::node::component::Component(_node, _config),
 	logger(_config.get("logger")),
-	numNodes(_config.get<int>("numNodes")),
+    numNodes(_config.get<int>("numNodes")),
 	pathMatrixIsConsistent(true)
 {
 	TheVPSService::Instance().setVPS(this);
@@ -98,9 +98,9 @@ VirtualPathSelection::VirtualPathSelection(wns::node::Interface* _node,	const wn
             assure(entry.size() == 3, "Entry has wrong size");
 
             wns::service::dll::UnicastAddress tx = entry.at<wns::service::dll::UnicastAddress>(0);
-            int32_t txId = mapper.map(tx);
+            int txId = mapper.map(tx);
             wns::service::dll::UnicastAddress rx = entry.at<wns::service::dll::UnicastAddress>(1);
-            int32_t rxId = mapper.map(rx);
+            int rxId = mapper.map(rx);
             double cost = entry.at<double>(2);
 
             preKnowledgeCosts[txId][rxId] = Metric(cost);
@@ -117,7 +117,7 @@ VirtualPathSelection::registerMP(const wns::service::dll::UnicastAddress mpAddre
 	assure(!isMeshPoint(mpAddress), "MP with address " << mpAddress << " already registered");
 	assure(mapper.getMaxId() < numNodes, "numNodes (" << numNodes << ") is too small for another MP");
 
-	int32_t id = mapper.map(mpAddress);
+	int id = mapper.map(mpAddress);
 	// store mp address
 	mps.push_back(id);
 
@@ -134,7 +134,7 @@ VirtualPathSelection::registerPortal(const wns::service::dll::UnicastAddress por
 	assure(!isPortal(portalAddress), "Portal with address " << portalAddress << " already registered");
 	assure(mapper.getMaxId() < numNodes, "numNodes (" << numNodes << ") is too small for another Portal");
 
-	int32_t id = mapper.map(portalAddress);
+	int id = mapper.map(portalAddress);
 
 	// first: every portal is also a mp
 	mps.push_back(id);
@@ -157,7 +157,7 @@ VirtualPathSelection::registerPortal(const wns::service::dll::UnicastAddress por
 
 wns::service::dll::UnicastAddress
 VirtualPathSelection::getNextHop(const wns::service::dll::UnicastAddress current,
-								 const wns::service::dll::UnicastAddress finalDestination)
+                                 const wns::service::dll::UnicastAddress finalDestination)
 {
 	MESSAGE_SINGLE(NORMAL, logger, "getNextHop query from " << current << " to " << finalDestination);
 
@@ -205,7 +205,7 @@ VirtualPathSelection::isMeshPoint(const wns::service::dll::UnicastAddress addres
 {
 	assure(address.isValid(), "address is not valid");
 
-	int32_t id;
+	int id;
 	if(!mapper.knows(address))
 	{
 		return false;
@@ -228,7 +228,7 @@ VirtualPathSelection::isPortal(const wns::service::dll::UnicastAddress address) 
 {
 	assure(address.isValid(), "address is not valid");
 
-	int32_t id;
+	int id;
 	if(!mapper.knows(address))
 	{
 		return false;
@@ -259,7 +259,7 @@ VirtualPathSelection::getPortalFor(const wns::service::dll::UnicastAddress clien
 	}
 
 
-	int32_t id;
+	int id;
 	if(!mapper.knows(clientAddress))
 	{
 		// unknown id
@@ -293,7 +293,7 @@ VirtualPathSelection::getProxyFor(const wns::service::dll::UnicastAddress client
 		this->onNewPathSelectionEntry();
 	}
 
-	int32_t id;
+	int id;
 	if(!mapper.knows(clientAddress))
 	{
 		// unknown id
@@ -318,7 +318,7 @@ VirtualPathSelection::getProxyFor(const wns::service::dll::UnicastAddress client
 
 void
 VirtualPathSelection::registerProxy(const wns::service::dll::UnicastAddress proxy,
-									const wns::service::dll::UnicastAddress client)
+                                    const wns::service::dll::UnicastAddress client)
 {
 	if(!pathMatrixIsConsistent)
 	{
@@ -331,8 +331,8 @@ VirtualPathSelection::registerProxy(const wns::service::dll::UnicastAddress prox
 	assure(getProxyFor(client) == wns::service::dll::UnicastAddress(),
 		   "client " << client << " is already proxied by " << getProxyFor(client) << ", second proxy by " << proxy << " is not allowed");
 
-	int32_t clientId = mapper.map(client);
-	int32_t proxyId = mapper.get(proxy);
+	int clientId = mapper.map(client);
+	int proxyId = mapper.get(proxy);
 
 	clients2proxies[clientId] = proxyId;
 	MESSAGE_SINGLE(NORMAL, logger, "registered " << proxy << " as proxy for " << client);
@@ -407,8 +407,8 @@ VirtualPathSelection::createPeerLink(const wns::service::dll::UnicastAddress mys
 	}
 	else
 	{
-        int32_t myselfId = mapper.get(myself);
-        int32_t peerId = mapper.get(peer);
+        int myselfId = mapper.get(myself);
+        int peerId = mapper.get(peer);
 
 		assure(linkCosts[myselfId][peerId].isInf(), "createPeerLink with already known linkCosts");
 
@@ -438,8 +438,8 @@ VirtualPathSelection::updatePeerLink(const wns::service::dll::UnicastAddress mys
 	assure(isMeshPoint(myself) , "myself (" << myself << ") is not a known MP");
 	assure(isMeshPoint(peer), "peer (" << peer << ") is not a known MP");
 
-	int32_t myselfId = mapper.get(myself);
-	int32_t peerId = mapper.get(peer);
+	int myselfId = mapper.get(myself);
+	int peerId = mapper.get(peer);
 
 	if(linkCosts[myselfId][peerId].isInf())
 	{
@@ -485,8 +485,8 @@ VirtualPathSelection::closePeerLink(const wns::service::dll::UnicastAddress myse
 	assure(isMeshPoint(myself) , "myself (" << myself << ") is not a known MP");
 	assure(isMeshPoint(peer), "peer (" << peer << ") is not a known MP");
 
-	int32_t myselfId = mapper.get(myself);
-	int32_t peerId = mapper.get(peer);
+	int myselfId = mapper.get(myself);
+	int peerId = mapper.get(peer);
 
 	if(linkCosts[myselfId][peerId].isInf())
 	{
@@ -559,7 +559,7 @@ VirtualPathSelection::onNewPathSelectionEntry()
 		{
 			if((*i != *j) && (pathCosts[*i][*j].isNotInf()))
 			{
-				int32_t firstHopOut = *j;
+				int firstHopOut = *j;
 
 				while(pred[*i][firstHopOut] != *i)
 				{
@@ -698,7 +698,7 @@ VirtualPathSelection::AddressStorage::AddressStorage() :
 
 }
 
-int32_t
+int
 VirtualPathSelection::AddressStorage::map(const wns::service::dll::UnicastAddress adr)
 {
     if(!adr2id.knows(adr))
@@ -713,14 +713,14 @@ VirtualPathSelection::AddressStorage::map(const wns::service::dll::UnicastAddres
 	return(adr2id.find(adr));
 }
 
-int32_t
+int
 VirtualPathSelection::AddressStorage::get(const wns::service::dll::UnicastAddress adr) const
 {
     return(adr2id.find(adr));
 }
 
 wns::service::dll::UnicastAddress
-VirtualPathSelection::AddressStorage::get(const int32_t id) const
+VirtualPathSelection::AddressStorage::get(const int id) const
 {
     return(id2adr.find(id));
 }
@@ -732,12 +732,12 @@ VirtualPathSelection::AddressStorage::knows(const wns::service::dll::UnicastAddr
 }
 
 bool
-VirtualPathSelection::AddressStorage::knows(const int32_t id) const
+VirtualPathSelection::AddressStorage::knows(const int id) const
 {
        return(id2adr.knows(id));
 }
 
-int32_t
+int
 VirtualPathSelection::AddressStorage::getMaxId() const
 {
 	return(nextId-1);

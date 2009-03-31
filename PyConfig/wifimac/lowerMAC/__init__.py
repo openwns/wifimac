@@ -32,7 +32,7 @@ from RateAdaptation import *
 from StopAndWaitARQ import *
 from TXOP import *
 from DuplicateFilter import *
-from SingleBuffer import *
+from Buffer import *
 
 import wifimac.helper.Keys
 import wifimac.helper.Filter
@@ -63,16 +63,16 @@ names['txop']  = 'TXOP'
 def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = __getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
 
-    FUs.append(SingleBuffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
-                            commandName = names['buffer'] + 'Command',
-                            sizeUnit = config.bufferSizeUnit,
-                            size = config.bufferSize,
-                            localIDs = probeLocalIDs,
-                            probingEnabled = False,
-                            raName = names['ra'] + str(transceiverAddress),
-                            managerName = names['manager'] + str(transceiverAddress),
-                            protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-                            parentLogger = logger))
+    FUs.append(Buffer(functionalUnitName = names['buffer'] + str(transceiverAddress),
+                      commandName = names['buffer'] + 'Command',
+                      sizeUnit = config.bufferSizeUnit,
+                      size = config.bufferSize,
+                      localIDs = probeLocalIDs,
+                      probingEnabled = False,
+                      raName = names['ra'] + str(transceiverAddress),
+                      managerName = names['manager'] + str(transceiverAddress),
+                      protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                      parentLogger = logger))
 
     FUs.append(DuplicateFilter(functionalUnitName = names['DuplicateFilter'] + str(transceiverAddress),
                                commandName =  names['DuplicateFilter'] + 'Command',

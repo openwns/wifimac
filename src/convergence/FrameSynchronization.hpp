@@ -59,24 +59,31 @@ namespace wifimac { namespace convergence {
 	/**
 	 * @brief FrameSynchronization models the capture effect in OFDM-Receivers
 	 *
-	 * To receive a frame successfully, the OFDM-receiver has to be synchronized to the
-	 * transmission via the leading preamble. Hence, not only the SINR plays an important
-	 * role for the packet error rate, but also if the synchronization has been successfully.
+	 * To receive a frame successfully, the OFDM-receiver has to be synchronized
+	 * to the transmission via the leading preamble. Hence, not only the SINR
+	 * plays an important role for the packet error rate, but also if the
+	 * synchronization has been successfully.
 	 *
-	 * In this FU, three scenarios are modeled: SenderFirst (SF), SenderLastClear (SLC),
-	 * SenderLastGarbled (SLG).
-	 * - SF: The sender starts while no other transmissions are active, the interfering tx starts afterwards.
-	 *       Synchronization is successfull if the SINR of the preamble is above idleCapture.
-	 * - SLC: The interferer starts first, and the receiver is successfully synchronized. Then,
-	 *        a transmission is received with at least slcCapture dB; this "captures" the receiver to the new
-	 *        sender.
-	 * - SLG: Same as in SLC, but the receiver is not successfully synchronized, because the SINR is too low
-	 *        or it has missed the preamble due to another, earlier, overlapping transmission. The "capture" to
-	 *        the new transmission required slgCapture.
-	 * Usually, 0 <= idleCapture <= slcCapture <= slgCapture.
-	 * For more information, see Lee et al., "An Experimental Study on the Capture Effect in 802.11a"
+	 * In this FU, three scenarios are modeled: SenderFirst (SF),
+	 * SenderLastClear (SLC), SenderLastGarbled (SLG).
+     *
+	 * - SF: The sender starts while no other transmissions are active, the
+	 *       interfering tx starts afterwards.  Synchronization is successfull
+	 *       if the SINR of the preamble is above idleCapture.
+     *
+	 * - SLC: The interferer starts first, and the receiver is successfully
+	 *        synchronized. Then, a transmission is received with at least
+	 *        slcCapture dB; this "captures" the receiver to the new sender.
+     *
+	 * - SLG: Same as in SLC, but the receiver is not successfully synchronized,
+	 *        because the SINR is too low or it has missed the preamble due to
+	 *        another, earlier, overlapping transmission. The "capture" to the
+	 *        new transmission required slgCapture.
+     *
+	 * Usually, 0 <= idleCapture <= slcCapture <= slgCapture.  For more
+	 * information, see Lee et al., "An Experimental Study on the Capture Effect
+	 * in 802.11a"
 	 */
-
 	class FrameSynchronization:
 		public wns::ldk::fu::Plain<FrameSynchronization, FrameSynchronizationCommand>,
 		public wns::events::CanTimeout,

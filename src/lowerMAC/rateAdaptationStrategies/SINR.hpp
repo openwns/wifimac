@@ -41,10 +41,14 @@
 namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
     /**
-	 * @brief The Rate Adpation (RA) tries to select the optimal Modulation- and Coding-Scheme (MCS)
-	 *    for the upcomming transmission.
+	 * @brief The SINR-based Rate Adaptation (RA) selects the MCS based on the
+	 * knowledge of received link quality indicators.
+     *
+     * In contrast to the Opportunistic RA, the SINR-based RA gets direct
+     * feedback about the link quality from the peer of the link. Hence, it can
+     * directly select the matching MCS for the indicated (averaged) link
+     * quality.
 	 */
-
     class SINR:
         public Opportunistic
     {

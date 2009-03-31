@@ -38,11 +38,14 @@
 
 namespace wifimac { namespace management {
 
-	/** @brief provides calculation capabilities to reduces inter-FU dependencies
-	* using the ProtocolCalculator services enables calculations of values for
-	* which information of other FUs would be necessary, e.g. PPDU size or transmission
-	* duration for a compound in a MAC FU
-	*/
+	/** 
+     *  @brief provides calculation capabilities to reduces inter-FU
+     *  dependencies
+     *
+     * using the ProtocolCalculator services enables calculations of values for
+     * which information of other FUs would be necessary, e.g. PPDU size or transmission
+     * duration for a compound in a MAC FU
+     */
     class ProtocolCalculator:
         public wns::ldk::ManagementService
     {

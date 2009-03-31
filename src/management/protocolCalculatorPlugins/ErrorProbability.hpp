@@ -64,6 +64,10 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
             }
     };
 
+    /**
+     * @brief This class calculates the packet|bit|symbol error probability for
+     * a given SNR, packet length and wifimac::convergence::PhyMode.
+     */
     class ErrorProbability
     {
     public:
