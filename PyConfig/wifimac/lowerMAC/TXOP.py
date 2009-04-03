@@ -35,7 +35,9 @@ class TXOPConfig(object):
     expectedACKDuration = 44E-6
     txopLimit = 0
     singleReceiver = False
-
+    impatient = True
+    """ when True, continuous TXOP operation, else TXOP has to be triggered with startTXOP() """
+    
 class TXOP(openwns.Probe.Probe):
 
     __plugin__ = 'wifimac.lowerMAC.TXOP'
