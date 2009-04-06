@@ -133,7 +133,8 @@ namespace wifimac { namespace management {
                 throw wns::Exception("Cannot set the same information twice");
             }
 
-            nodeInformationBase->find(adr)->insert<T>(key, value);
+            InformationBase* i = nodeInformationBase->find(adr);
+	    i->insert<T>(key, value);
 
             MESSAGE_SINGLE(NORMAL, logger, "Node " << adr << " inserted key " << key << " with value " << value);
         } // set

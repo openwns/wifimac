@@ -196,7 +196,7 @@ Beacon::onTimeout()
     {
         {
             MESSAGE_BEGIN(NORMAL, this->logger, m, "Start association, received beacons: ");
-            std::map<wns::Power, wns::service::dll::UnicastAddress>::const_reverse_iterator i = beaconRxStrength.rbegin();
+            std::map<wns::Power, wns::service::dll::UnicastAddress>::reverse_iterator i = beaconRxStrength.rbegin();
             while(i != beaconRxStrength.rend())
             {
                 m << "\n   " << i->first << " from " << i->second << " on " << bssFrequencies[i->second] << "MHz";
@@ -205,7 +205,7 @@ Beacon::onTimeout()
             MESSAGE_END();
         }
 
-        std::map<wns::Power, wns::service::dll::UnicastAddress>::const_reverse_iterator itr = beaconRxStrength.rbegin();
+        std::map<wns::Power, wns::service::dll::UnicastAddress>::reverse_iterator itr = beaconRxStrength.rbegin();
         friends.manager->getPhyUser()->setFrequency(bssFrequencies[itr->second]);
         friends.manager->associateWith(itr->second);
 
