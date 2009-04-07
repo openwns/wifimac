@@ -65,12 +65,20 @@ namespace wifimac { namespace convergence {
     /**
 	 * @brief Summarizes the channel state information, using several indicators
 	 *
-	 *  IEEE 802.11 defines the following channel state indicators:
-	 *   - Raw energy detection: Any signal above a given threshold is identified as a busy channel
-	 *   - PHY carrier sense: Any valid OFDM signal above a given threshol is identified as a busy channel
-	 *   - PHY packet length: The channel is busy for the length of the frame as indicated in the PLCP header
-	 *   - Network Allocation Vector: The channel is busy for the length of the NAV as indicated in any received MAC-Header
-	 *  Additionally, the channel is busy during own transmissions.
+	 * IEEE 802.11 defines the following channel state indicators:
+     *
+	 * - Raw energy detection: Any signal above a given threshold is
+     *   identified as a busy channel
+     *
+	 * - PHY carrier sense: Any valid OFDM signal above a given threshol is
+     *   identified as a busy channel
+     *
+	 * - PHY packet length: The channel is busy for the length of the frame as
+     *   indicated in the PLCP header
+     *
+     * - Network Allocation Vector: The channel is busy for the length of the
+	 *   NAV as indicated in any received MAC-Header Additionally, the channel
+	 *   is busy during own transmissions.
 	 */
     class ChannelState :
         public wns::ldk::fu::Plain<ChannelState, ChannelStateCommand>,

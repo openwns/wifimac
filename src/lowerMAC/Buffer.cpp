@@ -25,34 +25,31 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/lowerMAC/SingleBuffer.hpp>
+#include <WIFIMAC/lowerMAC/Buffer.hpp>
 
-using namespace wns::ldk;
-using namespace wns::ldk::buffer;
-using namespace wns::ldk::buffer::dropping;
 using namespace wifimac::lowerMAC;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    SingleBuffer,
     Buffer,
-    "wifimac.lowerMAC.SingleBuffer",
-    FUNConfigCreator);
+    wns::ldk::buffer::Buffer,
+    "wifimac.lowerMAC.Buffer",
+    wns::ldk::FUNConfigCreator);
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    SingleBuffer,
-    FunctionalUnit,
-    "wifimac.lowerMAC.SingleBuffer",
-    FUNConfigCreator);
+    Buffer,
+    wns::ldk::FunctionalUnit,
+    "wifimac.lowerMAC.Buffer",
+    wns::ldk::FUNConfigCreator);
 
-SingleBuffer::SingleBuffer(fun::FUN* fuNet, const wns::pyconfig::View& config) :
-    Buffer(fuNet, config),
+Buffer::Buffer(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::View& config) :
+    wns::ldk::buffer::Buffer(fuNet, config),
 
-    fu::Plain<SingleBuffer>(fuNet),
-    Delayed<SingleBuffer>(),
+    wns::ldk::fu::Plain<Buffer>(fuNet),
+    wns::ldk::Delayed<Buffer>(),
     raName(config.get<std::string>("raName")),
     managerName(config.get<std::string>("managerName")),
     protocolCalculatorName(config.get<std::string>("protocolCalculatorName")),
-    buffer(ContainerType()),
+    buffer(wns::ldk::buffer::dropping::ContainerType()),
     maxSize(config.get<int>("size")),
     currentSize(0),
     sizeCalculator(),
@@ -65,31 +62,31 @@ SingleBuffer::SingleBuffer(fun::FUN* fuNet, const wns::pyconfig::View& config) :
 {
     {
         std::string pluginName = config.get<std::string>("sizeUnit");
-        sizeCalculator = std::auto_ptr<SizeCalculator>(SizeCalculator::Factory::creator(pluginName)->create());
+        sizeCalculator = std::auto_ptr<wns::ldk::buffer::SizeCalculator>(wns::ldk::buffer::SizeCalculator::Factory::creator(pluginName)->create());
     }
     friends.ra = NULL;
     friends.manager = NULL;
     protocolCalculator = NULL;
     {
         std::string pluginName = config.get<std::string>("drop");
-        dropper = std::auto_ptr<Drop>(Drop::Factory::creator(pluginName)->create());
+        dropper = std::auto_ptr<wns::ldk::buffer::dropping::Drop>(wns::ldk::buffer::dropping::Drop::Factory::creator(pluginName)->create());
     }
-} // SingleBuffer
+} // Buffer
 
-SingleBuffer::SingleBuffer(const SingleBuffer& other) :
-	CompoundHandlerInterface(other),
-	CommandTypeSpecifierInterface(other),
-	HasReceptorInterface(other),
-	HasConnectorInterface(other),
-	HasDelivererInterface(other),
-	CloneableInterface(other),
-	IOutputStreamable(other),
-	PythonicOutput(other),
-	FunctionalUnit(other),
-	DelayedInterface(other),
-	Buffer(other),
-	fu::Plain<SingleBuffer>(other),
-	Delayed<SingleBuffer>(other),
+Buffer::Buffer(const Buffer& other) :
+	wns::ldk::CompoundHandlerInterface(other),
+	wns::ldk::CommandTypeSpecifierInterface(other),
+	wns::ldk::HasReceptorInterface(other),
+	wns::ldk::HasConnectorInterface(other),
+	wns::ldk::HasDelivererInterface(other),
+	wns::CloneableInterface(other),
+    wns::IOutputStreamable(other),
+    wns::PythonicOutput(other),
+	wns::ldk::FunctionalUnit(other),
+	wns::ldk::DelayedInterface(other),
+    wns::ldk::buffer::Buffer(other),
+	wns::ldk::fu::Plain<Buffer>(other),
+	wns::ldk::Delayed<Buffer>(other),
 	buffer(other.buffer),
 	maxSize(other.maxSize),
 	currentSize(other.currentSize),
@@ -105,7 +102,7 @@ SingleBuffer::SingleBuffer(const SingleBuffer& other) :
 	protocolCalculator = other.protocolCalculator;
 }
 
-void SingleBuffer::onFUNCreated()
+void Buffer::onFUNCreated()
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
     friends.ra = getFUN()->findFriend<wifimac::lowerMAC::RateAdaptation*>(raName);
@@ -114,30 +111,30 @@ void SingleBuffer::onFUNCreated()
 }
 
 
-SingleBuffer::~SingleBuffer()
+Buffer::~Buffer()
 {
-} // ~SingleBuffer
+} // ~Buffer
 
 
 //
 // Delayed interface
 //
 void
-SingleBuffer::processIncoming(const CompoundPtr& compound)
+Buffer::processIncoming(const wns::ldk::CompoundPtr& compound)
 {
 	getDeliverer()->getAcceptor(compound)->onData(compound);
 } // processIncoming
 
 
 bool
-SingleBuffer::hasCapacity() const
+Buffer::hasCapacity() const
 {
 	return true;
 } // hasCapacity
 
 
 void
-SingleBuffer::processOutgoing(const CompoundPtr& compound)
+Buffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
     checkLifetime();
 
@@ -151,7 +148,7 @@ SingleBuffer::processOutgoing(const CompoundPtr& compound)
         m << " current size is " << currentSize;
         MESSAGE_END();
 
-        CompoundPtr toDrop = (*dropper)(buffer);
+        wns::ldk::CompoundPtr toDrop = (*dropper)(buffer);
         int pduSize = (*sizeCalculator)(toDrop);
         currentSize -= pduSize;
         increaseDroppedPDUs(pduSize);
@@ -162,26 +159,26 @@ SingleBuffer::processOutgoing(const CompoundPtr& compound)
 } // processOutgoing
 
 
-const CompoundPtr
-SingleBuffer::hasSomethingToSend() const
+const wns::ldk::CompoundPtr
+Buffer::hasSomethingToSend() const
 {
     if(buffer.empty() or (isActive == false))
     {
-        return CompoundPtr();
+        return wns::ldk::CompoundPtr();
     }
     if ((maxDuration > 0) and (firstCompoundDuration() > maxDuration))
     {
-        return CompoundPtr();
+        return wns::ldk::CompoundPtr();
     }
 
     return buffer.front();
 } // somethingToSend
 
 
-CompoundPtr
-SingleBuffer::getSomethingToSend()
+wns::ldk::CompoundPtr
+Buffer::getSomethingToSend()
 {
-	CompoundPtr compound = buffer.front();
+	wns::ldk::CompoundPtr compound = buffer.front();
 	buffer.pop_front();
 
 	currentSize -= (*sizeCalculator)(compound);
@@ -200,7 +197,7 @@ SingleBuffer::getSomethingToSend()
 
 
 void
-SingleBuffer::checkLifetime()
+Buffer::checkLifetime()
 {
     for (wns::ldk::buffer::dropping::ContainerType::iterator it = buffer.begin();
          it != buffer.end();
@@ -232,27 +229,27 @@ SingleBuffer::checkLifetime()
 //
 
 uint32_t
-SingleBuffer::getSize()
+Buffer::getSize()
 {
 	return currentSize;
 } // getSize
 
 
 uint32_t
-SingleBuffer::getMaxSize()
+Buffer::getMaxSize()
 {
 	return maxSize;
 } // getMaxSize
 
 
-void SingleBuffer::setDuration(wns::simulator::Time duration)
+void Buffer::setDuration(wns::simulator::Time duration)
 {
     maxDuration = duration;
     isActive = true;
     MESSAGE_SINGLE(NORMAL, this->logger, "Got setDuration with duration " << duration);
 }
 
-wns::simulator::Time SingleBuffer::getActualDuration(wns::simulator::Time duration)
+wns::simulator::Time Buffer::getActualDuration(wns::simulator::Time duration)
 {
     if (firstCompoundDuration() > duration)
     {
@@ -261,7 +258,7 @@ wns::simulator::Time SingleBuffer::getActualDuration(wns::simulator::Time durati
     return firstCompoundDuration();
 }
 
-wns::simulator::Time SingleBuffer::firstCompoundDuration() const
+wns::simulator::Time Buffer::firstCompoundDuration() const
 {
     if (buffer.empty())
     {

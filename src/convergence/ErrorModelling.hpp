@@ -78,8 +78,8 @@ namespace wifimac { namespace convergence {
     /**
 	 * @brief ErrorModelling implementation of the FU.
 	 *
-	 * It maps the Carry Interference Ratio (CIR) for a PhyMode
-	 * to the Packet Error Rate (PER).
+	 * It maps the Carrier Interference Ratio (CIR) for an MCS to the Packet
+	 * Error Rate (PER).
 	 */
     class ErrorModelling:
         public wns::ldk::fu::Plain<ErrorModelling, ErrorModellingCommand>,

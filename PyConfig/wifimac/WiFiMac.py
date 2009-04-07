@@ -27,9 +27,8 @@
 import openwns.module
 
 class WiFiMac(openwns.module.Module):
-    """ WiFiMac Module Configuration
-
-    Needed in order to load this module by WNS."""
+    """ Module Configuration
+        Needed in order to load this module."""
 
     def __init__(self):
         super(WiFiMac, self).__init__("wifimac", "wifimac")

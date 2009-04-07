@@ -38,6 +38,9 @@
 
 namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
+    /**
+     * @brief Constant Rate Adaption: Always use configured MCS
+     */
     class Constant :
         public IRateAdaptationStrategy
     {

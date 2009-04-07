@@ -180,17 +180,6 @@ BlockACK::storageSize() const
 bool
 BlockACK::hasCapacity() const
 {
-    // conditions for accepting a new compound:
-    //
-    // 1. The capacity of the FU (size txQueue + sizes rxQueues) is not
-    // exhausted.
-    // 2. The last compound accepted has the same receiver as the current
-    // transmission queue (otherwise, a new send block has to start)
-    // 3. The transmission queue does not wait for an ACK, i.e. there are no
-    // frames "on the air"
-    // 4. The number of frames in the txQueue is below the number which can be
-    // send in the next round
-
     return((this->storageSize() < this->capacity) and 
            (currentReceiver == nextReceiver) and
            ((txQueue == NULL) or
@@ -834,13 +823,6 @@ bool TransmissionQueue::isSortedBySN(const std::deque<CompoundPtrWithSize> q) co
     return true;
 
 }
-
-//void TransmissionQueue::missingACK()
-//{
-//    std::set<BlockACKCommand::SequenceNumber> none;
-//    none.clear();
-//    this->processIncomingACK(none);
-//} // TransmissionQueue::missingACK
 
 const bool TransmissionQueue::waitsForACK() const
 {

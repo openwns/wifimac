@@ -33,11 +33,12 @@
 #include <WNS/simulator/Bit.hpp>
 
 namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
-	/** @brief plugin to determine PSDU sizes for different MAC data units
-	*
-	* this class calculates the resulting PSDU length in bits for
-	* MSDUs, A-MPDUs, A-MSDUs
-	*/
+	/** 
+     * @brief plugin to determine PSDU sizes for different MAC data units
+     *
+     * this class calculates the resulting PSDU length in bits for
+     * MSDUs, A-MPDUs, A-MSDUs
+     */
     class FrameLength
     {
     public:

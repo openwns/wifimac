@@ -38,6 +38,22 @@
 
 namespace wifimac { namespace draftn {
 
+    /**
+     * @brief Frame aggregation according to IEEE 802.11n Draft 8.0
+     *
+     * This frame aggregation FU is derived from
+     * wns::ldk::concatenation::Concatenation, which is changed in the following
+     * manner:
+     * - The aggregation is closes if an outgoing compound requires a direct
+     * reply (e.g. a BlockACK request)
+     * - Furthermore, it is closes if the compound is for another receiver
+     * Additinally, the aggregation is closed early upon the timeout of a timer
+     * (to avoid too long aggregation delays) or if the aggregation FU is set to
+     * behave "impatiently".
+     *
+     * An additional probe measures the number of frames in one aggregation
+     * train.
+     */
     class Aggregation:
         public wns::ldk::concatenation::Concatenation,
         public wns::events::CanTimeout,
@@ -46,8 +62,20 @@ namespace wifimac { namespace draftn {
     public:
         Aggregation(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
 
+        /** @brief Enhance the wns::ldk::concatenation::Concatenation with an
+         * early closing of the aggregation in the case of direct reply
+         * request, different receiver or impatient behaviour.
+         */
         void processOutgoing(const wns::ldk::CompoundPtr& compound);
+
+        /**
+         * @brief Checks if outgoing compounds are pending
+         */
         const wns::ldk::CompoundPtr hasSomethingToSend() const;
+
+        /**
+         * @brief Prepares the ougoing compound for transmission
+         */
         wns::ldk::CompoundPtr getSomethingToSend();
 
         void onFUNCreated();

@@ -44,9 +44,9 @@ namespace wifimac { namespace pathselection {
 
     /**
 	 * @brief Implementation of the MP's path selection using the virtual path
-	 *        selection service, i.e. with global information.
+     * selection service, i.e. with global information.
 	 *
-	 *        Essentially, all calls are relayed to TheVPSService::Instance().getVPS()->...
+	 * Essentially, all calls are relayed to TheVPSService::Instance().getVPS()->...
 	 */
     class PathSelectionOverVPS :
         public IPathSelection,
@@ -57,9 +57,6 @@ namespace wifimac { namespace pathselection {
         PathSelectionOverVPS( wns::ldk::ManagementServiceRegistry*, const wns::pyconfig::View& config );
         virtual ~PathSelectionOverVPS() {};
 
-        /**
-		 * @brief Implementation of the PathSelectionInterface
-		 */
         virtual wns::service::dll::UnicastAddress
         getNextHop(const wns::service::dll::UnicastAddress current,
                    const wns::service::dll::UnicastAddress finalDestination);

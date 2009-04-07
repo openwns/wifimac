@@ -53,7 +53,14 @@ namespace wifimac { namespace lowerMAC {
 namespace wifimac { namespace convergence {
 
 	/**
-	 * @brief Convergence FU to the OFDMA-Modul
+	 * @brief Convergence FU to the OFDM(A)-Module
+     *
+     * The PhyUser represents the lowest FU in the WiFiMAC FUN, it transates the
+     * FU-Interface to the notification/request interface of the lower OFDM(A)
+     * module.
+     *
+     * Furthermore, the PhyUser provides some Phy-dependent functions, e.g
+     * access to the different PhyModes (MCSs) via the PhyModeProvider.
 	 */
 	class PhyUser:
 		public wns::ldk::fu::Plain<PhyUser, PhyUserCommand>,

@@ -32,31 +32,35 @@
 #include <WNS/ldk/Compound.hpp>
 
 namespace wifimac { namespace lowerMAC {
-	/** @brief Interface class of FUs for which TXOP controls outgoing data flow
-	*	FU should only process outgoing data with transmission duration smaller
-	*	than the set duration value
-	*/
+	/** 
+     * @brief Interface class of FUs for which TXOP controls outgoing data flow
+     *	 FU should only process outgoing data with transmission duration smaller
+     *	 than the set duration value
+     */
 	class ITXOPWindow
 	{
 	public:
-		/** @brief set the time window for transmissions
-		* sets the max duration for transmission of outgoing compounds
-		* and activates FU for process outgoing data.
-		* The FU itself is responsible for deactivating itself after reaching
-		* the time limit
-		*/
+		/**
+         * @brief set the time window for transmissions
+         * sets the max duration for transmission of outgoing compounds
+         * and activates FU for process outgoing data.
+         * The FU itself is responsible for deactivating itself after reaching
+         * the time limit
+         */
 		virtual void setDuration(wns::simulator::Time duration) = 0;
 
-		/** @brief get time portion of duration window actually used
-		* this function returns the time that is actually used for transmitting
-		* outgoing compounds, given the passed time limit
-		*/
+		/**
+         * @brief get time portion of duration window actually used
+         * this function returns the time that is actually used for transmitting
+         * outgoing compounds, given the passed time limit
+         */
 		virtual wns::simulator::Time getActualDuration(wns::simulator::Time duration) = 0;
 
-		/** @brief returns first outgoing compound
-		* the first of the compounds that fit into the time window is passed
-		* (if any)
-		*/
+		/**
+         * @brief returns first outgoing compound
+         * the first of the compounds that fit into the time window is passed
+         * (if any)
+         */
 		virtual const wns::ldk::CompoundPtr hasSomethingToSend() const = 0;	
 	};
 } // lowerMAC

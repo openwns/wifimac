@@ -55,9 +55,25 @@ namespace wifimac { namespace convergence {
         }
     };
 
-
-	class PreambleGenerator:
-		public wns::ldk::fu::Plain<PreambleGenerator, PreambleGeneratorCommand>,
+    /**
+     * @brief Prefixes an OFDM-preamble to any compound
+     *
+     * A IEEE 802.11 OFDM transmission (according to .11a/g) consists of several
+     * elements:
+     * - The PLCP preamble
+     * - The SIGNAL (containing rate, length, parity)
+     * - SERVICE bits
+     * - The PSDU
+     * - Tail and padding bits
+     * The last three elements are coded using the code rate as defined by the
+     * MCS. The first two have a constant duration (e.g. 12+1 symbol in .11g)
+     * and are neccessary to decode the following PSDU. In the simulator, this
+     * first part is simulated as a separate transmission, before the actual
+     * PSDU transmission, called the "Preamble". The PreambleGenerator creates
+     * this preamble, sends it and delays the actual PSDU.
+     */
+    class PreambleGenerator:
+        public wns::ldk::fu::Plain<PreambleGenerator, PreambleGeneratorCommand>,
         public wns::ldk::Delayed<PreambleGenerator>
 	{
 	public:
@@ -74,7 +90,7 @@ namespace wifimac { namespace convergence {
         const wns::ldk::CompoundPtr hasSomethingToSend() const;
         wns::ldk::CompoundPtr getSomethingToSend();
 
-	void onFUNCreated();
+        void onFUNCreated();
 
         const std::string phyUserName;
         const std::string protocolCalculatorName;

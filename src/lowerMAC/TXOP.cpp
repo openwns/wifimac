@@ -36,7 +36,7 @@
 using namespace wifimac::lowerMAC;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-    wifimac::lowerMAC::TXOP,
+    TXOP,
     wns::ldk::FunctionalUnit,
     "wifimac.lowerMAC.TXOP",
     wns::ldk::FUNConfigCreator);
@@ -51,6 +51,7 @@ TXOP::TXOP(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     expectedACKDuration(config_.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
     txopLimit(config_.get<wns::simulator::Time>("myConfig.txopLimit")),
     singleReceiver(config_.get<bool>("myConfig.singleReceiver")),
+    impatient(config_.get<bool>("myConfig.impatient")),
     remainingTXOPDuration(0),
     txopReceiver(),
     logger(config_.get("logger"))
@@ -89,13 +90,16 @@ void TXOP::onFUNCreated()
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
 
-    friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
-    friends.txopWindow = getFUN()->findFriend<wifimac::lowerMAC::ITXOPWindow*>(txopWindowName);
-    friends.ra = getFUN()->findFriend<wifimac::lowerMAC::RateAdaptation*>(raName);
+    friends.manager = getFUN()->findFriend<Manager*>(managerName);
+    friends.txopWindow = getFUN()->findFriend<ITXOPWindow*>(txopWindowName);
+    friends.ra = getFUN()->findFriend<RateAdaptation*>(raName);
     protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 
     // initial triggering of timeWindow FU letting thru compounds
-    friends.txopWindow->setDuration(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
+    if (impatient == true) 
+    {
+    	friends.txopWindow->setDuration(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
+    }
 }
 
 void
@@ -118,7 +122,7 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
     {
     case DATA:
     {
-        if(this->remainingTXOPDuration == 0)
+        if((this->remainingTXOPDuration == 0) and (impatient == true))
         {
             // start of the TXOP
             this->remainingTXOPDuration = this->txopLimit;
@@ -133,6 +137,7 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
         }
         else
         {
+	    assure(this->remainingTXOPDuration > 0,"tried to send data outside TXOP window");
             // we have an ongoing TXOP
 
             // no need check if frame fits into current TXOP:
@@ -163,10 +168,13 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
         {
             // no time for additional frames -> no (more) TXOP
             this->remainingTXOPDuration = 0;
-            // reset duration of time window FU -> let frames leave buffer for new TXOP round
-            friends.txopWindow->setDuration(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
             MESSAGE_SINGLE(NORMAL, this->logger, "Current compound fills complete TXOP");
             TXOPDurationProbe->put(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
+            // reset duration of time window FU -> let frames leave buffer for new TXOP round
+	    if (impatient == true) 
+	    {
+	            friends.txopWindow->setDuration(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
+	    }
             return;
         }
 
@@ -181,7 +189,11 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
             MESSAGE_SINGLE(NORMAL, this->logger, "No next compound, no (more) TXOP");
             // reset duration of time window FU -> let frames leave buffer for new TXOP round
             TXOPDurationProbe->put(this->txopLimit - this->remainingTXOPDuration);
-            friends.txopWindow->setDuration(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
+            // reset duration of time window FU -> let frames leave buffer for new TXOP round
+	    if (impatient == true) 
+	    {
+	            friends.txopWindow->setDuration(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
+	    }
             return;
         }
 
@@ -194,9 +206,12 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
             m << friends.manager->getReceiverAddress(nextCompound->getCommandPool());
             m << "no (more) TXOP";
             MESSAGE_END();
-            // reset duration of time window FU -> let frames leave buffer for new TXOP round
-            friends.txopWindow->setDuration(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
             TXOPDurationProbe->put(this->txopLimit - this->remainingTXOPDuration);
+            // reset duration of time window FU -> let frames leave buffer for new TXOP round
+	    if (impatient == true) 
+	    {
+	            friends.txopWindow->setDuration(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
+	    }
             return;
         }
         wns::simulator::Time nextFrameExchangeDuration =
@@ -259,4 +274,14 @@ bool TXOP::doIsAccepting(const wns::ldk::CompoundPtr& compound) const
         // no special handling
         return wns::ldk::Processor<TXOP>::doIsAccepting(compound);
     }
+}
+
+void TXOP::startTXOP(wns::simulator::Time duration) 
+{
+	if (friends.txopWindow->getActualDuration(duration - this->sifsDuration - this->expectedACKDuration) > 0)
+	{
+		this->txopLimit = duration;
+		this->remainingTXOPDuration = this->txopLimit;
+		friends.txopWindow->setDuration(std::max(this->txopLimit - this->sifsDuration - this->expectedACKDuration,0.0));
+	}
 }

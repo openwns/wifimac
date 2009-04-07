@@ -44,32 +44,52 @@
 namespace wifimac { namespace pathselection {
 
     /**
-	 * @brief Forwarding of data frames
+	 * @brief Forwarding of data frames from a STA perspective
+     *
+     * The forwarding of data frames in a STA is very easy: Frames are always
+     * send to the AP to which the STA is associated to.
 	 */
     class StationForwarding :
         public wns::ldk::fu::Plain<StationForwarding, ForwardingCommand>
     {
     public:
-
+        /** @brief Constructor */
         StationForwarding(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
 
+        /** @brief Destructor */
         virtual
         ~StationForwarding();
 
     private:
-        // FunctionalUnit / CompoundHandlerInterface
-        virtual bool doIsAccepting(const wns::ldk::CompoundPtr& _compound) const;
-        virtual void doSendData(const wns::ldk::CompoundPtr& _compound);
-        virtual void doWakeup();
-        virtual void doOnData(const wns::ldk::CompoundPtr& _compound);
+        /** @brief If associated, we accept if the lower FU is accepting */
+        virtual bool
+        doIsAccepting(const wns::ldk::CompoundPtr& _compound) const;
 
+        /** @brief The target address becomes the final destination, the
+         * association address becomes the target. */
+        virtual void doSendData(const wns::ldk::CompoundPtr& _compound);
+
+        /** @brief Forward the wakeup call  */
+        virtual void
+        doWakeup();
+
+        /** @brief Exchange target source agains original source and deliver */
+        virtual void
+        doOnData(const wns::ldk::CompoundPtr& _compound);
+
+        /** @brief Initialize the FU */
         virtual void onFUNCreated();
 
+        /** @brief  The config */
         const wns::pyconfig::View config;
+
+        /** @brief  The logger */
         wns::logger::Logger logger;
 
-        std::string ucName;
+        /** @brief Name of the upper convergence FU  */
+        const std::string ucName;
 
+        /** @brief Pointer to Layer2  */
         wifimac::Layer2* layer2;
     };
 } // mac

@@ -46,24 +46,30 @@
 #include <WNS/Observer.hpp>
 
 namespace wifimac { namespace lowerMAC {
-	/** @brief FU implementing TXOP functionality
-	*
-	* this FU mainly is responsible for setting the NAV of outgoing compounds
-	* correctly, according to 802.11 standard.
-	* In order to calculate the NAV for a given compound, it uses an FU
-	* implementing the ITXOPTimeWindow interface to determine if more
-	* compounds follow the current one and if the transmission duration
-	* of the next one will fit into the remaining TXOP duration (including
-	* SIFSs and expected ACK duration). 
-	* If this is the case, the NAV of the current compound is set to cover
-	* its successor. Furthermore the ITXOPTimeWindow FU is updated to the
-	* the remaining TXOP duration in order to let the successor pass the FUN
-	* up to the TXOP FU. Otherwise, the current TXOP is closed, another round
-	* is initiated and the ITXOPTimeWindow instance is resetted to the TXOP
-	* maximum limit, and let further compounds for the new round enter the FUN
-	* up to the TXOP FU.
-	* To disable TXOP the TXOP limit has to be set to 0
-	*/
+	/** 
+     * @brief FU implementing TXOP functionality
+     *
+     * this FU mainly is responsible for setting the NAV of outgoing compounds
+     * correctly, according to 802.11 standard.
+     * In order to calculate the NAV for a given compound, it uses an FU
+     * implementing the ITXOPTimeWindow interface to determine if more
+     * compounds follow the current one and if the transmission duration
+     * of the next one will fit into the remaining TXOP duration (including
+     * SIFSs and expected ACK duration).
+     * If this is the case, the NAV of the current compound is set to cover
+     * its successor. Furthermore the ITXOPTimeWindow FU is updated to the
+     * the remaining TXOP duration in order to let the successor pass the FUN
+     * up to the TXOP FU. Otherwise, the current TXOP is closed, another round
+     * is initiated and the ITXOPTimeWindow instance is resetted to the TXOP
+     * maximum limit, and let further compounds for the new round enter the FUN
+     * up to the TXOP FU.
+     * To disable TXOP the TXOP limit has to be set to 0
+     * patient / impatient: when impatient, TXOP is done for every transmission, whereas
+     * in patient mode, in order to have a(ny) (TXOP) transmission, startTXOP() has to be called
+     * in order to trigger this FU and let compounds be passed down. Note that after TXOP is done
+     * in patient mode, the FU is not accepting any further compounds from upper FUs until it has
+     * been triggered once again.
+     */
     class TXOP:
         public wns::ldk::fu::Plain<TXOP, wns::ldk::EmptyCommand>,
         public wns::ldk::Processor<TXOP>,
@@ -82,6 +88,9 @@ namespace wifimac { namespace lowerMAC {
         void
         onTxEnd(const wns::ldk::CompoundPtr& compound);
 
+	void 
+	startTXOP(wns::simulator::Time duration);
+
     private:
         /** @brief Processor Interface Implementation */
         void processIncoming(const wns::ldk::CompoundPtr& compound);
@@ -99,9 +108,10 @@ namespace wifimac { namespace lowerMAC {
         /** @brief Duration of the Short InterFrame Space */
         const wns::simulator::Time sifsDuration;
         const wns::simulator::Time expectedACKDuration;
-        const wns::simulator::Time txopLimit;
         const bool singleReceiver;
+	const bool impatient;
 
+	wns::simulator::Time txopLimit;
         wns::simulator::Time remainingTXOPDuration;
         wns::service::dll::UnicastAddress txopReceiver;
 

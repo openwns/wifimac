@@ -38,6 +38,17 @@
 
 namespace wifimac { namespace draftn {
 
+    /**
+     * @brief Blocks all further transmissions until a reply is received.
+     *
+     * This block is required for all DraftN-Transmissions which need an
+     * immediate reply (i.e. after SIFS waiting time). If a compound other than
+     * ACK arrives, it returns on later doIsAccepting calls false until the own
+     * transmission of the frame is finished and
+     * - Other data is received, or
+     * - After SIFS+PreambleDelay no frame arrives or
+     * - After SIFS+PreambleDelay a onRxError arrives
+     */
     class BlockUntilReply:
         public wns::ldk::fu::Plain<BlockUntilReply, wns::ldk::EmptyCommand>,
         public wns::events::CanTimeout,

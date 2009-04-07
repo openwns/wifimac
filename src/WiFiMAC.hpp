@@ -60,14 +60,13 @@
  *
  * @section HigherMAC Higher MAC
  *
- * The Higher MAC provides the wifimac::pathselection functionality, including
- * measurement of the link metric.
+ * The Higher MAC provides the wifimac::pathselection functionality
  *
  * @section LowerMAC Lower MAC
  *
- * The Lower MAC, wifimac::lowerMAC, represents the data link layer in every transceiver. In here,
- * the neccessary functional units for the operation of the IEEE 802.11 MAC can
- * be found.
+ * The Lower MAC, wifimac::lowerMAC, represents the data link layer in every
+ * transceiver. In here, the neccessary functional units for the operation of
+ * the IEEE 802.11 MAC can be found.
  *
  * @section Convergence Convergence
  *
@@ -77,10 +76,12 @@
  * @li Error modelling, including synchronization and
  * @li Interfaces to signal the current channel state to the MAC
  *
- * @section Additional functionality
+ * @section Additional Additional functionality
  *
  * wifimac::helper incorporates functions for dll::CompoundFilter,
  * contextprovider (wifimac::helper::contextprovider) and keys.
+ *
+ * @section Management Management Plane
  *
  * wifimac::management contains functions for the management plane. Most
  * importantly the wifimac::management::Beacon FU for beacon transmission and
@@ -90,39 +91,108 @@
  * @li SINR measurement (wifimac::management::SINRInformationBase)
  * @li Node capabilities (wifimac::management::VirtualCapabilityInformationBase)
  *
+ * @section DraftN DraftN implementation
+ *
+ * wifimac::draftn enhances the wifimac::lowerMAC FUN with functional units for
+ *
+ * @li Block Acknowledgement, wifimac::draftn::BlockACK and
+ * @li Frame Aggregation, wifimac::draftn::Aggregation
+ *
+ * Furthermore, it implements rate adaptation strategies that include the
+ * possibility to transmit with multiple streams
+ * (wifimac::draftn:rateAdaptationStrategies) and a DeAggregation-FU to simulate
+ * the improved packet error robustness of frame aggregation according to A-MPDU
+ * (wifimac::draftn::DeAggregation).
+ */
+
+/**
+ * @namespace wifimac::pathselection
+ * @brief The path selection allows to setup a self-configurating mesh network
+ * according to IEEE 802.11s
+ *
+ * The path selection in the WiFiMAC allows the setup of a mesh topology
+ * according to IEEE 802.11s. Based on link measurements (given from
+ * wifimac::lowerMAC), the shortest path through the mesh network to a
+ * destination is identified and frames are forwarded accordingly. Furthermore,
+ * the path selection supports
+ *
+ * - Mesh proxy functionality, to allow transparent participation of non-mesh
+ *   nodes (STAs) in the mesh network
+ * - Portal nodes to access the Radio Access Network Gateway node.
+ * - Multiple transceiver per nodes to simulate multi-radio multi-channel mesh
+ *   networks.
+ *
+ */
+
+/**
+ * @namespace wifimac::lowerMAC
+ * @brief The lower MAC represents the data link layer in every IEEE 802.11
+ * transceiver of the WiFiMAC. In here, the neccessary functional units for the
+ * operation of the IEEE 802.11 MAC can be found.
+ *
+ */
+
+/**
+ * @namespace wifimac::convergence
+ * @brief The convergence FUs combine functions to access the next lower module,
+ * the OFDM physical layer, with IEEE 802.11 specific functionality like channel
+ * state detection.
+ *
+ */
+
+/**
+ * @namespace wifimac::helper
+ * @brief Classes in wifimac::helper provide functions that do not fit directly
+ * into one of the other namespaces, e.g. for sorting probe output.
+ *
+ */
+
+/**
+ * @namespace wifimac::management
+ * @brief The management part of the WiFiMAC has two responsibilities:
+ * - Provide FUs for the management plane, e.g. beacon transmission
+ * - Provide information bases to be accessed by other FUs, e.g. for packet
+ * error rate statistics.
+ *
+ */
+
+/**
+ * @namespace wifimac::draftn
+ * @brief FUs in this namespace allow to enhance wifimac::lowerMAC with
+ * functions from the ammendment "n" for high throughput.
+ *
  */
 
 namespace dll {
-	class StationManager;
+    class StationManager;
 }
 
 namespace wifimac
 {
-	/**
+    /**
 	 * @brief Anchor of the library.
 	 *
-	 * Start up and shut down are coordinated from here
-	 * WNS-Core will use an instance of this class to start up and shut down the
-	 * library. Therefor it calls GetModuleInterface() which returns a pointer
-	 * to an instance of this class. The method StartUp() is called
-	 * subsequently.
+	 * Start up and shut down are coordinated from here WNS-Core will use an
+	 * instance of this class to start up and shut down the library. Therefor it
+	 * calls GetModuleInterface() which returns a pointer to an instance of this
+	 * class. The method StartUp() is called subsequently.
 	 */
 
-	class WiFiMAC :
-		public wns::module::Module<WiFiMAC>
-	{
-	public:
-		WiFiMAC(const wns::pyconfig::View& config);
+    class WiFiMAC :
+        public wns::module::Module<WiFiMAC>
+    {
+    public:
+        WiFiMAC(const wns::pyconfig::View& config);
 
-		// Module interface
-		virtual void configure();
-		virtual void startUp();
-		virtual void shutDown();
+        // Module interface
+        virtual void configure();
+        virtual void startUp();
+        virtual void shutDown();
 
-	private:
-		wns::logger::Logger logger;
+    private:
+        wns::logger::Logger logger;
 
-	};
+    };
 }
 
 #endif // NOT defined WIFIMAC_HPP

@@ -41,10 +41,17 @@
 namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
 
     /**
-	 * @brief The Rate Adpation (RA) tries to select the optimal Modulation- and Coding-Scheme (MCS)
-	 *    for the upcomming transmission.
+	 * @brief The Opportunisitc Rate Adpation tries to find the maximum rate
+     *   (using MCSs and number of antennas) with a packet error rate below a
+     *   given value.
+     *
+     * Opportunistic RA works only using the statistics of received ACKs as a
+     * reply to the used MCS and number of antennas. Hence, it slowly increases
+     * the rate by selecting high-rate MCSs (and switching the number of
+     * antennas, if possible), until the PER exceeds a given value. Then, it
+     * stays at the next lower MCS/antenna combination until the percieved PER
+     * changes again.
 	 */
-
     class OpportunisticwithMIMO:
         public wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy
     {

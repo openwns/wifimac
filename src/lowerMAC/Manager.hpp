@@ -50,7 +50,7 @@ namespace wifimac { namespace convergence {
 
 namespace wifimac { namespace lowerMAC {
 
-    /** @brief */
+    /** @brief Command of wifimac::lowerMAC::Manager */
     class ManagerCommand :
         public wifimac::IKnowsFrameTypeCommand
     {
@@ -63,9 +63,11 @@ namespace wifimac { namespace lowerMAC {
             wifimac::FrameType type;
             wifimac::convergence::PhyMode phyMode;
 
-            // Duration field as defined in IEEE 802.11 7.1.3.2
-            // i.e. the duration of the frame exchange, without the current
-            // frame!
+            /**
+             * @brief Duration field as defined in IEEE 802.11 7.1.3.2
+             * i.e. the duration of the frame exchange, without the current
+             * frame!
+             */
             wns::simulator::Time frameExchangeDuration;
 
             /** @brief Frame requires a direct reply from peer */

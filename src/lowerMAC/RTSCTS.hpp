@@ -60,6 +60,26 @@ namespace wifimac { namespace lowerMAC {
     };
 
 
+   /**
+    * @brief Implementation of the RTS/CTS frame exchange in IEEE 802.11
+    *
+    * The RTS/CTS frame exchange works in the following way, assuming no
+    * transmission errors.
+    *
+    * \msc
+    *   Sender, Receiver;
+    *
+    *   Sender->Receiver [ label = "RTS" ];
+    *   Receiver->Sender [ label = "CTS" ];
+    *   Sender->Receiver [ label = "Data"];
+    *   Sender->Receiver [ label = "ACK"];
+    * \endmsc
+    *
+    * The three-way handshake of the RTS/CTS/DATA/ACK increases the overhead,
+    * but also the probability for a successful frame exchange, as the RTS and
+    * CTS set the NAV of all overhearing STAs in reach of both the transmitter
+    * and the receiver.
+    */
    class RTSCTS:
         public wns::ldk::fu::Plain<RTSCTS, RTSCTSCommand>,
         public wns::ldk::Delayed<RTSCTS>,

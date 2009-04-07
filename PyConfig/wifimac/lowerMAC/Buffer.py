@@ -31,16 +31,16 @@ import wifimac.Logger
 import openwns.FUN
 import openwns.Buffer
 
-class SingleBuffer(openwns.Buffer.Buffer):
-    __plugin__ = 'wifimac.lowerMAC.SingleBuffer'
-    name = "SingleBuffer"
+class Buffer(openwns.Buffer.Buffer):
+    __plugin__ = 'wifimac.lowerMAC.Buffer'
+    name = "Buffer"
 
     raName = None
     managerName = None
 
     drop = 'Tail'
     def __init__(self, protocolCalculatorName, raName, managerName, parentLogger = None, **kw):
-        super(SingleBuffer, self).__init__(**kw)
+        super(Buffer, self).__init__(**kw)
 	self.raName = raName
         self.managerName = managerName
 	self.protocolCalculatorName = protocolCalculatorName

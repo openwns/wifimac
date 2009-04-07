@@ -39,10 +39,13 @@ namespace wns { namespace node {
 }}
 
 namespace wifimac { namespace convergence {
-	class PhyUser;
+    class PhyUser;
 
-	class OFDMAAccessFunc:
-		public virtual wns::CloneableInterface
+    /**
+     * @brief Encapsulates the access to the OFDM(A)-PHY
+     */
+    class OFDMAAccessFunc:
+        public virtual wns::CloneableInterface
 	{
 	public:
 		virtual void operator()(PhyUser*, const wns::ldk::CompoundPtr& compound) = 0;

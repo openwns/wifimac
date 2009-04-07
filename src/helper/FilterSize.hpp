@@ -32,7 +32,7 @@
 #include <DLL/compoundSwitch/Filter.hpp>
 
 namespace wifimac { namespace helper {
-
+    /** @brief Filter by compound size, to be used by the compound switch */
     class FilterSize:
         public dll::compoundSwitch::Filter
     {

@@ -47,7 +47,7 @@
 namespace wifimac { namespace lowerMAC {
 
     /**
-     * @brief StopAndWaitARQ specialization for the IEEE 802.11 DCF
+     * @brief Specialization fo the wns::ldk::arq::StopAndWait for the IEEE 802.11 DCF
      */
      class StopAndWaitARQ :
         public wns::ldk::arq::StopAndWait,
