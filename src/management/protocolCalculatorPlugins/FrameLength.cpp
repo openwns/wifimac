@@ -47,6 +47,23 @@ FrameLength::FrameLength(const wns::pyconfig::View& config):
 
 }
 
+FrameLength::FrameLength( const ConfigGetter& config ):
+    macDataHdr(config.get<Bit>("macDataHdr", "i")),
+    macDataFCS(config.get<Bit>("macDataFCS", "i")),
+    amsdu_subhdr(config.get<Bit>("amsdu_subhdr", "i")),
+    ampdu_delimiter(config.get<Bit>("ampdu_delimiter", "i")),
+    service(config.get<Bit>("service", "i")),
+    tail(config.get<Bit>("tail", "i")),
+    ack(config.get<Bit>("ack", "i")),
+    rts(config.get<Bit>("rts", "i")),
+    cts(config.get<Bit>("cts", "i")),
+    blockACK(config.get<Bit>("blockACK", "i")),
+    blockACKreq(config.get<Bit>("blockACKreq", "i")),
+    beacon(config.get<Bit>("beacon", "i"))
+{
+
+}
+
 Bit
 FrameLength::getPSDU(Bit msduFrameSize) const
 {
