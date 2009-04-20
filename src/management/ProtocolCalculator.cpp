@@ -42,7 +42,7 @@ ProtocolCalculator::ProtocolCalculator( wns::ldk::ManagementServiceRegistry* msr
 {
     errorProbability = new protocolCalculatorPlugins::ErrorProbability(config_.get<wns::pyconfig::View>("errorProbability"));
     frameLength = new protocolCalculatorPlugins::FrameLength(config_.get<wns::pyconfig::View>("frameLength"));
-    duration = new protocolCalculatorPlugins::Duration(this, config_.get<wns::pyconfig::View>("duration"));
+    duration = new protocolCalculatorPlugins::Duration(frameLength, config_.get<wns::pyconfig::View>("duration"));
 }
 
 void

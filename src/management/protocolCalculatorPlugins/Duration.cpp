@@ -26,17 +26,25 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/management/ProtocolCalculator.hpp>
 #include <WIFIMAC/management/protocolCalculatorPlugins/Duration.hpp>
 #include <cmath>
 
 using namespace wifimac::management::protocolCalculatorPlugins;
 
-Duration::Duration(ProtocolCalculator* pc_, const wns::pyconfig::View& config):
+Duration::Duration( FrameLength* fl_, const wns::pyconfig::View& config):
     symbol(config.get<wns::simulator::Time>("symbol")),
     slot(config.get<wns::simulator::Time>("slot")),
-    pc(pc_),
-    basicDBPS(config.get<Bit>("basicDBPS"))
+    basicDBPS(config.get<Bit>("basicDBPS")),
+    fl(fl_)
+{
+
+}
+
+Duration::Duration( FrameLength* fl_, const ConfigGetter& config ):
+    symbol(config.get<wns::simulator::Time>("symbol", "d")),
+    slot(config.get<wns::simulator::Time>("slot", "d")),
+    basicDBPS(config.get<Bit>("basicDBPS", "i")),
+    fl(fl_)
 {
 
 }
@@ -69,7 +77,7 @@ Duration::getOFDMSymbols(Bit psduLength, Bit dbps, unsigned int streams, unsigne
         dbps = dbps * streams * 54 / 26;
     }
 
-    return(static_cast<int>(ceil(static_cast<double>(psduLength + pc->getFrameLength()->service + pc->getFrameLength()->tail*n_es)/static_cast<double>(dbps))));
+    return(static_cast<int>(ceil(static_cast<double>(psduLength + fl->service + fl->tail*n_es)/static_cast<double>(dbps))));
 }
 
 wns::simulator::Time
@@ -148,7 +156,7 @@ Duration::getPreambleProcessing(unsigned int streams, std::string plcpMode) cons
 wns::simulator::Time
 Duration::getACK(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->ack,
+    return(getFrame(fl->ack,
                     basicDBPS,
                     streams,
                     bandwidth,
@@ -176,7 +184,7 @@ Duration::getEIFS(unsigned int streams, unsigned int bandwidth, std::string plcp
 wns::simulator::Time
 Duration::getRTS(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->rts,
+    return(getFrame(fl->rts,
                     basicDBPS,
                     streams,
                     bandwidth,
@@ -186,7 +194,7 @@ Duration::getRTS(unsigned int streams, unsigned int bandwidth, std::string plcpM
 wns::simulator::Time
 Duration::getCTS(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->cts,
+    return(getFrame(fl->cts,
                     basicDBPS,
                     streams,
                     bandwidth,
@@ -196,7 +204,7 @@ Duration::getCTS(unsigned int streams, unsigned int bandwidth, std::string plcpM
 wns::simulator::Time
 Duration::getBlockACK(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->blockACK,
+    return(getFrame(fl->blockACK,
                     basicDBPS,
                     streams,
                     bandwidth,
@@ -206,7 +214,7 @@ Duration::getBlockACK(unsigned int streams, unsigned int bandwidth, std::string 
 wns::simulator::Time
 Duration::getMSDU_PPDU(Bit msduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->getPSDU(msduFrameSize),
+    return(getFrame(fl->getPSDU(msduFrameSize),
                     dbps,
                     streams,
                     bandwidth,
@@ -227,7 +235,7 @@ Duration::getMPDU_PPDU(Bit mpduSize, unsigned int dbps, unsigned int streams, un
 wns::simulator::Time
 Duration::getA_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->getA_MPDU_PSDU(mpduFrameSize, n_aggFrames),
+    return(getFrame(fl->getA_MPDU_PSDU(mpduFrameSize, n_aggFrames),
                     dbps,
                     streams,
                     bandwidth,
@@ -238,7 +246,7 @@ Duration::getA_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, unsigned i
 wns::simulator::Time
 Duration::getA_MPDU_PPDU(const std::vector<Bit>& mpduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->getA_MPDU_PSDU(mpduFrameSize),
+    return(getFrame(fl->getA_MPDU_PSDU(mpduFrameSize),
                     dbps,
                     streams,
                     bandwidth,
@@ -248,7 +256,7 @@ Duration::getA_MPDU_PPDU(const std::vector<Bit>& mpduFrameSize, unsigned int dbp
 wns::simulator::Time
 Duration::getA_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->getA_MSDU_PSDU(msduFrameSize, n_aggFrames),
+    return(getFrame(fl->getA_MSDU_PSDU(msduFrameSize, n_aggFrames),
                     dbps,
                     streams,
                     bandwidth,
@@ -258,7 +266,7 @@ Duration::getA_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, unsigned i
 wns::simulator::Time
 Duration::getA_MSDU_PPDU(const std::vector<Bit>& msduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
 {
-    return(getFrame(pc->getFrameLength()->getA_MSDU_PSDU(msduFrameSize),
+    return(getFrame(fl->getA_MSDU_PSDU(msduFrameSize),
                     dbps,
                     streams,
                     bandwidth,

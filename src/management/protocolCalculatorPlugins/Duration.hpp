@@ -29,6 +29,11 @@
 #ifndef WIFIMAC_MANAGEMENT_PROTOCOLCALCULATORPLUGINS_DURATION_HPP
 #define WIFIMAC_MANAGEMENT_PROTOCOLCALCULATORPLUGINS_DURATION_HPP
 
+// must be the first include!
+#include <WNS/Python.hpp>
+#include <WIFIMAC/management/protocolCalculatorPlugins/ConfigGetter.hpp>
+#include <WIFIMAC/management/protocolCalculatorPlugins/FrameLength.hpp>
+
 #include <WNS/pyconfig/View.hpp>
 #include <WNS/simulator/Time.hpp>
 
@@ -38,7 +43,7 @@ namespace wifimac { namespace management {
 }}
 
 namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
-	/** 
+    /**
      * @brief Class to determine transmission duration for different PDUs
      *
      * this class calculates the actual duration of different PDUs under given
@@ -49,7 +54,10 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
     class Duration
     {
     public:
-        Duration( wifimac::management::ProtocolCalculator* pc_, const wns::pyconfig::View& config );
+        Duration( wifimac::management::protocolCalculatorPlugins::FrameLength* fl_, const wns::pyconfig::View& config );
+
+        Duration( wifimac::management::protocolCalculatorPlugins::FrameLength* fl_, const ConfigGetter& config);
+
         virtual ~Duration() {};
 
         unsigned int
@@ -106,7 +114,7 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
         const wns::simulator::Time slot;
 
     private:
-        const wifimac::management::ProtocolCalculator* pc;
+        const wifimac::management::protocolCalculatorPlugins::FrameLength* fl;
         const Bit basicDBPS;
 
 
