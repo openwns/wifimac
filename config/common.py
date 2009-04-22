@@ -35,6 +35,6 @@ commonEnv = CNBSEnvironment(PROJNAME       = 'wifimac',
                             LIBRARY        = True,
                             SHORTCUTS      = True,
                             FLATINCLUDES   = False,
-			    REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
+                            REVISIONCONTROL = RCS.Bazaar('../', 'WiFiMAC', 'main', '0.2'), 
                             )
 Return('commonEnv')

@@ -41,8 +41,8 @@ class Buffer(openwns.Buffer.Buffer):
     drop = 'Tail'
     def __init__(self, protocolCalculatorName, raName, managerName, parentLogger = None, **kw):
         super(Buffer, self).__init__(**kw)
-	self.raName = raName
+        self.raName = raName
         self.managerName = managerName
-	self.protocolCalculatorName = protocolCalculatorName
+        self.protocolCalculatorName = protocolCalculatorName
         self.logger = wifimac.Logger.Logger(name = "Buffer", parent = parentLogger)
 

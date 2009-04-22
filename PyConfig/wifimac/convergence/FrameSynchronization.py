@@ -32,71 +32,71 @@ import wifimac.Logger
 from openwns import dB, fromdB
 
 class FrameSynchronizationConfig(object):
-	# idle Capture Threshold, >= dB(0) for OFDM
-	idleCapture = dB(0)
-	# SenderLastClear Capture Threshold, >= idleCapture
-	slcCapture = dB(10)
-	# SenderLastGarbled Capture Threshold, >= slcCapture
-	slgCapture = dB(18)
-	# Below this threshold, no preamble will even be detected
-	detectionThreshold = dB(-5)
+    # idle Capture Threshold, >= dB(0) for OFDM
+    idleCapture = dB(0)
+    # SenderLastClear Capture Threshold, >= idleCapture
+    slcCapture = dB(10)
+    # SenderLastGarbled Capture Threshold, >= slcCapture
+    slgCapture = dB(18)
+    # Below this threshold, no preamble will even be detected
+    detectionThreshold = dB(-5)
 
 class FrameSynchronization(openwns.Probe.Probe):
-	""" This FU is responsible for passing only correctly received preambles and frames, i.e.
-	    * With no CRC error as set by the crc, and
-	    * With a valid preamble in case of a frame/psdu
-	"""
-	__plugin__ = 'wifimac.convergence.FrameSynchronization'
+    """ This FU is responsible for passing only correctly received preambles and frames, i.e.
+        * With no CRC error as set by the crc, and
+        * With a valid preamble in case of a frame/psdu
+    """
+    __plugin__ = 'wifimac.convergence.FrameSynchronization'
 
-	logger = None
+    logger = None
 
-	myConfig = None
+    myConfig = None
 
-	managerName = None
-	crcCommandName = None
-	phyUserCommandName = None
-	errorModellingCommandName = None
+    managerName = None
+    crcCommandName = None
+    phyUserCommandName = None
+    errorModellingCommandName = None
 
-	successRateProbeName = None
-	sinrProbeName = None
-	perProbeName = None
+    successRateProbeName = None
+    sinrProbeName = None
+    perProbeName = None
 
-	sinrMIBServiceName = None
+    sinrMIBServiceName = None
 
-	""" Preset values are according to Lee et al., "An Experimental Study on the Capture Effect in 802.11a" """
-	def __init__(self,
-		     name,
-		     commandName,
-		     managerName,
-		     crcCommandName,
-		     phyUserCommandName,
-		     errorModellingCommandName,
-		     probePrefix,
-		     sinrMIBServiceName,
-		     config,
-		     parentLogger=None, **kw):
-        	super(FrameSynchronization, self).__init__(name=name, commandName=commandName)
+    """ Preset values are according to Lee et al., "An Experimental Study on the Capture Effect in 802.11a" """
+    def __init__(self,
+             name,
+             commandName,
+             managerName,
+             crcCommandName,
+             phyUserCommandName,
+             errorModellingCommandName,
+             probePrefix,
+             sinrMIBServiceName,
+             config,
+             parentLogger=None, **kw):
+             super(FrameSynchronization, self).__init__(name=name, commandName=commandName)
 
-		# Check consistency of config
-		assert(config.__class__ == FrameSynchronizationConfig)
-		assert(fromdB(config.detectionThreshold) <= fromdB(config.idleCapture))
-		assert(0 <= fromdB(config.idleCapture))
-		assert(fromdB(config.idleCapture) < fromdB(config.slcCapture))
-		assert(fromdB(config.slcCapture) <= fromdB(config.slgCapture))
-		self.myConfig = config
+        # Check consistency of config
+             assert(config.__class__ == FrameSynchronizationConfig)
+             assert(fromdB(config.detectionThreshold) <= fromdB(config.idleCapture))
+             assert(0 <= fromdB(config.idleCapture))
+             assert(fromdB(config.idleCapture) < fromdB(config.slcCapture))
+             assert(fromdB(config.slcCapture) <= fromdB(config.slgCapture))
+             self.myConfig = config
 
-	        self.logger = wifimac.Logger.Logger(name = "FrameSync", parent = parentLogger)
+             self.logger = wifimac.Logger.Logger(name = "FrameSync", parent = parentLogger)
 
-		self.managerName = managerName
-		self.crcCommandName = crcCommandName
-		self.phyUserCommandName = phyUserCommandName
-		self.errorModellingCommandName = errorModellingCommandName
+             self.managerName = managerName
+             self.crcCommandName = crcCommandName
+             self.phyUserCommandName = phyUserCommandName
+             self.errorModellingCommandName = errorModellingCommandName
 
-		self.successRateProbeName = probePrefix + ".msduSuccessRate"
-		self.sinrProbeName = probePrefix + ".sinr"
-		self.perProbeName = probePrefix + ".per"
+             self.successRateProbeName = probePrefix + ".msduSuccessRate"
+             self.sinrProbeName = probePrefix + ".sinr"
+             self.perProbeName = probePrefix + ".per"
 
-		self.sinrMIBServiceName = sinrMIBServiceName
+             self.sinrMIBServiceName = sinrMIBServiceName
 
-	        openwns.pyconfig.attrsetter(self, kw)
+             openwns.pyconfig.attrsetter(self, kw)
 

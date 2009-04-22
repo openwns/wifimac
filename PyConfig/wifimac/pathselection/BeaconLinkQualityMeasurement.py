@@ -33,54 +33,54 @@ from openwns import dBm
 import wifimac.Logger
 
 class BeaconLinkQualityMeasurementConfig(object):
-	windowLength = 9.5
-	noiseLevel = dBm(-94)
-	meanFrameSize = 1500*8
-	expectedAckDuration = 44E-6
-	slotDuration = 9E-6
-	sifsDuration = 16E-6
-	preambleDuration = 16E-6
-	scalingFactor = 0.00144
-	maxMissedBeacons = 9
+    windowLength = 9.5
+    noiseLevel = dBm(-94)
+    meanFrameSize = 1500*8
+    expectedAckDuration = 44E-6
+    slotDuration = 9E-6
+    sifsDuration = 16E-6
+    preambleDuration = 16E-6
+    scalingFactor = 0.00144
+    maxMissedBeacons = 9
 
-	def __init__(self, **kw):
-		openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self, **kw):
+        openwns.pyconfig.attrsetter(self, kw)
 
 
 class BeaconLinkQualityMeasurement(openwns.Probe.Probe):
-	""" Measures the quality of existing links via the received beacons"""
-	__plugin__ = "wifimac.pathselection.BeaconLinkQualityMeasurement"
+    """ Measures the quality of existing links via the received beacons"""
+    __plugin__ = "wifimac.pathselection.BeaconLinkQualityMeasurement"
 
-	logger = None
-	pathSelectionServiceName = None
-	sinrMIBServiceName = None
-	beaconInterval = None
-	linkParams = None
-	managerName = None
-	phyUserCommandName = None
+    logger = None
+    pathSelectionServiceName = None
+    sinrMIBServiceName = None
+    beaconInterval = None
+    linkParams = None
+    managerName = None
+    phyUserCommandName = None
 
-	receivedPowerProbeName = None
-	peerMeasurementProbeName = None
-	linkCostProbeName = None
-	myConfig = None
+    receivedPowerProbeName = None
+    peerMeasurementProbeName = None
+    linkCostProbeName = None
+    myConfig = None
 
-	def __init__(self, fuName, commandName,
-		     beaconInterval,
-		     sinrMIBServiceName, managerName, phyUserCommandName, probePrefix,
-		     config,
-		     parentLogger=None, **kw):
-		super(BeaconLinkQualityMeasurement, self).__init__(name=fuName, commandName = commandName)
-		self.logger = wifimac.Logger.Logger(name = "BeaconLQM", parent = parentLogger)
-		self.pathSelectionServiceName = 'PATHSELECTIONOVERVPS'
-		self.sinrMIBServiceName = sinrMIBServiceName
-		self.managerName = managerName
-		self.beaconInterval = beaconInterval
-		self.phyUserCommandName = phyUserCommandName
-		self.receivedPowerProbeName = probePrefix + ".receivedPower"
-		self.peerMeasurementProbeName = probePrefix + ".peerMeasurement"
-		self.linkCostProbeName = probePrefix + ".linkCost"
+    def __init__(self, fuName, commandName,
+             beaconInterval,
+             sinrMIBServiceName, managerName, phyUserCommandName, probePrefix,
+             config,
+             parentLogger=None, **kw):
+        super(BeaconLinkQualityMeasurement, self).__init__(name=fuName, commandName = commandName)
+        self.logger = wifimac.Logger.Logger(name = "BeaconLQM", parent = parentLogger)
+        self.pathSelectionServiceName = 'PATHSELECTIONOVERVPS'
+        self.sinrMIBServiceName = sinrMIBServiceName
+        self.managerName = managerName
+        self.beaconInterval = beaconInterval
+        self.phyUserCommandName = phyUserCommandName
+        self.receivedPowerProbeName = probePrefix + ".receivedPower"
+        self.peerMeasurementProbeName = probePrefix + ".peerMeasurement"
+        self.linkCostProbeName = probePrefix + ".linkCost"
 
-		assert(config.__class__ == BeaconLinkQualityMeasurementConfig)
-		self.myConfig = config
+        assert(config.__class__ == BeaconLinkQualityMeasurementConfig)
+        self.myConfig = config
 
-		openwns.pyconfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)

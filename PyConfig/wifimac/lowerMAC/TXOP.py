@@ -63,5 +63,5 @@ class TXOP(openwns.Probe.Probe):
         self.myConfig = config
         self.logger = wifimac.Logger.Logger(name = "TXOP", parent = parentLogger)
         self.TXOPDurationProbeName = probePrefix + '.duration'
-	openwns.pyconfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)
 

@@ -29,15 +29,15 @@ import openwns.FUN
 import wifimac.Logger
 
 class TxDurationSetter(openwns.FUN.FunctionalUnit):
-	__plugin__ = 'wifimac.convergence.TxDurationSetter'
+    __plugin__ = 'wifimac.convergence.TxDurationSetter'
 
-	logger = None
-	protocolCalculatorName = None
-	managerName = None
+    logger = None
+    protocolCalculatorName = None
+    managerName = None
 
-	def __init__(self, name, commandName, protocolCalculatorName, managerName, parentLogger = None):
-		super(TxDurationSetter, self).__init__(functionalUnitName = name, commandName = commandName)
-		self.protocolCalculatorName = protocolCalculatorName
-		self.managerName = managerName
-		self.logger = wifimac.Logger.Logger("TxTimeSetter", parent = parentLogger)
+    def __init__(self, name, commandName, protocolCalculatorName, managerName, parentLogger = None):
+        super(TxDurationSetter, self).__init__(functionalUnitName = name, commandName = commandName)
+        self.protocolCalculatorName = protocolCalculatorName
+        self.managerName = managerName
+        self.logger = wifimac.Logger.Logger("TxTimeSetter", parent = parentLogger)
 

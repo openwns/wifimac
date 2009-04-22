@@ -31,31 +31,31 @@ import openwns.pyconfig
 import wifimac.Logger
 
 class MeshForwarding(openwns.FUN.FunctionalUnit):
-	""" Forwarding based on association (STA <-> AP) and mesh-routing"""
+    """ Forwarding based on association (STA <-> AP) and mesh-routing"""
 
-	__plugin__ = 'wifimac.pathselection.MeshForwarding'
-	logger = None
-	upperConvergenceName = None
-	dot11MeshTTL = None
-	pathSelectionServiceName = None
+    __plugin__ = 'wifimac.pathselection.MeshForwarding'
+    logger = None
+    upperConvergenceName = None
+    dot11MeshTTL = None
+    pathSelectionServiceName = None
 
-	def __init__(self, functionalUnitName, commandName, upperConvergenceName, parentLogger=None, **kw):
-		super(MeshForwarding, self).__init__(functionalUnitName=functionalUnitName, commandName=commandName)
-		self.upperConvergenceName = upperConvergenceName
-		self.logger = wifimac.Logger.Logger(name = "MeshForwarding", parent = parentLogger)
-		self.dot11MeshTTL = 15
-		self.pathSelectionServiceName = 'PATHSELECTIONOVERVPS'
-		openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self, functionalUnitName, commandName, upperConvergenceName, parentLogger=None, **kw):
+        super(MeshForwarding, self).__init__(functionalUnitName=functionalUnitName, commandName=commandName)
+        self.upperConvergenceName = upperConvergenceName
+        self.logger = wifimac.Logger.Logger(name = "MeshForwarding", parent = parentLogger)
+        self.dot11MeshTTL = 15
+        self.pathSelectionServiceName = 'PATHSELECTIONOVERVPS'
+        openwns.pyconfig.attrsetter(self, kw)
 
 class StationForwarding(openwns.FUN.FunctionalUnit):
-	""" Forwarding for STAs: Always to the associated AP"""
+    """ Forwarding for STAs: Always to the associated AP"""
 
-	__plugin__ = 'wifimac.pathselection.StationForwarding'
-	logger = None
-	upperConvergenceName = None
+    __plugin__ = 'wifimac.pathselection.StationForwarding'
+    logger = None
+    upperConvergenceName = None
 
-	def __init__(self, functionalUnitName, commandName, upperConvergenceName, parentLogger=None, **kw):
-		super(StationForwarding, self).__init__(functionalUnitName=functionalUnitName, commandName=commandName)
-		self.upperConvergenceName = upperConvergenceName
-		self.logger = wifimac.Logger.Logger(name = "STAForwarding", parent = parentLogger)
-		openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self, functionalUnitName, commandName, upperConvergenceName, parentLogger=None, **kw):
+        super(StationForwarding, self).__init__(functionalUnitName=functionalUnitName, commandName=commandName)
+        self.upperConvergenceName = upperConvergenceName
+        self.logger = wifimac.Logger.Logger(name = "STAForwarding", parent = parentLogger)
+        openwns.pyconfig.attrsetter(self, kw)

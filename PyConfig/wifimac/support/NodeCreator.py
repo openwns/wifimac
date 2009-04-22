@@ -48,280 +48,280 @@ import constanze.node
 import rise.Mobility
 
 class Station(openwns.node.Node):
-	load = None      # Load Generator
-	tl = None        # Transport Layer
-	nl = None        # Network Layer
-	dll = None       # Data Link Layer
-	phy = None       # Physical Layer
-	mobility = None  # Mobility Component
+    load = None      # Load Generator
+    tl = None        # Transport Layer
+    nl = None        # Network Layer
+    dll = None       # Data Link Layer
+    phy = None       # Physical Layer
+    mobility = None  # Mobility Component
 
-	id = None        # Identifier
+    id = None        # Identifier
 
-	def __init__(self, name, id):
-		super(Station, self).__init__(name)
-		self.id = id
-		self.logger = wifimac.Logger.Logger(name, parent = None)
+    def __init__(self, name, id):
+        super(Station, self).__init__(name)
+        self.id = id
+        self.logger = wifimac.Logger.Logger(name, parent = None)
 
 class NodeCreator(object):
-	__slots__ = (
-	'propagation',  # rise propagation object (pathloss, shadowing, fading... for node type pairs)
-	'txPower'
-	)
+    __slots__ = (
+    'propagation',  # rise propagation object (pathloss, shadowing, fading... for node type pairs)
+    'txPower'
+    )
 
-	def __init__(self, propagationConfig, **kw):
-		self.propagation = rise.scenario.Propagation.Propagation()
-		self.propagation.configurePair("STA", "STA", propagationConfig)
-		self.propagation.configurePair("STA", "MP", propagationConfig)
-		self.propagation.configurePair("STA", "AP", propagationConfig)
+    def __init__(self, propagationConfig, **kw):
+        self.propagation = rise.scenario.Propagation.Propagation()
+        self.propagation.configurePair("STA", "STA", propagationConfig)
+        self.propagation.configurePair("STA", "MP", propagationConfig)
+        self.propagation.configurePair("STA", "AP", propagationConfig)
 
-		self.propagation.configurePair("MP", "STA", propagationConfig)
-		self.propagation.configurePair("MP", "MP", propagationConfig)
-		self.propagation.configurePair("MP", "AP", propagationConfig)
+        self.propagation.configurePair("MP", "STA", propagationConfig)
+        self.propagation.configurePair("MP", "MP", propagationConfig)
+        self.propagation.configurePair("MP", "AP", propagationConfig)
 
-		self.propagation.configurePair("AP", "STA", propagationConfig)
-		self.propagation.configurePair("AP", "MP", propagationConfig)
-		self.propagation.configurePair("AP", "AP", propagationConfig)
+        self.propagation.configurePair("AP", "STA", propagationConfig)
+        self.propagation.configurePair("AP", "MP", propagationConfig)
+        self.propagation.configurePair("AP", "AP", propagationConfig)
 
-		self.txPower = dBm(30)
+        self.txPower = dBm(30)
 
-		openwns.pyconfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)
 
-	def createPhyLayer(self, managerName, propagationName, txPower, frequency, parentLogger):
-		receiver = ofdmaphy.Receiver.OFDMAReceiver(propagation = self.propagation,
-							   propagationCharacteristicName = propagationName,
-							   receiverNoiseFigure = dB(5),
-							   parentLogger = parentLogger )
-		transmitter = rise.Transmitter.Transmitter(propagation = self.propagation,
-							   propagationCharacteristicName = propagationName,
-							   parentLogger = parentLogger )
+    def createPhyLayer(self, managerName, propagationName, txPower, frequency, parentLogger):
+        receiver = ofdmaphy.Receiver.OFDMAReceiver(propagation = self.propagation,
+                               propagationCharacteristicName = propagationName,
+                               receiverNoiseFigure = dB(5),
+                               parentLogger = parentLogger )
+        transmitter = rise.Transmitter.Transmitter(propagation = self.propagation,
+                               propagationCharacteristicName = propagationName,
+                               parentLogger = parentLogger )
 
-		phy = ofdmaphy.Station.OFDMAStation([receiver], [transmitter], parentLogger = parentLogger)
-		phy.txFrequency = frequency
-		phy.rxFrequency = frequency
-		phy.txPower = txPower
-		phy.numberOfSubCarrier = 1
-		phy.bandwidth = 20
-		phy.systemManagerName = managerName
+        phy = ofdmaphy.Station.OFDMAStation([receiver], [transmitter], parentLogger = parentLogger)
+        phy.txFrequency = frequency
+        phy.rxFrequency = frequency
+        phy.txPower = txPower
+        phy.numberOfSubCarrier = 1
+        phy.bandwidth = 20
+        phy.systemManagerName = managerName
 
-		return(phy)
+        return(phy)
 
-	def createTransceiver(self, node, name, MACAddress, managerName, config):
-		# create PHY
-		phyLayerConfig = self.createPhyLayer(managerName = managerName,
-						     propagationName = name,
-						     txPower = config.txPower,
-						     frequency = config.frequency,
-						     parentLogger = node.logger)
-		ofdma = ofdmaphy.Station.OFDMAComponent(node, name+' PHY' + str(MACAddress), phyLayerConfig, parentLogger = node.logger)
-		node.phy.append(ofdma)
+    def createTransceiver(self, node, name, MACAddress, managerName, config):
+        # create PHY
+        phyLayerConfig = self.createPhyLayer(managerName = managerName,
+                             propagationName = name,
+                             txPower = config.txPower,
+                             frequency = config.frequency,
+                             parentLogger = node.logger)
+        ofdma = ofdmaphy.Station.OFDMAComponent(node, name+' PHY' + str(MACAddress), phyLayerConfig, parentLogger = node.logger)
+        node.phy.append(ofdma)
 
-		# create lower MAC
-		node.dll.addTransceiver(address = MACAddress,
-					phyDataTransmission = ofdma.dataTransmission,
-					phyNotification = ofdma.notification,
-					phyCarrierSense = ofdma.notification,
-					config = config.layer2)
+        # create lower MAC
+        node.dll.addTransceiver(address = MACAddress,
+                    phyDataTransmission = ofdma.dataTransmission,
+                    phyNotification = ofdma.notification,
+                    phyCarrierSense = ofdma.notification,
+                    config = config.layer2)
 
 
-	def createAP(self, idGen, managerPool, config):
-		# One id for the node and the first transceiver
-		id = idGen.next()
+    def createAP(self, idGen, managerPool, config):
+        # One id for the node and the first transceiver
+        id = idGen.next()
 
-		newAP = Station("AP" + str(id), id)
+        newAP = Station("AP" + str(id), id)
 
-		# Create tranceivers (phy+lower mac), for each given frequency one
-		# Prepare the L1/L2
+        # Create tranceivers (phy+lower mac), for each given frequency one
+        # Prepare the L1/L2
 
-		newAP.phy = []
-		newAP.dll = wifimac.Layer2.dllAP(newAP, "MAC AP"+str(id), parentLogger = newAP.logger)
-		newAP.dll.setStationID(id)
-		newAP.dll.setPathSelectionService("PATHSELECTIONOVERVPS")
+        newAP.phy = []
+        newAP.dll = wifimac.Layer2.dllAP(newAP, "MAC AP"+str(id), parentLogger = newAP.logger)
+        newAP.dll.setStationID(id)
+        newAP.dll.setPathSelectionService("PATHSELECTIONOVERVPS")
 
-		# The first frequency is the bss frequency (important for the manager)
-		self.createTransceiver(node = newAP,
-				       name = 'AP',
-				       MACAddress = id,
-				       managerName = managerPool.getBSSManager().name,
-				       config = config.transceivers[0])
+        # The first frequency is the bss frequency (important for the manager)
+        self.createTransceiver(node = newAP,
+                       name = 'AP',
+                       MACAddress = id,
+                       managerName = managerPool.getBSSManager().name,
+                       config = config.transceivers[0])
 
-		# Create the mesh transceivers
-		for i in xrange(len(config.transceivers)-1):
-			self.createTransceiver(node = newAP,
-					       name = 'AP',
-					       MACAddress = idGen.next(),
-					       managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
-					       config = config.transceivers[i+1])
-		# create Mobility component
-		newAP.mobility = rise.Mobility.Component(node = newAP,
+        # Create the mesh transceivers
+        for i in xrange(len(config.transceivers)-1):
+            self.createTransceiver(node = newAP,
+                           name = 'AP',
+                           MACAddress = idGen.next(),
+                           managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
+                           config = config.transceivers[i+1])
+        # create Mobility component
+        newAP.mobility = rise.Mobility.Component(node = newAP,
                 	                                 name = "Mobility AP"+str(id),
                         	                         mobility = rise.Mobility.No(openwns.Position()))
-		newAP.mobility.mobility.setCoords(config.position)
+        newAP.mobility.mobility.setCoords(config.position)
 
-		return newAP
+        return newAP
 
-	def createMP(self, idGen, managerPool, config):
-		# One id for the node and the first transceiver
-		id = idGen.next()
+    def createMP(self, idGen, managerPool, config):
+        # One id for the node and the first transceiver
+        id = idGen.next()
 
-		newMP = Station("MP" + str(id), id)
+        newMP = Station("MP" + str(id), id)
 
-		# Create tranceivers (phy+lower mac), for each given frequency one
-		# Prepare the L1/L2
+        # Create tranceivers (phy+lower mac), for each given frequency one
+        # Prepare the L1/L2
 
-		newMP.phy = []
-		newMP.dll = wifimac.Layer2.dllMP(newMP, "MAC MP"+str(id), parentLogger = newMP.logger)
-		newMP.dll.setStationID(id)
-		newMP.dll.setPathSelectionService("PATHSELECTIONOVERVPS")
+        newMP.phy = []
+        newMP.dll = wifimac.Layer2.dllMP(newMP, "MAC MP"+str(id), parentLogger = newMP.logger)
+        newMP.dll.setStationID(id)
+        newMP.dll.setPathSelectionService("PATHSELECTIONOVERVPS")
 
-		# The first frequency is the bss frequency (important for the manager)
-		self.createTransceiver(node = newMP,
-				       name = 'MP',
-				       MACAddress = id,
-				       managerName = managerPool.getBSSManager().name,
-				       config = config.transceivers[0])
+        # The first frequency is the bss frequency (important for the manager)
+        self.createTransceiver(node = newMP,
+                       name = 'MP',
+                       MACAddress = id,
+                       managerName = managerPool.getBSSManager().name,
+                       config = config.transceivers[0])
 
-		# Create the mesh transceivers
-		for i in xrange(len(config.transceivers)-1):
-			self.createTransceiver(node = newMP,
-					       name = 'MP',
-					       MACAddress = idGen.next(),
-					       managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
-					       config = config.transceivers[i+1])
+        # Create the mesh transceivers
+        for i in xrange(len(config.transceivers)-1):
+            self.createTransceiver(node = newMP,
+                           name = 'MP',
+                           MACAddress = idGen.next(),
+                           managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
+                           config = config.transceivers[i+1])
 
-		newMP.nl = ip.Component.IPv4Component ( newMP, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow=1.0 )
-		newMP.nl.addDLL ( "wifi",
-				# Where to get IP Adresses
-				_addressResolver = FixedAddressResolver ( "192.168.1."+str ( id ), "255.255.255.0" ),
-				# Name of ARP zone
-				_arpZone = "theOnlyZone",
-				# We can deliver locally without going to the gateway
-				_pointToPoint = True,
-				# Service names of DLL
-				_dllDataTransmission = newMP.dll.dataTransmission,
-				_dllNotification = newMP.dll.notification )
+        newMP.nl = ip.Component.IPv4Component ( newMP, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow=1.0 )
+        newMP.nl.addDLL ( "wifi",
+                # Where to get IP Adresses
+                _addressResolver = FixedAddressResolver ( "192.168.1."+str ( id ), "255.255.255.0" ),
+                # Name of ARP zone
+                _arpZone = "theOnlyZone",
+                # We can deliver locally without going to the gateway
+                _pointToPoint = True,
+                # Service names of DLL
+                _dllDataTransmission = newMP.dll.dataTransmission,
+                _dllNotification = newMP.dll.notification )
 
-		# create load generator
-		newMP.load = constanze.node.ConstanzeComponent ( newMP, "constanze" )
+        # create load generator
+        newMP.load = constanze.node.ConstanzeComponent ( newMP, "constanze" )
 
-		newMP.mobility = rise.Mobility.Component ( node = newMP,
-		                 			   name = "Mobility MP"+str ( id ),
-							   mobility = rise.Mobility.No ( openwns.Position() ))
-		newMP.mobility.mobility.setCoords ( config.position )
+        newMP.mobility = rise.Mobility.Component ( node = newMP,
+                                       name = "Mobility MP"+str ( id ),
+                               mobility = rise.Mobility.No ( openwns.Position() ))
+        newMP.mobility.mobility.setCoords ( config.position )
 
-		return newMP
+        return newMP
 
-	def createSTA ( self, idGen, managerPool, rang, config, loggerLevel, dllLoggerLevel) :
-		id = idGen.next()
-		newSTA = Station("STA" + str(id), id)
+    def createSTA ( self, idGen, managerPool, rang, config, loggerLevel, dllLoggerLevel) :
+        id = idGen.next()
+        newSTA = Station("STA" + str(id), id)
 
-		# create Physical Layer
-		newSTA.phy = ofdmaphy.Station.OFDMAComponent(newSTA, "PHY STA"+str(id),
-							     self.createPhyLayer(managerName = managerPool.getBSSManager().name,
-										 propagationName="STA",
-										 txPower = config.txPower,
-										 frequency = config.frequency,
-										 parentLogger = newSTA.logger),
-							     parentLogger = newSTA.logger)
+        # create Physical Layer
+        newSTA.phy = ofdmaphy.Station.OFDMAComponent(newSTA, "PHY STA"+str(id),
+                                 self.createPhyLayer(managerName = managerPool.getBSSManager().name,
+                                         propagationName="STA",
+                                         txPower = config.txPower,
+                                         frequency = config.frequency,
+                                         parentLogger = newSTA.logger),
+                                 parentLogger = newSTA.logger)
 
-		# create data link layer
-		newSTA.dll = wifimac.Layer2.dllSTA ( newSTA, "MAC STA"+str ( id ), config.layer2, parentLogger = newSTA.logger )
-		newSTA.dll.setStationID ( id )
-		newSTA.dll.manager.setMACAddress(id)
-		newSTA.dll.manager.setPhyDataTransmission(newSTA.phy.dataTransmission)
-		newSTA.dll.manager.setPhyNotification(newSTA.phy.notification)
-		newSTA.dll.manager.setPhyCarrierSense(newSTA.phy.notification)
+        # create data link layer
+        newSTA.dll = wifimac.Layer2.dllSTA ( newSTA, "MAC STA"+str ( id ), config.layer2, parentLogger = newSTA.logger )
+        newSTA.dll.setStationID ( id )
+        newSTA.dll.manager.setMACAddress(id)
+        newSTA.dll.manager.setPhyDataTransmission(newSTA.phy.dataTransmission)
+        newSTA.dll.manager.setPhyNotification(newSTA.phy.notification)
+        newSTA.dll.manager.setPhyCarrierSense(newSTA.phy.notification)
 
-		# create network layer
-		newSTA.nl = ip.Component.IPv4Component ( newSTA, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow=1.0 )
-		newSTA.nl.addDLL ( "wifi",
-				# Where to get IP Adresses
-				_addressResolver = FixedAddressResolver ( "192.168.1."+str ( id ), "255.255.255.0" ),
-				# Name of ARP zone
-				_arpZone = "theOnlyZone",
-				# We can deliver locally without going to the gateway
-				_pointToPoint = True,
-				# Service names of DLL
-				_dllDataTransmission = newSTA.dll.dataTransmission,
-				_dllNotification = newSTA.dll.notification )
+        # create network layer
+        newSTA.nl = ip.Component.IPv4Component ( newSTA, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow=1.0 )
+        newSTA.nl.addDLL ( "wifi",
+                # Where to get IP Adresses
+                _addressResolver = FixedAddressResolver ( "192.168.1."+str ( id ), "255.255.255.0" ),
+                # Name of ARP zone
+                _arpZone = "theOnlyZone",
+                # We can deliver locally without going to the gateway
+                _pointToPoint = True,
+                # Service names of DLL
+                _dllDataTransmission = newSTA.dll.dataTransmission,
+                _dllNotification = newSTA.dll.notification )
 
-		# IP Route Table
-		newSTA.nl.addRoute("192.168.1.0", "255.255.255.0", "0.0.0.0", "wifi")
-		newSTA.nl.addRoute(rang.nl.dataLinkLayers[0].addressResolver.address,
-				"255.255.255.255",
-				rang.nl.dataLinkLayers[0].addressResolver.address,
-				"wifi")
-		rang.nl.addRoute(newSTA.nl.dataLinkLayers[0].addressResolver.address,
-				 "255.255.255.255",
-				 newSTA.nl.dataLinkLayers[0].addressResolver.address,
-				 "wifi")
+        # IP Route Table
+        newSTA.nl.addRoute("192.168.1.0", "255.255.255.0", "0.0.0.0", "wifi")
+        newSTA.nl.addRoute(rang.nl.dataLinkLayers[0].addressResolver.address,
+                "255.255.255.255",
+                rang.nl.dataLinkLayers[0].addressResolver.address,
+                "wifi")
+        rang.nl.addRoute(newSTA.nl.dataLinkLayers[0].addressResolver.address,
+                 "255.255.255.255",
+                 newSTA.nl.dataLinkLayers[0].addressResolver.address,
+                 "wifi")
 
-		# create load generator
-		newSTA.load = constanze.node.ConstanzeComponent ( newSTA, "constanze" )
+        # create load generator
+        newSTA.load = constanze.node.ConstanzeComponent ( newSTA, "constanze" )
 
-		# create mobility component
-		newSTA.mobility = rise.Mobility.Component ( node = newSTA,
-							    name = "Mobility STA"+str ( id ),
-							    mobility = rise.Mobility.No ( openwns.Position() ))
-		newSTA.mobility.mobility.setCoords ( config.position )
+        # create mobility component
+        newSTA.mobility = rise.Mobility.Component ( node = newSTA,
+                                name = "Mobility STA"+str ( id ),
+                                mobility = rise.Mobility.No ( openwns.Position() ))
+        newSTA.mobility.mobility.setCoords ( config.position )
 
-		newSTA.logger.level = loggerLevel
-		newSTA.dll.logger.level = dllLoggerLevel
+        newSTA.logger.level = loggerLevel
+        newSTA.dll.logger.level = dllLoggerLevel
 
 
-		return newSTA
+        return newSTA
 
-	def createRANG(self, listener, loggerLevel,
-		       listenerWindowSize = 1.0, listenerSampleInterval = 0.5):
-		rang = Station('RANG', (256*255)-1)
+    def createRANG(self, listener, loggerLevel,
+               listenerWindowSize = 1.0, listenerSampleInterval = 0.5):
+        rang = Station('RANG', (256*255)-1)
 
-		# create dll
-		rang.dll = wifimac.support.Rang.RANG(rang, parentLogger = rang.logger)
-		rang.dll.setStationID((256*255)-1)
+        # create dll
+        rang.dll = wifimac.support.Rang.RANG(rang, parentLogger = rang.logger)
+        rang.dll.setStationID((256*255)-1)
 
-		# create network layer
-		rang.nl = ip.Component.IPv4Component(rang, "192.168.255.254", "192.168.255.254", probeWindow=1.0)
-		rang.nl.addDLL("wifi",
-			# Where to get IP Adresses
-			_addressResolver = FixedAddressResolver("192.168.255.254", "255.255.0.0"),
-			# Name of ARP zone
-			_arpZone = "theOnlyZone",
-			# We can deliver locally without going to the gateway
-			_pointToPoint = True,
-			# Service names of DLL
-			_dllDataTransmission = rang.dll.dataTransmission,
-			_dllNotification = rang.dll.notification)
-		rang.nl.forwarding.config.isForwarding = True
+        # create network layer
+        rang.nl = ip.Component.IPv4Component(rang, "192.168.255.254", "192.168.255.254", probeWindow=1.0)
+        rang.nl.addDLL("wifi",
+            # Where to get IP Adresses
+            _addressResolver = FixedAddressResolver("192.168.255.254", "255.255.0.0"),
+            # Name of ARP zone
+            _arpZone = "theOnlyZone",
+            # We can deliver locally without going to the gateway
+            _pointToPoint = True,
+            # Service names of DLL
+            _dllDataTransmission = rang.dll.dataTransmission,
+            _dllNotification = rang.dll.notification)
+        rang.nl.forwarding.config.isForwarding = True
 
-		# create load generator
-		rang.load = constanze.node.ConstanzeComponent(rang, "constanze")
+        # create load generator
+        rang.load = constanze.node.ConstanzeComponent(rang, "constanze")
 
-		rang.logger.level = loggerLevel
+        rang.logger.level = loggerLevel
 
-		if(listener):
-			ipListenerBinding = constanze.node.IPListenerBinding(rang.nl.domainName, parentLogger=rang.logger)
-			listener = constanze.node.Listener(rang.nl.domainName + ".listener", probeWindow = 0.1, parentLogger=rang.logger)
-			rang.load.addListener(ipListenerBinding, listener)
-			rang.nl.windowedEndToEndProbe.config.windowSize = listenerWindowSize
-			rang.nl.windowedEndToEndProbe.config.sampleInterval = listenerSampleInterval
+        if(listener):
+            ipListenerBinding = constanze.node.IPListenerBinding(rang.nl.domainName, parentLogger=rang.logger)
+            listener = constanze.node.Listener(rang.nl.domainName + ".listener", probeWindow = 0.1, parentLogger=rang.logger)
+            rang.load.addListener(ipListenerBinding, listener)
+            rang.nl.windowedEndToEndProbe.config.windowSize = listenerWindowSize
+            rang.nl.windowedEndToEndProbe.config.sampleInterval = listenerSampleInterval
 
-		return rang
+        return rang
 
-	def createVARP(self, loggerLevel, name = "VARP", zone = "theOnlyZone"):
-		varp = ip.VirtualARP.VirtualARPServer(name, zone)
-		varp.logger.level = loggerLevel
-		return varp
+    def createVARP(self, loggerLevel, name = "VARP", zone = "theOnlyZone"):
+        varp = ip.VirtualARP.VirtualARPServer(name, zone)
+        varp.logger.level = loggerLevel
+        return varp
 
-	def createVDNS(self, loggerLevel, name = "VDNS", root = "ip.DEFAULT.GLOBAL"):
-		vdns = ip.VirtualDNS.VirtualDNSServer(name, root)
-		vdns.logger.level = loggerLevel
-		return vdns
+    def createVDNS(self, loggerLevel, name = "VDNS", root = "ip.DEFAULT.GLOBAL"):
+        vdns = ip.VirtualDNS.VirtualDNSServer(name, root)
+        vdns.logger.level = loggerLevel
+        return vdns
 
-	def createVPS(self, numNodes, loggerLevel, name = "VPS"):
-		vps = wifimac.pathselection.VirtualPSServer("VPS", numNodes = numNodes)
-		vps.logger.level = loggerLevel
-		return vps
+    def createVPS(self, numNodes, loggerLevel, name = "VPS"):
+        vps = wifimac.pathselection.VirtualPSServer("VPS", numNodes = numNodes)
+        vps.logger.level = loggerLevel
+        return vps
 
-	def createVCIB(self, loggerLevel, name = "VCIB"):
-		vcibs = wifimac.management.InformationBases.VirtualCababilityInformationService(name)
-		vcibs.logger.level = loggerLevel
-		return vcibs
+    def createVCIB(self, loggerLevel, name = "VCIB"):
+        vcibs = wifimac.management.InformationBases.VirtualCababilityInformationService(name)
+        vcibs.logger.level = loggerLevel
+        return vcibs

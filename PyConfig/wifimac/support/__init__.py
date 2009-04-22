@@ -38,14 +38,14 @@ class Node(object):
         self.position = position
 
 class idGenerator:
-	nextId = None
-	def __init__(self):
-		self.nextId = 0
-	def next(self):
-		self.nextId += 1
-		return self.nextId
-	def get(self, num):
-		bunch = []
-		for i in xrange(num):
-			bunch.append(self.next())
-		return bunch
+    nextId = None
+    def __init__(self):
+        self.nextId = 0
+    def next(self):
+        self.nextId += 1
+        return self.nextId
+    def get(self, num):
+        bunch = []
+        for i in xrange(num):
+            bunch.append(self.next())
+        return bunch

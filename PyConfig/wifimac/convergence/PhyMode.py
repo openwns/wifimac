@@ -29,99 +29,99 @@ from openwns import dBm, dB, fromdB
 import wifimac.Logger
 
 class PhyMode(object):
-	dataBitsPerSymbol = None
-	modulation = None
-	codingRate = None
-	logger = None
-	constFrameSizeBits = None
-	minRSS = None
-	minSINR = None
+    dataBitsPerSymbol = None
+    modulation = None
+    codingRate = None
+    logger = None
+    constFrameSizeBits = None
+    minRSS = None
+    minSINR = None
 
-	def __init__(self, dataBitsPerSymbol, modulation, codingRate, parentLogger, constFrameSizeBits = 0, minRSS = dBm(0), minSINR = dB(0)):
-		self.dataBitsPerSymbol = dataBitsPerSymbol
-		self.modulation = modulation
-		self.codingRate = codingRate
-		self.constFrameSizeBits = constFrameSizeBits
-		self.minRSS = minRSS
-		self.minSINR = minSINR
-		self.logger = wifimac.Logger.Logger(modulation+codingRate, parentLogger) 
+    def __init__(self, dataBitsPerSymbol, modulation, codingRate, parentLogger, constFrameSizeBits = 0, minRSS = dBm(0), minSINR = dB(0)):
+        self.dataBitsPerSymbol = dataBitsPerSymbol
+        self.modulation = modulation
+        self.codingRate = codingRate
+        self.constFrameSizeBits = constFrameSizeBits
+        self.minRSS = minRSS
+        self.minSINR = minSINR
+        self.logger = wifimac.Logger.Logger(modulation+codingRate, parentLogger) 
 
 class PhyModes(object):
-	numPhyModes = None
-	logger = None
+    numPhyModes = None
+    logger = None
 
-	def __init__(self, logger):
-		self.numPhyModes = 8
-		self.logger = logger
+    def __init__(self, logger):
+        self.numPhyModes = 8
+        self.logger = logger
 
-	def getNumPhyModes():
-		return self.numPhyModes
+    def getNumPhyModes():
+        return self.numPhyModes
 
-	def getPhyModePreamble(self):
-		return (PhyMode(dataBitsPerSymbol = 24,
-				modulation = "BPSK",
-				codingRate = "1/2",
-				constFrameSizeBits = 4*24,
-				minSINR = dB(6.0),
+    def getPhyModePreamble(self):
+        return (PhyMode(dataBitsPerSymbol = 24,
+                modulation = "BPSK",
+                codingRate = "1/2",
+                constFrameSizeBits = 4*24,
+                minSINR = dB(6.0),
                                 parentLogger = self.logger))
-	def getPhyMode0(self):
-		return (PhyMode(dataBitsPerSymbol = 24,
-				modulation = "BPSK",
-				codingRate = "1/2",
-				minSINR = dB(6.0),
+    def getPhyMode0(self):
+        return (PhyMode(dataBitsPerSymbol = 24,
+                modulation = "BPSK",
+                codingRate = "1/2",
+                minSINR = dB(6.0),
                                 parentLogger = self.logger))
 
-	def getPhyMode1(self):
-		return(PhyMode(dataBitsPerSymbol = 36,
-			       modulation = "BPSK",
-			       codingRate = "3/4",
-			       minSINR = dB(8.8),
-			       parentLogger = self.logger))
+    def getPhyMode1(self):
+        return(PhyMode(dataBitsPerSymbol = 36,
+                   modulation = "BPSK",
+                   codingRate = "3/4",
+                   minSINR = dB(8.8),
+                   parentLogger = self.logger))
 
-	def getPhyMode2(self):
-		return(PhyMode(dataBitsPerSymbol = 48,
-			       modulation = "QPSK",
-			       codingRate = "1/2",
-			       minSINR = dB(8.8),
-			       parentLogger = self.logger))
+    def getPhyMode2(self):
+        return(PhyMode(dataBitsPerSymbol = 48,
+                   modulation = "QPSK",
+                   codingRate = "1/2",
+                   minSINR = dB(8.8),
+                   parentLogger = self.logger))
 
-	def getPhyMode3(self):
-		return(PhyMode(dataBitsPerSymbol = 72,
-			       modulation = "QPSK",
-			       codingRate = "3/4",
-			       minSINR = dB(12.0),
-			       parentLogger = self.logger))
+    def getPhyMode3(self):
+        return(PhyMode(dataBitsPerSymbol = 72,
+                   modulation = "QPSK",
+                   codingRate = "3/4",
+                   minSINR = dB(12.0),
+                   parentLogger = self.logger))
 
-	def getPhyMode4(self):
-		return(PhyMode(dataBitsPerSymbol = 96,
-			       modulation = "16QAM",
-			       codingRate = "1/2",
-			       minSINR = dB(15.4),
-			       parentLogger = self.logger))
+    def getPhyMode4(self):
+        return(PhyMode(dataBitsPerSymbol = 96,
+                   modulation = "16QAM",
+                   codingRate = "1/2",
+                   minSINR = dB(15.4),
+                   parentLogger = self.logger))
 
-	def getPhyMode5(self):
-		return(PhyMode(dataBitsPerSymbol = 144,
-			       modulation = "16QAM",
-			       codingRate = "3/4",
-			       minSINR = dB(18.8),
-			       parentLogger = self.logger))
+    def getPhyMode5(self):
+        return(PhyMode(dataBitsPerSymbol = 144,
+                   modulation = "16QAM",
+                   codingRate = "3/4",
+                   minSINR = dB(18.8),
+                   parentLogger = self.logger))
 
-	def getPhyMode6(self):
-		return(PhyMode(dataBitsPerSymbol = 192,
-			       modulation = "64QAM",
-			       codingRate = "2/3",
-			       minSINR = dB(23.5),
-			       parentLogger = self.logger))
+    def getPhyMode6(self):
+        return(PhyMode(dataBitsPerSymbol = 192,
+                   modulation = "64QAM",
+                   codingRate = "2/3",
+                   minSINR = dB(23.5),
+                   parentLogger = self.logger))
 
-	def getPhyMode7(self):
-		return(PhyMode(dataBitsPerSymbol = 216,
-			       modulation = "64QAM",
-			       codingRate = "3/4",
-			       minSINR = dB(24.8),
-			       parentLogger = self.logger))
-	def getPhyMode8(self):
-		return(PhyMode(dataBitsPerSymbol = 260,
-			       modulation = "64QAM",
-			       codingRate = "5/6",
-			       minSINR = dB(26.5),
-			       parentLogger = self.logger))
+    def getPhyMode7(self):
+        return(PhyMode(dataBitsPerSymbol = 216,
+                   modulation = "64QAM",
+                   codingRate = "3/4",
+                   minSINR = dB(24.8),
+                   parentLogger = self.logger))
+    def getPhyMode8(self):
+        return(PhyMode(dataBitsPerSymbol = 260,
+                   modulation = "64QAM",
+                   codingRate = "5/6",
+                   minSINR = dB(26.5),
+                   parentLogger = self.logger))

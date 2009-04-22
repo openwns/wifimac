@@ -32,66 +32,66 @@ import openwns.Probe
 import wifimac.Logger
 
 class Service(object):
-	nameInServiceFactory  = None
-	serviceName = None
+    nameInServiceFactory  = None
+    serviceName = None
 
 class PathSelectionOverVPS(Service):
-	logger  = None
-	upperConvergenceName = None
+    logger  = None
+    upperConvergenceName = None
 
-	def __init__(self, serviceName, upperConvergenceName=None, parentLogger=None, **kw):
-		self.nameInServiceFactory = 'wifimac.pathselection.PathSelectionOverVPS'
-        	self.serviceName = serviceName
-        	self.upperConvergenceName = upperConvergenceName
-        	self.logger = wifimac.Logger.Logger(name = 'PS-VPS', parent = parentLogger)
-        	openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self, serviceName, upperConvergenceName=None, parentLogger=None, **kw):
+        self.nameInServiceFactory = 'wifimac.pathselection.PathSelectionOverVPS'
+        self.serviceName = serviceName
+        self.upperConvergenceName = upperConvergenceName
+        self.logger = wifimac.Logger.Logger(name = 'PS-VPS', parent = parentLogger)
+        openwns.pyconfig.attrsetter(self, kw)
 
 
 class Knowledge(object):
-	alpha = None
-	costs = None
-	readOutActive = None
-	numNodes = None
+    alpha = None
+    costs = None
+    readOutActive = None
+    numNodes = None
 
-	def __init__(self, alpha, numNodes):
-		self.alpha = alpha
-		self.readOutActive = False
-		self.costs = []
-		self.numNodes = numNodes
+    def __init__(self, alpha, numNodes):
+        self.alpha = alpha
+        self.readOutActive = False
+        self.costs = []
+        self.numNodes = numNodes
 
-	def add(self, tx, rx, cost):
-		assert(self.readOutActive == False)
-		assert(tx < self.numNodes)
-		assert(rx < self.numNodes)
-		self.costs.append([tx, rx, cost])
+    def add(self, tx, rx, cost):
+        assert(self.readOutActive == False)
+        assert(tx < self.numNodes)
+        assert(rx < self.numNodes)
+        self.costs.append([tx, rx, cost])
 
-	def get(self, i):
-		self.readOutActive = True
-		assert(i < len(self.costs))
-		return(self.costs[i])
+    def get(self, i):
+        self.readOutActive = True
+        assert(i < len(self.costs))
+        return(self.costs[i])
 
-	def size(self):
-		return(len(self.costs))
+    def size(self):
+        return(len(self.costs))
 
 class VirtualPS(openwns.node.Component):
-	""" The virtual path selection service hold a global knowledge about the network
-	    toplogy; it is feed and accessed by the PathSelectionOverVPS Compound in each
-	    pathselection-enabled node"""
+    """ The virtual path selection service hold a global knowledge about the network
+        toplogy; it is feed and accessed by the PathSelectionOverVPS Compound in each
+        pathselection-enabled node"""
 
-	nameInComponentFactory = "wifimac.pathselection.VirtualPathSelection"
+    nameInComponentFactory = "wifimac.pathselection.VirtualPathSelection"
 
-	logger = None
-	numNodes = None
-	preKnowledge = None
+    logger = None
+    numNodes = None
+    preKnowledge = None
 
-	def __init__(self, node, numNodes, preKnowledgeAlpha = 0.0, parentLogger=None):
-		super(VirtualPS, self).__init__(node, "VPS")
-		self.numNodes = numNodes
-		self.preKnowledge = Knowledge(preKnowledgeAlpha, numNodes)
-		self.logger = wifimac.Logger.Logger(name="VPS", parent=parentLogger)
+    def __init__(self, node, numNodes, preKnowledgeAlpha = 0.0, parentLogger=None):
+        super(VirtualPS, self).__init__(node, "VPS")
+        self.numNodes = numNodes
+        self.preKnowledge = Knowledge(preKnowledgeAlpha, numNodes)
+        self.logger = wifimac.Logger.Logger(name="VPS", parent=parentLogger)
 
 class VirtualPSServer(openwns.node.Node):
-	vps = None
-	def __init__(self, name, numNodes):
-		super(VirtualPSServer, self).__init__(name)
-		self.vps = VirtualPS(node = self, numNodes = numNodes, parentLogger=self.logger)
+    vps = None
+    def __init__(self, name, numNodes):
+        super(VirtualPSServer, self).__init__(name)
+        self.vps = VirtualPS(node = self, numNodes = numNodes, parentLogger=self.logger)

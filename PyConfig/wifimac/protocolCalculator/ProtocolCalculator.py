@@ -33,17 +33,17 @@ import ErrorProbability
 import wifimac.Logger
 
 class Service(object):
-	nameInServiceFactory  = None
-	serviceName = None
+    nameInServiceFactory  = None
+    serviceName = None
 
 class ProtocolCalculator(Service):
-	logger  = None
-	windowSize = None
-	errorProbability = None
+    logger  = None
+    windowSize = None
+    errorProbability = None
 
-	def __init__(self, serviceName, parentLogger=None, **kw):
-		self.nameInServiceFactory = 'wifimac.management.ProtocolCalculator'
-        	self.serviceName = serviceName
-        	self.logger = wifimac.Logger.Logger(name = 'PC', parent = parentLogger)
-		self.errorProbability = ErrorProbability(guardInterval_us = 0.8)
-        	openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self, serviceName, parentLogger=None, **kw):
+        self.nameInServiceFactory = 'wifimac.management.ProtocolCalculator'
+        self.serviceName = serviceName
+        self.logger = wifimac.Logger.Logger(name = 'PC', parent = parentLogger)
+        self.errorProbability = ErrorProbability(guardInterval_us = 0.8)
+        openwns.pyconfig.attrsetter(self, kw)

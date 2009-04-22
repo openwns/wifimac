@@ -33,73 +33,73 @@ import openwns.Probe
 import wifimac.Logger
 
 class Service(object):
-	nameInServiceFactory  = None
-	serviceName = None
+    nameInServiceFactory  = None
+    serviceName = None
 
 class SINR(Service):
-	logger  = None
-	windowSize = None
+    logger  = None
+    windowSize = None
 
-	def __init__(self, serviceName, windowSize = 1.0, parentLogger=None, **kw):
-		self.nameInServiceFactory = 'wifimac.management.SINRInformationBase'
-        	self.serviceName = serviceName
-		self.windowSize = windowSize
-        	self.logger = wifimac.Logger.Logger(name = 'SINR-MIB', parent = parentLogger)
-        	openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self, serviceName, windowSize = 1.0, parentLogger=None, **kw):
+        self.nameInServiceFactory = 'wifimac.management.SINRInformationBase'
+        self.serviceName = serviceName
+        self.windowSize = windowSize
+        self.logger = wifimac.Logger.Logger(name = 'SINR-MIB', parent = parentLogger)
+        openwns.pyconfig.attrsetter(self, kw)
 
 class PERConfig(object):
-		windowSize = 1.0
-		minSamples = 10
-		frameSizeThreshold = 10*8
+        windowSize = 1.0
+        minSamples = 10
+        frameSizeThreshold = 10*8
 
-		def __init__(self, **kw):
-			openwns.pyconfig.attrsetter(self, kw)
+        def __init__(self, **kw):
+            openwns.pyconfig.attrsetter(self, kw)
             
 class PER(Service):
-	logger = None
-	myConfig = None
+    logger = None
+    myConfig = None
 
-	def __init__(self, serviceName, config, parentLogger=None, **kw):
-		self.nameInServiceFactory = 'wifimac.management.PERInformationBase'
-		self.serviceName = serviceName
-		assert(config.__class__ == PERConfig)
-		self.myConfig = config
-		self.logger = wifimac.Logger.Logger(name = 'PER-MIB', parent = parentLogger)
-		openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self, serviceName, config, parentLogger=None, **kw):
+        self.nameInServiceFactory = 'wifimac.management.PERInformationBase'
+        self.serviceName = serviceName
+        assert(config.__class__ == PERConfig)
+        self.myConfig = config
+        self.logger = wifimac.Logger.Logger(name = 'PER-MIB', parent = parentLogger)
+        openwns.pyconfig.attrsetter(self, kw)
 
 class CIBDefaultValues(object):
-	readOutActive = None
-	entries = None
+    readOutActive = None
+    entries = None
 
-	def __init__(self):
-		self.readOutActive = False
-		self.entries = []
+    def __init__(self):
+        self.readOutActive = False
+        self.entries = []
 
-	def add(self, key, value):
-		assert(self.readOutActive == False)
-		self.entries.append([key, value])
+    def add(self, key, value):
+        assert(self.readOutActive == False)
+        self.entries.append([key, value])
 
-	def get(self, i):
-		self.readOutActive = True
-		assert(i < len(self.entries))
-		return(self.entries[i])
+    def get(self, i):
+        self.readOutActive = True
+        assert(i < len(self.entries))
+        return(self.entries[i])
 
-	def size(self):
-		return(len(self.entries))
+    def size(self):
+        return(len(self.entries))
 
 class VirtualCIB(openwns.node.Component):
-	nameInComponentFactory = "wifimac.management.VirtualCapabilityInformationBase"
+    nameInComponentFactory = "wifimac.management.VirtualCapabilityInformationBase"
 
-	logger = None
-	defaultValues = None
+    logger = None
+    defaultValues = None
 
-	def __init__(self, node, parentLogger=None):
-		super(VirtualCIB, self).__init__(node, "VCIB")
-		self.defaultValues = CIBDefaultValues()
-		self.logger = wifimac.Logger.Logger(name="VCIB", parent=parentLogger)
+    def __init__(self, node, parentLogger=None):
+        super(VirtualCIB, self).__init__(node, "VCIB")
+        self.defaultValues = CIBDefaultValues()
+        self.logger = wifimac.Logger.Logger(name="VCIB", parent=parentLogger)
 
 class VirtualCababilityInformationService(openwns.node.Node):
-	vcib = None
-	def __init__(self, name):
-		super(VirtualCababilityInformationService, self).__init__(name)
-		self.vcib = VirtualCIB(node = self, parentLogger=self.logger)
+    vcib = None
+    def __init__(self, name):
+        super(VirtualCababilityInformationService, self).__init__(name)
+        self.vcib = VirtualCIB(node = self, parentLogger=self.logger)

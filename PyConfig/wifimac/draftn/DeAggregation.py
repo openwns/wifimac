@@ -28,17 +28,17 @@ import openwns.FUN
 import wifimac.Logger
 
 class DeAggregation(openwns.FUN.FunctionalUnit):
-	__plugin__ = 'wifimac.draftn.DeAggregation'
-	logger = None
-	phyUserName = None
-	protocolCalculatorName = None
-	managerName = None
-	aggregationCommandName = None
+    __plugin__ = 'wifimac.draftn.DeAggregation'
+    logger = None
+    phyUserName = None
+    protocolCalculatorName = None
+    managerName = None
+    aggregationCommandName = None
 
-	def __init__(self, name, commandName, phyUserName, protocolCalculatorName, managerName, aggregationCommandName, parentLogger = None):
-		super(DeAggregation, self).__init__(functionalUnitName = name, commandName = commandName)
-		self.protocolCalculatorName = protocolCalculatorName
-		self.phyUserName = phyUserName
-		self.managerName = managerName
-		self.aggregationCommandName = aggregationCommandName
-		self.logger = wifimac.Logger.Logger("DeAggregation", parent = parentLogger)
+    def __init__(self, name, commandName, phyUserName, protocolCalculatorName, managerName, aggregationCommandName, parentLogger = None):
+        super(DeAggregation, self).__init__(functionalUnitName = name, commandName = commandName)
+        self.protocolCalculatorName = protocolCalculatorName
+        self.phyUserName = phyUserName
+        self.managerName = managerName
+        self.aggregationCommandName = aggregationCommandName
+        self.logger = wifimac.Logger.Logger("DeAggregation", parent = parentLogger)

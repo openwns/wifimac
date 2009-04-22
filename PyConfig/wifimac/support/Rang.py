@@ -29,15 +29,15 @@ import dll.Layer2
 import openwns.node
 
 class RANG( dll.Layer2.Layer2 ):
-	dllDataTransmissions = None
-	dllNotifications = None
+    dllDataTransmissions = None
+    dllNotifications = None
 
-	def __init__(self, node, parentLogger = None):
-		super(RANG,self).__init__(node, "RANG", parentLogger)
-		self.nameInComponentFactory = "dll.RANG"
-		self.dllDataTransmissions = []
-		self.dllNotifications = []
+    def __init__(self, node, parentLogger = None):
+        super(RANG,self).__init__(node, "RANG", parentLogger)
+        self.nameInComponentFactory = "dll.RANG"
+        self.dllDataTransmissions = []
+        self.dllNotifications = []
 
-	def addAP(self, ap):
-		self.dllDataTransmissions.append(openwns.node.FQSN(ap, ap.dll.dataTransmission))
-		self.dllNotifications.append(openwns.node.FQSN(ap, ap.dll.notification))
+    def addAP(self, ap):
+        self.dllDataTransmissions.append(openwns.node.FQSN(ap, ap.dll.dataTransmission))
+        self.dllNotifications.append(openwns.node.FQSN(ap, ap.dll.notification))

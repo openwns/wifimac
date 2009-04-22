@@ -77,7 +77,7 @@ def __upperPart__(transceiverAddress, names, config, myFUN, logger, probeLocalID
                                  phyUserName = names['phyUser'] + str(transceiverAddress),
                                  managerName = names['manager'] + str(transceiverAddress),
                                  protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-				 parentLogger = logger))
+                                 parentLogger = logger))
     return FUs
 
 def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):

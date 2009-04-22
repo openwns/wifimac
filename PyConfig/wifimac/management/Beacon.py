@@ -32,39 +32,39 @@ import wifimac.Logger
 
 # begin example "wifimac.pyconfig.layer2.management.beacon.beaconconfig"
 class BeaconConfig(object):
-	enabled = True
-	delay = 0.1
-	""" Initial start delay"""
-	period = 0.1
-	""" Beacon transmission period, common value is 100ms """
-	scanDuration = 0.3
-	""" duration of scanning(for each frequency) before association for STAs """
-	scanFrequencies = None
-	""" freqencies to scan for beacons """
-	beaconPhyModeId = 0
-	""" PhyModeId with which the beacon is transmitted --> default the lowest for most robustness"""
-	bssId = 'ComNetsWLAN'
-	""" for APs: bssId set in the beacon; for STAs: Only associate to bssIds with this name """
+    enabled = True
+    delay = 0.1
+    """ Initial start delay"""
+    period = 0.1
+    """ Beacon transmission period, common value is 100ms """
+    scanDuration = 0.3
+    """ duration of scanning(for each frequency) before association for STAs """
+    scanFrequencies = None
+    """ freqencies to scan for beacons """
+    beaconPhyModeId = 0
+    """ PhyModeId with which the beacon is transmitted --> default the lowest for most robustness"""
+    bssId = 'ComNetsWLAN'
+    """ for APs: bssId set in the beacon; for STAs: Only associate to bssIds with this name """
 
 
-	def __init__(self, **kw):
-		self.scanFrequencies = []
-		openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self, **kw):
+        self.scanFrequencies = []
+        openwns.pyconfig.attrsetter(self, kw)
 # end example
 
 class Beacon(openwns.FUN.FunctionalUnit):
-	__plugin__ = 'wifimac.management.Beacon'
+    __plugin__ = 'wifimac.management.Beacon'
 
-	logger = None
-	phyUserCommandName = None
-	managerName = None
-	myConfig = None
+    logger = None
+    phyUserCommandName = None
+    managerName = None
+    myConfig = None
 
-	def __init__(self, functionalUnitName, commandName, managerName, phyUserCommandName, config, parentLogger = None, **kw):
-		super(Beacon, self).__init__(functionalUnitName = functionalUnitName, commandName=commandName)
-		self.logger = wifimac.Logger.Logger(name = "Beacon", parent = parentLogger)
-		self.managerName = managerName
-		self.phyUserCommandName = phyUserCommandName
-		assert(config.__class__ == BeaconConfig)
-		self.myConfig = config
-		openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self, functionalUnitName, commandName, managerName, phyUserCommandName, config, parentLogger = None, **kw):
+        super(Beacon, self).__init__(functionalUnitName = functionalUnitName, commandName=commandName)
+        self.logger = wifimac.Logger.Logger(name = "Beacon", parent = parentLogger)
+        self.managerName = managerName
+        self.phyUserCommandName = phyUserCommandName
+        assert(config.__class__ == BeaconConfig)
+        self.myConfig = config
+        openwns.pyconfig.attrsetter(self, kw)

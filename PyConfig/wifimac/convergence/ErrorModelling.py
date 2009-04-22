@@ -30,25 +30,25 @@ import openwns.pyconfig
 import wifimac.Logger
 
 class ErrorModelling(openwns.FUN.FunctionalUnit):
-	"""This class maps the cir to ser and calculates PER"""
-	name = 'ErrorModelling'
-	logger = None
-	phyUserCommandName = None
-	managerCommandName = None
-	protocolCalculatorName = None
-	cyclicPrefixReduction = 0.8
-	__plugin__ = 'wifimac.convergence.ErrorModelling'
+    """This class maps the cir to ser and calculates PER"""
+    name = 'ErrorModelling'
+    logger = None
+    phyUserCommandName = None
+    managerCommandName = None
+    protocolCalculatorName = None
+    cyclicPrefixReduction = 0.8
+    __plugin__ = 'wifimac.convergence.ErrorModelling'
 
-	def __init__(self,
-		     name,
-		     commandName,
-		     phyUserCommandName,
-		     managerCommandName,
-		     protocolCalculatorName,
-		     parentLogger = None, **kw):
-		super(ErrorModelling, self).__init__(functionalUnitName=name, commandName=commandName)
-		self.phyUserCommandName = phyUserCommandName
-		self.managerCommandName = managerCommandName
-		self.protocolCalculatorName = protocolCalculatorName
-		self.logger = wifimac.Logger.Logger("ErrorModelling", parent = parentLogger)
-		openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self,
+             name,
+             commandName,
+             phyUserCommandName,
+             managerCommandName,
+             protocolCalculatorName,
+             parentLogger = None, **kw):
+        super(ErrorModelling, self).__init__(functionalUnitName=name, commandName=commandName)
+        self.phyUserCommandName = phyUserCommandName
+        self.managerCommandName = managerCommandName
+        self.protocolCalculatorName = protocolCalculatorName
+        self.logger = wifimac.Logger.Logger("ErrorModelling", parent = parentLogger)
+        openwns.pyconfig.attrsetter(self, kw)

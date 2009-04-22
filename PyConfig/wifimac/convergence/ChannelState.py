@@ -33,52 +33,52 @@ import wifimac.Logger
 from openwns import dBm
 
 class ChannelStateConfig(object):
-	useRawEnergyDetection = False
-	usePhyCarrierSense = True
-	usePhyPacketLength = True
-	useNAV = True
-	useOwnTx = True
-	useOwnRx = True
+    useRawEnergyDetection = False
+    usePhyCarrierSense = True
+    usePhyPacketLength = True
+    useNAV = True
+    useOwnTx = True
+    useOwnRx = True
 
-	rawEnergyThreshold = dBm(-62)
-	phyCarrierSenseThreshold = dBm(-82)
+    rawEnergyThreshold = dBm(-62)
+    phyCarrierSenseThreshold = dBm(-82)
 
-	""" To probe the channel busy fraction """
-	channelBusyFractionMeasurementPeriod = 0.5
+    """ To probe the channel busy fraction """
+    channelBusyFractionMeasurementPeriod = 0.5
 
-	sifsDuration = 16E-6
-	preambleProcessingDelay = 21E-6
-	slotDuration = 9E-6
-	expectedCTSDuration = 44E-6
+    sifsDuration = 16E-6
+    preambleProcessingDelay = 21E-6
+    slotDuration = 9E-6
+    expectedCTSDuration = 44E-6
 
 class ChannelState(openwns.Probe.Probe):
-	__plugin__ = 'wifimac.convergence.ChannelState'
+    __plugin__ = 'wifimac.convergence.ChannelState'
 
-	logger = None
+    logger = None
 
-	myConfig = None
+    myConfig = None
 
-	managerName = None
-	phyUserCommandName = None
-	rtsctsCommandName = None
-	txStartEndName = None
-	rxStartEndName = None
+    managerName = None
+    phyUserCommandName = None
+    rtsctsCommandName = None
+    txStartEndName = None
+    rxStartEndName = None
 
-	""" To probe the channel busy fraction """
-	busyFractionProbeName = None
+    """ To probe the channel busy fraction """
+    busyFractionProbeName = None
 
-	def __init__(self, name, commandName, managerName, phyUserCommandName, rtsctsCommandName, txStartEndName, rxStartEndName, probePrefix, config, parentLogger = None, **kw):
-		super(ChannelState, self).__init__(name=name, commandName=commandName)
-		self.logger = wifimac.Logger.Logger(name = "ChannelState", parent = parentLogger)
-		assert(config.__class__ == ChannelStateConfig)
-		self.myConfig = config
-		self.managerName = managerName
-		self.phyUserCommandName = phyUserCommandName
-		self.rtsctsCommandName = rtsctsCommandName
-		self.txStartEndName = txStartEndName
-		self.rxStartEndName = rxStartEndName
-		self.busyFractionProbeName = probePrefix + ".busy"
+    def __init__(self, name, commandName, managerName, phyUserCommandName, rtsctsCommandName, txStartEndName, rxStartEndName, probePrefix, config, parentLogger = None, **kw):
+        super(ChannelState, self).__init__(name=name, commandName=commandName)
+        self.logger = wifimac.Logger.Logger(name = "ChannelState", parent = parentLogger)
+        assert(config.__class__ == ChannelStateConfig)
+        self.myConfig = config
+        self.managerName = managerName
+        self.phyUserCommandName = phyUserCommandName
+        self.rtsctsCommandName = rtsctsCommandName
+        self.txStartEndName = txStartEndName
+        self.rxStartEndName = rxStartEndName
+        self.busyFractionProbeName = probePrefix + ".busy"
 
-		openwns.pyconfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)
 
 

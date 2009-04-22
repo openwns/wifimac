@@ -31,61 +31,61 @@ import openwns.pyconfig
 import wifimac.Logger
 
 class ManagerConfig(object):
-	sifsDuration = 16E-6
-	expectedACKDuration = 44E-6
-	numAntennas = 1
-	""" number of antennas for MIMO """
-	msduLifetimeLimit = 0
-	""" maximum msdu lifetime, set to zero for unlimited lifetime """
+    sifsDuration = 16E-6
+    expectedACKDuration = 44E-6
+    numAntennas = 1
+    """ number of antennas for MIMO """
+    msduLifetimeLimit = 0
+    """ maximum msdu lifetime, set to zero for unlimited lifetime """
 
 class Manager(openwns.FUN.FunctionalUnit):
-	__plugin__ = 'wifimac.lowerMAC.Manager'
+    __plugin__ = 'wifimac.lowerMAC.Manager'
 
-	logger = None
-	myMACAddress = None
-	phyDataTransmission = None
-	phyNotification = None
-	phyCarrierSense = None
-	phyUserName = None
-	channelStateName = None
-	receiveFilterName = None
-	upperConvergenceCommandName = None
+    logger = None
+    myMACAddress = None
+    phyDataTransmission = None
+    phyNotification = None
+    phyCarrierSense = None
+    phyUserName = None
+    channelStateName = None
+    receiveFilterName = None
+    upperConvergenceCommandName = None
 
-	myConfig = None
+    myConfig = None
 
-	def __init__(self,
-		     functionalUnitName,
-		     commandName,
-		     phyUserName,
-		     channelStateName,
-		     receiveFilterName,
-		     upperConvergenceCommandName,
-		     config,
-		     parentLogger = None, **kw):
-		super(Manager, self).__init__(functionalUnitName=functionalUnitName,
-						      commandName=commandName)
-		self.logger = wifimac.Logger.Logger(name = "Manager", parent = parentLogger)
-		self.phyUserName = phyUserName
-		self.channelStateName = channelStateName
-		self.receiveFilterName = receiveFilterName
-		self.upperConvergenceCommandName = upperConvergenceCommandName
+    def __init__(self,
+             functionalUnitName,
+             commandName,
+             phyUserName,
+             channelStateName,
+             receiveFilterName,
+             upperConvergenceCommandName,
+             config,
+             parentLogger = None, **kw):
+        super(Manager, self).__init__(functionalUnitName=functionalUnitName,
+                              commandName=commandName)
+        self.logger = wifimac.Logger.Logger(name = "Manager", parent = parentLogger)
+        self.phyUserName = phyUserName
+        self.channelStateName = channelStateName
+        self.receiveFilterName = receiveFilterName
+        self.upperConvergenceCommandName = upperConvergenceCommandName
 
-		assert(config.__class__ == ManagerConfig)
-		self.myConfig = config
+        assert(config.__class__ == ManagerConfig)
+        self.myConfig = config
 
-		openwns.pyconfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)
 
-	def setMACAddress(self, address):
-		if self.myMACAddress is not None: raise AssertionError, "Do you really want to re-set the MACAddress?"
-		self.myMACAddress = address
+    def setMACAddress(self, address):
+        if self.myMACAddress is not None: raise AssertionError, "Do you really want to re-set the MACAddress?"
+        self.myMACAddress = address
 
-	def setPhyDataTransmission(self, serviceName):
-		self.phyDataTransmission = serviceName
+    def setPhyDataTransmission(self, serviceName):
+        self.phyDataTransmission = serviceName
 
-	def setPhyNotification(self, serviceName):
-		self.phyNotification = serviceName
+    def setPhyNotification(self, serviceName):
+        self.phyNotification = serviceName
 
-	def setPhyCarrierSense(self, serviceName):
-		self.phyCarrierSense = serviceName
+    def setPhyCarrierSense(self, serviceName):
+        self.phyCarrierSense = serviceName
 
 

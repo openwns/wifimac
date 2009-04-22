@@ -29,23 +29,23 @@ import openwns.FUN
 import wifimac.Logger
 
 class PreambleGenerator(openwns.FUN.FunctionalUnit):
-	logger = None
-	phyUserName = None
-	managerName = None
-	protocolCalculatorName = None
-	__plugin__ = 'wifimac.convergence.PreambleGenerator'
+    logger = None
+    phyUserName = None
+    managerName = None
+    protocolCalculatorName = None
+    __plugin__ = 'wifimac.convergence.PreambleGenerator'
 
-	def __init__(self,
-		     name,
-		     commandName,
-		     phyUserName,
-		     managerName,
-		     protocolCalculatorName,
-		     parentLogger = None, **kw):
-		super(PreambleGenerator, self).__init__(functionalUnitName=name, commandName=commandName)
-		self.phyUserName = phyUserName
-		self.managerName = managerName
-		self.protocolCalculatorName = protocolCalculatorName
-		self.logger = wifimac.Logger.Logger("PreambleGenerator", parent = parentLogger)
-		openwns.pyconfig.attrsetter(self, kw)
+    def __init__(self,
+             name,
+             commandName,
+             phyUserName,
+             managerName,
+             protocolCalculatorName,
+             parentLogger = None, **kw):
+        super(PreambleGenerator, self).__init__(functionalUnitName=name, commandName=commandName)
+        self.phyUserName = phyUserName
+        self.managerName = managerName
+        self.protocolCalculatorName = protocolCalculatorName
+        self.logger = wifimac.Logger.Logger("PreambleGenerator", parent = parentLogger)
+        openwns.pyconfig.attrsetter(self, kw)
 

@@ -109,8 +109,8 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                                  txopWindowName = names['buffer'] + str(transceiverAddress),
                                  raName = names['ra'] + str(transceiverAddress),
                                  probePrefix = 'wifimac.txop',
-				 localIDs = probeLocalIDs,
-				 config = config.txop,
+                                 localIDs = probeLocalIDs,
+                                 config = config.txop,
                                  parentLogger = logger))
 
     for fu in FUs:
@@ -168,7 +168,7 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
                     commandName = names['rtscts'] + 'Command',
                     managerName = names['manager'] + str(transceiverAddress),
                     phyUserName = names['phyUser'] + str(transceiverAddress),
-		    protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                    protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                     arqName = names['arq'] + str(transceiverAddress),
                     navName = names['channelState'] + str(transceiverAddress),
                     rxStartName = names['frameSynchronization'] + str(transceiverAddress),
