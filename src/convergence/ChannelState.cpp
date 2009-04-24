@@ -162,7 +162,7 @@ ChannelState::onTxEnd(const wns::ldk::CompoundPtr& compound)
 {
     this->indicators.ownTx = false;
 
-    if(friends.manager->getFrameExchangeDuration(compound->getCommandPool()) > 0)
+    if(friends.manager->getFrameExchangeDuration(compound->getCommandPool()) > this->sifsDuration)
     {
         // something expected after the frame (either own tx or reply) --> set
         // short NAV
@@ -214,7 +214,7 @@ ChannelState::processIncoming(const wns::ldk::CompoundPtr& compound)
         wns::simulator::Time duration = friends.manager->getFrameExchangeDuration(compound->getCommandPool());
         MESSAGE_SINGLE(NORMAL, logger, "Received valid compound with fExDur " << duration);
 
-        if(duration == 0)
+        if(duration < this->sifsDuration)
         {
             return;
         }

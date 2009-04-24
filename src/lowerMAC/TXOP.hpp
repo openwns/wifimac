@@ -88,7 +88,7 @@ namespace wifimac { namespace lowerMAC {
         void
         onTxEnd(const wns::ldk::CompoundPtr& compound);
 
-	void 
+	wns::simulator::Time 
 	startTXOP(wns::simulator::Time duration);
 
     private:
@@ -116,6 +116,7 @@ namespace wifimac { namespace lowerMAC {
         wns::service::dll::UnicastAddress txopReceiver;
 
         wns::logger::Logger logger;
+	bool firstTXOPCompound;
 
         wifimac::management::ProtocolCalculator* protocolCalculator;
         struct Friends

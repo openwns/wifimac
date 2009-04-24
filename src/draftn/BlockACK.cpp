@@ -954,11 +954,17 @@ void ReceptionQueue::processIncomingACKreq(const wns::ldk::CompoundPtr& compound
     }
 
     // create BlockACK
+   wns::simulator::Time fxDur = parent->friends.manager->getFrameExchangeDuration(compound->getCommandPool()) - parent->sifsDuration - parent->expectedACKDuration;
+   if (fxDur < parent->sifsDuration)
+   {
+	fxDur = 0;
+    }
+
+MESSAGE_SINGLE(NORMAL,parent->logger,"create BA with exchange duration : " << fxDur);
     this->blockACK = parent->friends.manager->createCompound(parent->friends.manager->getMACAddress(),
                                                              adr,
                                                              ACK,
-                                                             parent->friends.manager->getFrameExchangeDuration(compound->getCommandPool())
-                                                             - parent->sifsDuration - parent->expectedACKDuration,
+							     fxDur,
                                                              false);
     // set baCommand information
     BlockACKCommand* baCommand = parent->activateCommand(this->blockACK->getCommandPool());
