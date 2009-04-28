@@ -190,5 +190,16 @@ Aggregation::getSomethingToSend()
 
     aggregationSizeFrames->put(it, getCommand(it->getCommandPool())->peer.compounds.size());
 
+    // REACTIVATE!
+    //wns::ldk::CompoundPtr lastEntry = getCommand(it->getCommandPool())->peer.compounds.back();
+
+    //MESSAGE_BEGIN(NORMAL, logger, m, "Send aggregated compound with frame exchange duration set to");
+    //m << friends.manager->getFrameExchangeDuration(lastEntry->getCommandPool());
+    //MESSAGE_END();
+
+    // set the frame exchange duration to the value given in the last aggregated compound
+    //friends.manager->setFrameExchangeDuration(it->getCommandPool(),
+    //                                          friends.manager->getFrameExchangeDuration(lastEntry->getCommandPool()));
+
     return(it);
 }

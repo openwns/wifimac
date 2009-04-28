@@ -48,7 +48,7 @@ Beacon::Beacon(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     currentBeacon(),
     phyUserCommandName(config.get<std::string>("phyUserCommandName")),
     scanFrequencies(config.getSequence("myConfig.scanFrequencies")),
-    beaconPhyModeId(config.get<int>("myConfig.beaconPhyModeId")),
+    beaconPhyMode(config.getView("myConfig.beaconPhyMode")),
     bssId(config.get<std::string>("myConfig.bssId")),
     beaconRxStrength(),
     bssFrequencies()
@@ -160,7 +160,7 @@ void
 Beacon::periodically()
 {
     this->currentBeacon = friends.manager->createCompound(friends.manager->getMACAddress(), wns::service::dll::UnicastAddress(), BEACON, 0.0);
-    friends.manager->setPhyMode(this->currentBeacon->getCommandPool(), beaconPhyModeId);
+    friends.manager->setPhyMode(this->currentBeacon->getCommandPool(), beaconPhyMode);
     BeaconCommand* bc = this->activateCommand(this->currentBeacon->getCommandPool());
     bc->peer.bssId = this->bssId;
     tryToSend();

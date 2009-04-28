@@ -50,10 +50,7 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
     tune(),
     dataTransmission(NULL),
     notificationService(NULL),
-    phyModes(config),
-    preambleDuration(config.get<wns::simulator::Time>("myConfig.PLCPPreambleDuration")),
-    service(config.get<Bit>("myConfig.PLCPServiceBits")),
-    tail(config.get<Bit>("myConfig.PLCPTailBits")),
+    phyModes(config.getView("myConfig.phyModesDeliverer")),
     managerName(config.get<std::string>("managerName")),
     txDurationProviderCommandName(config.get<std::string>("txDurationProviderCommandName")),
     txrxTurnaroundDelay(config.get<wns::simulator::Time>("myConfig.txrxTurnaroundDelay")),
@@ -61,7 +58,7 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
     currentTxCompound()
 {
     tune.frequency = config.get<double>("myConfig.initFrequency");
-    tune.bandwidth = config.get<double>("myConfig.bandwidth");
+    tune.bandwidth = config.get<double>("myConfig.initBandwidthMHz");
     tune.numberOfSubCarrier = 1;
 }
 // PhyUser

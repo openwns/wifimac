@@ -28,18 +28,75 @@
 #ifndef WIFIMAC_CONVERGENCE_PHYMODE_HPP
 #define WIFIMAC_CONVERGENCE_PHYMODE_HPP
 
+// must be the first include!
+#include <WNS/Python.hpp>
 #include <WNS/PowerRatio.hpp>
 #include <WNS/pyconfig/View.hpp>
 #include <WNS/logger/Logger.hpp>
 #include <WNS/Ttos.hpp>
-
 #include <WNS/simulator/Bit.hpp>
+
+#include <WIFIMAC/management/protocolCalculatorPlugins/ConfigGetter.hpp>
 
 #include <math.h>
 #include <map>
 
 namespace wifimac { namespace convergence {
-	/**
+
+    class PhyMode;
+
+    class MCS {
+        // PhyMode needs to access the nominator and denominator
+        friend class PhyMode;
+    public:
+        MCS();
+        MCS(const wns::pyconfig::View& config);
+        MCS(const MCS& other);
+        MCS(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& config);
+        
+
+        std::string getModulation() const
+            { return this->modulation;};
+
+        std::string getRate() const
+            { return this->codingRate;};
+
+        void
+        setIndex(unsigned int index)
+            { this->index = index;};
+        unsigned int
+        getIndex() const
+            { return this->index;};
+
+        wns::Ratio getMinSINR() const
+            { return this->minSINR;};
+        /**
+		 * @brief Compare two MCSs using the number of bits / symbol
+		 */
+        bool operator <(const MCS& rhs) const;
+        bool operator ==(const MCS& rhs) const;
+        bool operator !=(const MCS& rhs) const;
+
+    private:
+        void setModulation(const std::string& modulation);
+        void setCodingRate(const std::string codingRate);
+
+        std::string modulation;
+        std::string codingRate;
+
+        unsigned int nominator;
+        unsigned int denominator;
+
+        unsigned int index;
+        wns::Ratio minSINR;
+    };
+
+    inline std::ostream& operator<< (std::ostream& s, const MCS& mcs)
+    {
+        return s << mcs.getModulation() << "-" << mcs.getRate();
+    };
+
+    /**
 	 * @brief Holder for all necessary information about a PhyMode
 	 *
 	 * - Data-bits / Symbol
@@ -48,74 +105,74 @@ namespace wifimac { namespace convergence {
 	 * - Description (modulation, codingRate, index)
      * - Number of spatial streams
 	 */
-	class PhyMode {
-	public:
-		/** Constructors **/
-		PhyMode();
-		PhyMode(const wns::pyconfig::View& config, int index);
-
-		/**
-		 * @brief Read in the configuration for this Phy-Mode
-		 */
-		void configPhyMode(const wns::pyconfig::View& config);
-
-		/**
-		 * @brief Compute the number of symbols required to transmit
-		 *    length data bits
-		 */
-		int getNumSymbols(Bit length) const;
-
+    class PhyMode {
+    public:
+        /** Constructors **/
+        PhyMode();
+        PhyMode(const wns::pyconfig::View& config);
+        PhyMode(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& config);
         /**
-         * @brief Returns the number of bits per symbol, incorporating multiple
-         * streams
+         * @brief Returns the number of data bits per symbol
          */
         Bit getDataBitsPerSymbol() const;
 
         /**
-         * @brief Set the number of spatial streams for transmission
+         * @brief Get the number of spatial streams
          */
-        void setNumberOfSpatialStreams(unsigned int nss);
+        unsigned int getNumberOfSpatialStreams() const
+            { return this->numberOfSpatialStreams; };
+        void setNumberOfSpatialStreams(unsigned int ss)
+            { this->numberOfSpatialStreams = ss; };
+
+        MCS getMCS() const
+            { return this->mcs; };
+        void setMCS(const MCS& other)
+            { this->mcs = other; };
+
+        wns::Ratio getMinSINR() const
+            { return this->mcs.getMinSINR();};
+
+        unsigned int getNumberOfDataSubcarriers() const
+            { return this->numberOfDataSubcarriers;};
+        void setNumberOfDataSubcarriers(unsigned int ds)
+            { this->numberOfDataSubcarriers = ds; };
+
+        std::string getPreambleMode() const
+            { return this->plcpMode;};
+        void setPreambleMode(std::string pm)
+            { this->plcpMode = pm;}
+
+        wns::simulator::Time getGuardIntervalDuration() const
+            { return this->guardIntervalDuration;};
+        void setGuardIntervalDuration(wns::simulator::Time gi)
+            { this->guardIntervalDuration = gi;};
 
         /**
-         * @brief Get the number of spatial streams for transmission
-         */
-        unsigned int getNumberOfSpatialStreams() const;
-        std::string getModulation() const { return modulation_;};
-        std::string getRate() const { return codingRate_;};
-
-		int getIndex() const { return index; };
-
-		/**
 		 * @brief Compare two phyModes using the number of bits / symbol
 		 */
-		bool operator <(const PhyMode& rhs) const;
-		/**
+        bool operator <(const PhyMode& rhs) const;
+        /**
 		 * @brief Compare two phyModes using the number of bits / symbol
 		 */
-		bool operator ==(const PhyMode& rhs) const;
+        bool operator ==(const PhyMode& rhs) const;
         bool operator !=(const PhyMode& rhs) const;
 
-        wns::Ratio getMinSINR()
-            { return this->minSINR; }
+    private:
+        MCS mcs;
+        std::string codingRate;
+        unsigned int numberOfSpatialStreams;
+        unsigned int numberOfDataSubcarriers;
+        std::string plcpMode;
+        wns::simulator::Time guardIntervalDuration;
+    };
 
-	private:
-		Bit dataBitsPerSymbol_;
-		std::string modulation_;
-		std::string codingRate_;
-		Bit constFrameSize_;
-		wns::Power minRSS_;
-        wns::Ratio minSINR;
-        unsigned int numberOfSpatialStreams_;
-
-		wns::logger::Logger logger_;
-
-		int index;
-	};
-
-	inline std::ostream& operator<< (std::ostream& s, const PhyMode& p)
-	{
-        return s << p.getModulation() << "-" << p.getRate() << "*" << wns::Ttos(p.getNumberOfSpatialStreams());
-	}
+    inline std::ostream& operator<< (std::ostream& s, const PhyMode& p)
+    {
+        return s << "(" << p.getMCS() << ")*"
+                 << wns::Ttos(p.getNumberOfDataSubcarriers())
+                 << "*" << wns::Ttos(p.getNumberOfSpatialStreams())
+                 << " (-> " << wns::Ttos(p.getDataBitsPerSymbol()) << " dbps)";
+    };
 }}
 
 #endif // WIFIMAC_CONVERGENCE_PHYMODE_HPP

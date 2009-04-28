@@ -26,7 +26,7 @@
 ###############################################################################
 import math
 
-class FrameLength:
+class FrameLength(object):
     macDataHdr = None
     """ mac header length for data and management frames in bit """
     macDataFCS = None

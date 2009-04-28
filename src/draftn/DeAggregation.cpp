@@ -170,9 +170,9 @@ DeAggregation::processOutgoing(const wns::ldk::CompoundPtr& compound)
     // calculate tx duration
     DeAggregationCommand* command = activateCommand(compound->getCommandPool());
     wifimac::convergence::PhyMode phyMode = friends.manager->getPhyMode(compound->getCommandPool());
-    wns::simulator::Time preambleTxDuration = protocolCalculator->getDuration()->getPreamble(phyMode.getNumberOfSpatialStreams(),std::string("Basic"));
-    
-if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
+    wns::simulator::Time preambleTxDuration = protocolCalculator->getDuration()->preamble(phyMode);
+
+    if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
     {
         command->local.txDuration = preambleTxDuration;
         if(getFUN()->getCommandReader(aggregationCommandName)->commandIsActivated(compound->getCommandPool()))
@@ -192,7 +192,7 @@ if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
     this->currentTxCompound = compound;
     this->doSignalTxStart = true;
 
-    wns::simulator::Time frameTxDuration = protocolCalculator->getDuration()->getMPDU_PPDU(compound->getLengthInBits(),phyMode.getDataBitsPerSymbol(), phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic")) - preambleTxDuration;
+    wns::simulator::Time frameTxDuration = protocolCalculator->getDuration()->MPDU_PPDU(compound->getLengthInBits(), phyMode) - preambleTxDuration;
 
     if(not getFUN()->getCommandReader(aggregationCommandName)->commandIsActivated(compound->getCommandPool()))
     {

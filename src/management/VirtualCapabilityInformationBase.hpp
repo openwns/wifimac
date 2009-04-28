@@ -42,6 +42,10 @@
 
 namespace wifimac { namespace management {
 
+
+    typedef wns::container::UntypedRegistry<std::string> InformationBase;
+    typedef wns::container::Registry<wns::service::dll::UnicastAddress, InformationBase*> NodeBase;
+
     /**
      * @brief Allows "magic" (simulation-only) information exchange about the
      * node's capabilities
@@ -93,6 +97,9 @@ namespace wifimac { namespace management {
         bool
         knows(const wns::service::dll::UnicastAddress adr, const std::string& key) const;
 
+        bool
+        knows(const wns::service::dll::UnicastAddress adr) const;
+
         template <typename T>
         T
         get(const wns::service::dll::UnicastAddress adr, const std::string& key) const
@@ -118,6 +125,9 @@ namespace wifimac { namespace management {
             return(myIB->find<T>(key));
         } // get
 
+        InformationBase*
+        getAll(const wns::service::dll::UnicastAddress adr) const;
+
         template <typename T>
         void
         set(const wns::service::dll::UnicastAddress adr, const std::string& key, const T value)
@@ -139,13 +149,10 @@ namespace wifimac { namespace management {
         } // set
 
     private:
-		/**
+        /**
 		 * @brief the logger
 		 */
-		wns::logger::Logger logger;
-
-        typedef wns::container::UntypedRegistry<std::string> InformationBase;
-        typedef wns::container::Registry<wns::service::dll::UnicastAddress, InformationBase*> NodeBase;
+        wns::logger::Logger logger;
 
         /**
          * @brief the database
@@ -156,24 +163,24 @@ namespace wifimac { namespace management {
          * @brief the default values database
          */
         InformationBase* defaultValues;
-	};
+    };
 
-	class VirtualCapabilityInformationBaseService {
-	public:
-		VirtualCapabilityInformationBaseService();
+    class VirtualCapabilityInformationBaseService {
+    public:
+        VirtualCapabilityInformationBaseService();
 
-		VirtualCapabilityInformationBase*
-		getVCIB();
+        VirtualCapabilityInformationBase*
+        getVCIB();
 
-		void
-		setVCIB(VirtualCapabilityInformationBase* _vcib);
+        void
+        setVCIB(VirtualCapabilityInformationBase* _vcib);
 
 	private:
-		wns::logger::Logger logger;
-		VirtualCapabilityInformationBase* vcib;
-	};
+        wns::logger::Logger logger;
+        VirtualCapabilityInformationBase* vcib;
+    };
 
-	typedef wns::SingletonHolder<VirtualCapabilityInformationBaseService> TheVCIBService;
+    typedef wns::SingletonHolder<VirtualCapabilityInformationBaseService> TheVCIBService;
 
 } // management
 } // wifimac

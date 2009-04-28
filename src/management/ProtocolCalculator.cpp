@@ -40,9 +40,9 @@ ProtocolCalculator::ProtocolCalculator( wns::ldk::ManagementServiceRegistry* msr
     logger(config_.get("logger")),
     config(config_)
 {
-    errorProbability = new protocolCalculatorPlugins::ErrorProbability(config_.get<wns::pyconfig::View>("errorProbability"));
-    frameLength = new protocolCalculatorPlugins::FrameLength(config_.get<wns::pyconfig::View>("frameLength"));
-    duration = new protocolCalculatorPlugins::Duration(frameLength, config_.get<wns::pyconfig::View>("duration"));
+    errorProbability = new protocolCalculatorPlugins::ErrorProbability();
+    frameLength = new protocolCalculatorPlugins::FrameLength(config_.get<wns::pyconfig::View>("myConfig.frameLength"));
+    duration = new protocolCalculatorPlugins::Duration(frameLength, config_.get<wns::pyconfig::View>("myConfig.duration"));
 }
 
 void

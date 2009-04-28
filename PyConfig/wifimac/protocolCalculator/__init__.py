@@ -26,10 +26,7 @@
 ###############################################################################
 
 from Duration import Duration
-from ErrorProbability import ErrorProbability
 from MIMO import MIMO
-from PhyMode import *
-from Throughput import Throughput
 from FrameLength import FrameLength
 
 import wifimac.Logger
@@ -45,16 +42,29 @@ class Service(object):
 	nameInServiceFactory  = None
 	serviceName = None
 
+class Config:
+	duration = None
+	frameLength = None
+
+	def __init__(self, dur = None, fl = None):
+		if(dur is None):
+			self.duration = Duration(fl)
+		else:
+			self.duration = dur(fl)
+
+		if(fl is None):
+			self.frameLength = FrameLength()
+		else:
+			self.frameLength = fl
+
 class ProtocolCalculator(Service):
 	logger  = None
-	windowSize = None
-	errorProbability = None
+	myConfig = None
 
-	def __init__(self, serviceName, parentLogger=None, **kw):
+	def __init__(self, serviceName, config, parentLogger=None, **kw):
 		self.nameInServiceFactory = 'wifimac.management.ProtocolCalculator'
         	self.serviceName = serviceName
-        	self.logger = wifimac.Logger.Logger(name = 'PC', parent = parentLogger)
-		self.errorProbability = ErrorProbability(guardInterval = 0.8e-6)
-		self.duration = Duration(guardInterval = 0.8e-6)
-		self.frameLength = FrameLength()
+		self.myConfig = config
+
         	openwns.pyconfig.attrsetter(self, kw)
+        	self.logger = wifimac.Logger.Logger(name = 'PC', parent = parentLogger)

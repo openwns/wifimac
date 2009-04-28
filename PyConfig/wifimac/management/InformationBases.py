@@ -54,7 +54,7 @@ class PERConfig(object):
 
 		def __init__(self, **kw):
 			openwns.pyconfig.attrsetter(self, kw)
-            
+
 class PER(Service):
 	logger = None
 	myConfig = None

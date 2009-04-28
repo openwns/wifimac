@@ -36,6 +36,7 @@
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/management/PERInformationBase.hpp>
+#include <WIFIMAC/convergence/PhyMode.hpp>
 
 #include <WNS/Observer.hpp>
 #include <WNS/ldk/Layer.hpp>
@@ -121,7 +122,7 @@ namespace wifimac { namespace lowerMAC {
         const wns::simulator::Time expectedACKDuration;
         const wns::simulator::Time preambleProcessingDelay;
 
-        const int ackPhyModeId;
+        const wifimac::convergence::PhyMode ackPhyMode;
 
         enum AckState {
             none,

@@ -111,3 +111,27 @@ VirtualCapabilityInformationBase::knows(const wns::service::dll::UnicastAddress 
     return true;
 } // VirtualCapabilityInformationBase::knows
 
+bool
+VirtualCapabilityInformationBase::knows(const wns::service::dll::UnicastAddress adr) const
+{
+    if(nodeInformationBase->knows(adr))
+    {
+        // address is not known
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+InformationBase*
+VirtualCapabilityInformationBase::getAll(const wns::service::dll::UnicastAddress adr) const
+{
+    assure(nodeInformationBase->knows(adr), "Address " << adr << "not stored in capability information base");
+
+    InformationBase* myIB = nodeInformationBase->find(adr);
+
+    return(myIB);
+}

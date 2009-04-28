@@ -36,20 +36,9 @@
 
 using namespace wifimac::management::protocolCalculatorPlugins;
 
-ErrorProbability::ErrorProbability(const wns::pyconfig::View& config):
-    guardInterval(config.get<wns::simulator::Time>("guardInterval"))
+ErrorProbability::ErrorProbability()
 {
-    if(guardInterval == 0.8e-6)
-    {
-        cyclicPrefixReduction = 0.8;
-        return;
-    }
-    if(guardInterval == 0.4e-6)
-    {
-        cyclicPrefixReduction = 0.9;
-        return;
-    }
-    assure(false, "Unknown guard interval");
+
 }
 
 ErrorStatistic
@@ -57,46 +46,57 @@ ErrorProbability::getError(wns::Ratio postSNR,
                            Bit packetLength,
                            wifimac::convergence::PhyMode phyMode) const
 {
+    double cyclicPrefixReduction = 0.0;
+    if(phyMode.getGuardIntervalDuration() == 0.8e-6)
+    {
+        cyclicPrefixReduction = 0.8;
+    }
+    if(phyMode.getGuardIntervalDuration() == 0.4e-6)
+    {
+        cyclicPrefixReduction = 0.9;
+    }
+    assure(cyclicPrefixReduction > 0, "Unknown guard interval");
+
     ErrorStatistic e;
 
     postSNR.set_factor(postSNR.get_factor() * cyclicPrefixReduction);
 
-    if(phyMode.getModulation() == "BPSK")
+    if(phyMode.getMCS().getModulation() == "BPSK")
     {
         e.ser = Q(sqrt(2*postSNR.get_factor()));
         e.ber = e.ser;
     }
-    if(phyMode.getModulation() == "QPSK")
+    if(phyMode.getMCS().getModulation() == "QPSK")
     {
         e.ser = 2.0 * Q(sqrt(postSNR.get_factor())) * (1.0 - 0.5 * Q(sqrt(postSNR.get_factor())));
         e.ber = 0.5 * e.ser;
     }
-    if(phyMode.getModulation() == "16QAM")
+    if(phyMode.getMCS().getModulation() == "QAM16")
     {
         double P_sqrt16 = 3.0/2.0 * Q(sqrt((3.0/15.0) * postSNR.get_factor()));
         e.ser = 1 - pow((1 - P_sqrt16), 2);
         e.ber = e.ser / 4.0;
     }
-    if(phyMode.getModulation() == "64QAM")
+    if(phyMode.getMCS().getModulation() == "QAM64")
     {
         double P_sqrt64 = 7.0/4.0 * Q(sqrt((3.0/63.0) * postSNR.get_factor()));
         e.ser = 1 - pow((1 - P_sqrt64), 2);
         e.ber = e.ser / 6.0;
     }
 
-    if(phyMode.getRate() ==  "1/2")
+    if(phyMode.getMCS().getRate() ==  "1/2")
     {
         e.u = std::min(1.0, Pu12(e.ber));
     }
-    if(phyMode.getRate() == "2/3")
+    if(phyMode.getMCS().getRate() == "2/3")
     {
         e.u = std::min(1.0, Pu23(e.ber));
     }
-    if(phyMode.getRate() == "3/4")
+    if(phyMode.getMCS().getRate() == "3/4")
     {
         e.u = std::min(1.0, Pu34(e.ber));
     }
-    if(phyMode.getRate() == "5/6")
+    if(phyMode.getMCS().getRate() == "5/6")
     {
         e.u = std::min(1.0, Pu56(e.ber));
     }

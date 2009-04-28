@@ -154,7 +154,7 @@ namespace wifimac { namespace lowerMAC {
         const wns::simulator::Time expectedCTSDuration;
         const wns::simulator::Time preambleProcessingDelay;
 
-        const int phyModeId;
+        const wifimac::convergence::PhyMode rtsctsPhyMode;
 
         const Bit rtsBits;
         const Bit ctsBits;

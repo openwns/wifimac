@@ -32,22 +32,15 @@ using namespace wifimac::lowerMAC::rateAdaptationStrategies;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(Constant, IRateAdaptationStrategy, "Constant", IRateAdaptationStrategyCreator);
 
-Constant::Constant(
-    const wns::pyconfig::View& _config,
-    wifimac::management::PERInformationBase* _per,
-    wifimac::lowerMAC::Manager* _manager,
-    wifimac::convergence::PhyUser* _phyUser,
-    wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger)
+Constant::Constant(const wns::pyconfig::View& _config,
+                   wifimac::management::PERInformationBase* _per,
+                   wifimac::lowerMAC::Manager* _manager,
+                   wifimac::convergence::PhyUser* _phyUser,
+                   wns::logger::Logger* _logger):
+    IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger),
+    myPM(_config.getView("phyMode"))
 {
     friends.phyUser = _phyUser;
-    int myPMId = _config.get<int>("phyModeId");
-    assure(myPMId >= friends.phyUser->getPhyModeProvider()->getLowestId(),
-           "Given phyMode ID does not exist, must be equal or larger than " << friends.phyUser->getPhyModeProvider()->getLowestId());
-    assure(myPMId <= friends.phyUser->getPhyModeProvider()->getHighestId(),
-           "Given phyMode ID does not exist, must be equal or smaller than " << friends.phyUser->getPhyModeProvider()->getHighestId());
-
-    this->myPM = friends.phyUser->getPhyModeProvider()->getPhyMode(myPMId);
 }
 
 wifimac::convergence::PhyMode

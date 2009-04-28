@@ -178,6 +178,7 @@ pyconfigs = [
     'wifimac/draftn/Aggregation.py',
     'wifimac/draftn/BlockACK.py',
     'wifimac/draftn/BlockUntilReply.py',
+    'wifimac/draftn/PhyMode.py',
     'wifimac/draftn/__init__.py',
     'wifimac/evaluation/__init__.py',
     'wifimac/evaluation/default.py',
@@ -210,7 +211,6 @@ pyconfigs = [
 
     'wifimac/protocolCalculator/__init__.py',
     'wifimac/protocolCalculator/Duration.py',
-    'wifimac/protocolCalculator/ErrorProbability.py',
     'wifimac/protocolCalculator/MIMO.py',
     'wifimac/protocolCalculator/PhyMode.py',
     'wifimac/protocolCalculator/FrameLength.py',

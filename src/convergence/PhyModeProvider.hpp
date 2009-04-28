@@ -31,7 +31,6 @@
 
 #include <WIFIMAC/convergence/PhyMode.hpp>
 
-#include <WNS/container/Registry.hpp>
 #include <WNS/PowerRatio.hpp>
 
 namespace wifimac { namespace convergence {
@@ -40,74 +39,56 @@ namespace wifimac { namespace convergence {
 	 * @brief The PhyModeProvider holds all configured PhyModes and
 	 *    provides methods for their simple access by the rate adaption
 	 *
-	 * The PhyModes are ordered by their number of data bits per symbol (see PhyMode.hpp).
-	 * This allows for the methods rate[Up|Down], get[Lowest|Highest].
-	 * Of course, their robustness to interference should be ordered in the other way round.
+	 * The PhyModes are ordered by their number of data bits per symbol (see
+	 * PhyMode.hpp).  This allows for the methods mcs[Up|Down],
+	 * has[Lowest|Highest]. Of course, their robustness to interference should
+	 * be ordered in the other way round.
 	 */
-	class PhyModeProvider {
-	public:
-		PhyModeProvider(const wns::pyconfig::View& config);
+    class PhyModeProvider {
+    public:
+        PhyModeProvider(const wns::pyconfig::View& config);
 
-		/**
-		 * @brief Returns the next higher PhyMode 
+        /**
+		 * @brief Returns the PhyMode with more dbps, but also with higher SINR requirement
 		 */
-		PhyMode rateUp(PhyMode pm) const;
-		PhyMode rateUp(int id) const;
-		/**
-		 * @brief Returns the next lower PhyMode 
+        void mcsUp(PhyMode& pm) const;
+        /**
+		 * @brief Returns the next lower PhyMode
 		 */
-		PhyMode rateDown(PhyMode pm) const;
-		PhyMode rateDown(int id) const;
+        void mcsDown(PhyMode& pm) const;
 
-		/**
-		 * @brief Returns the lowest PhyMode 
+        /**
+		 * @brief Returns if the phy mode uses the lowest MCS
 		 */
-		PhyMode getLowest() const;
+        bool hasLowestMCS(const PhyMode& pm) const;
 
-		/**
-		 * @brief Returns the highest PhyMode 
+        /**
+		 * @brief Returns if the phy mode uses the highest
 		 */
-		PhyMode getHighest() const;
+        bool hasHighestMCS(const PhyMode& pm) const;
 
-		/**
-		 * @brief Returns the highest/lowest PhyModeId 
-		 */
-		int getHighestId() const;
-		int getLowestId() const;
-
-		/**
+        /**
 		 * @brief Returns the PhyMode which is used to model
 		 *   the preamble transmissions.
 		 */
-		PhyMode getPreamblePhyMode() const;
+        PhyMode getPreamblePhyMode(PhyMode pmFrame) const;
 
-		/**
-		 * @brief Returns the PhyMode by its id
-		 */
-		PhyMode getPhyMode(const int id) const;
+        PhyMode getDefaultPhyMode() const;
 
-		/**
-		 * @brief Returns the duration of one OFDM symbol
-		 */
-		wns::simulator::Time getSymbolDuration() const;
-
-        /** @brief return the optimal phymode for a suggested sinr */
-        PhyMode getPhyMode(wns::Ratio sinr) const;
-        int getPhyModeId(wns::Ratio sinr) const;
+        /** @brief return the optimal MCS for a suggested sinr */
+        MCS getMCS(wns::Ratio postSINR) const;
 
         /** @brief returns the minimal SINR for a connection */
         wns::Ratio getMinSINR() const;
 
-	private:
-		wns::container::Registry<int, PhyMode> id2phyMode;
-		wns::container::Registry<PhyMode, int> phyMode2id;
+    private:
+        std::map<wns::Ratio, MCS> sinr2mcs;
 
-		PhyMode preamblePhyMode;
-
-		int numPhyModes;
-		wns::simulator::Time symbolDuration;
         wns::Ratio switchingPointOffset;
-	};
+
+        PhyMode defaultPhyMode;
+        PhyMode preamblePhyMode;
+    };
 }}
 
 #endif // WIFIMAC_CONVERGENCE_PHYMODEPROVIDER_HPP

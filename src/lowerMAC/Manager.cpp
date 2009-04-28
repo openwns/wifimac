@@ -306,12 +306,6 @@ Manager::setPhyMode(const wns::ldk::CommandPool* commandPool, const wifimac::con
     getCommand(commandPool)->peer.phyMode = phyMode;
 }
 
-void
-Manager::setPhyMode(const wns::ldk::CommandPool* commandPool, const int phyModeId)
-{
-    this->setPhyMode(commandPool, this->getPhyUser()->getPhyModeProvider()->getPhyMode(phyModeId));
-}
-
 wns::simulator::Time
 Manager::getFrameExchangeDuration(const wns::ldk::CommandPool* commandPool) const
 {

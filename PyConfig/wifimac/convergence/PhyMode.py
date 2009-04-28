@@ -28,100 +28,63 @@ from openwns import dBm, dB, fromdB
 
 import wifimac.Logger
 
-class PhyMode(object):
-	dataBitsPerSymbol = None
-	modulation = None
-	codingRate = None
-	logger = None
-	constFrameSizeBits = None
-	minRSS = None
-	minSINR = None
+class MCS(object):
+    modulation = None
+    codingRate = None
+    minSINR = None
 
-	def __init__(self, dataBitsPerSymbol, modulation, codingRate, parentLogger, constFrameSizeBits = 0, minRSS = dBm(0), minSINR = dB(0)):
-		self.dataBitsPerSymbol = dataBitsPerSymbol
-		self.modulation = modulation
-		self.codingRate = codingRate
-		self.constFrameSizeBits = constFrameSizeBits
-		self.minRSS = minRSS
-		self.minSINR = minSINR
-		self.logger = wifimac.Logger.Logger(modulation+codingRate, parentLogger) 
+    def __init__(self, modulation, codingRate, minSINR):
+        self.modulation = modulation
+	self.codingRate = codingRate
+	self.minSINR = minSINR
 
-class PhyModes(object):
-	numPhyModes = None
-	logger = None
+class PhyMode(MCS):
+    numberOfSpatialStreams = None
+    numberOfDataSubcarriers = None
+    plcpMode = None
+    guardIntervalDuration = None
 
-	def __init__(self, logger):
-		self.numPhyModes = 8
-		self.logger = logger
+    def __init__(self, modulation, codingRate, numberOfSpatialStreams, numberOfDataSubcarriers, plcpMode, guardIntervalDuration, minSINR):
+        super(PhyMode, self).__init__(modulation=modulation, codingRate=codingRate, minSINR=minSINR)
+	self.numberOfSpatialStreams = numberOfSpatialStreams
+	self.numberOfDataSubcarriers = numberOfDataSubcarriers
+	self.plcpMode = plcpMode
+	self.guardIntervalDuration = guardIntervalDuration
 
-	def getNumPhyModes():
-		return self.numPhyModes
+class PhyModesDeliverer(object):
+    """ Super class for all phy modes """
+    defaultPhyMode = None
+    phyModePreamble = None
+    MCSs = None
+    switchingPointOffset = None
 
-	def getPhyModePreamble(self):
-		return (PhyMode(dataBitsPerSymbol = 24,
-				modulation = "BPSK",
-				codingRate = "1/2",
-				constFrameSizeBits = 4*24,
-				minSINR = dB(6.0),
-                                parentLogger = self.logger))
-	def getPhyMode0(self):
-		return (PhyMode(dataBitsPerSymbol = 24,
-				modulation = "BPSK",
-				codingRate = "1/2",
-				minSINR = dB(6.0),
-                                parentLogger = self.logger))
 
-	def getPhyMode1(self):
-		return(PhyMode(dataBitsPerSymbol = 36,
-			       modulation = "BPSK",
-			       codingRate = "3/4",
-			       minSINR = dB(8.8),
-			       parentLogger = self.logger))
+class IEEE80211a(PhyModesDeliverer):
+    """ Deliverer class for the basic phy modes of IEEE 802.11a """
 
-	def getPhyMode2(self):
-		return(PhyMode(dataBitsPerSymbol = 48,
-			       modulation = "QPSK",
-			       codingRate = "1/2",
-			       minSINR = dB(8.8),
-			       parentLogger = self.logger))
+    def __init__(self):
+        self.switchingPointOffset = dB(1.0)
+        self.phyModePreamble = makeBasicPhyMode("BPSK", "1/2", dB(6.0))
+	self.defaultPhyMode = makeBasicPhyMode("BPSK", "1/2", dB(6.0))
+	self.MCSs = [MCS("BPSK", "1/2",  dB(6.0)),
+		     MCS("BPSK", "3/4",  dB(8.7)),
+		     MCS("QPSK", "1/2",  dB(8.8)),
+		     MCS("QPSK", "3/4",  dB(12.0)),
+		     MCS("QAM16", "1/2", dB(15.4)),
+		     MCS("QAM16", "3/4", dB(18.8)),
+		     MCS("QAM64", "2/3", dB(23.5)),
+		     MCS("QAM64", "3/4", dB(24.8))]
 
-	def getPhyMode3(self):
-		return(PhyMode(dataBitsPerSymbol = 72,
-			       modulation = "QPSK",
-			       codingRate = "3/4",
-			       minSINR = dB(12.0),
-			       parentLogger = self.logger))
+    def getLowest(self):
+        return(makeBasicPhyMode("BPSK", "1/2", dB(6.0)))
 
-	def getPhyMode4(self):
-		return(PhyMode(dataBitsPerSymbol = 96,
-			       modulation = "16QAM",
-			       codingRate = "1/2",
-			       minSINR = dB(15.4),
-			       parentLogger = self.logger))
 
-	def getPhyMode5(self):
-		return(PhyMode(dataBitsPerSymbol = 144,
-			       modulation = "16QAM",
-			       codingRate = "3/4",
-			       minSINR = dB(18.8),
-			       parentLogger = self.logger))
+def makeBasicPhyMode(modulation, codingRate, minSINR):
+    return PhyMode(modulation = modulation,
+		   codingRate = codingRate,
+		   numberOfSpatialStreams = 1,
+		   numberOfDataSubcarriers = 48,
+		   plcpMode = "Basic",
+		   guardIntervalDuration = 0.8e-6,
+		   minSINR = minSINR)
 
-	def getPhyMode6(self):
-		return(PhyMode(dataBitsPerSymbol = 192,
-			       modulation = "64QAM",
-			       codingRate = "2/3",
-			       minSINR = dB(23.5),
-			       parentLogger = self.logger))
-
-	def getPhyMode7(self):
-		return(PhyMode(dataBitsPerSymbol = 216,
-			       modulation = "64QAM",
-			       codingRate = "3/4",
-			       minSINR = dB(24.8),
-			       parentLogger = self.logger))
-	def getPhyMode8(self):
-		return(PhyMode(dataBitsPerSymbol = 260,
-			       modulation = "64QAM",
-			       codingRate = "5/6",
-			       minSINR = dB(26.5),
-			       parentLogger = self.logger))

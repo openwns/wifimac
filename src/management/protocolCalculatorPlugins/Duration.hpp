@@ -31,8 +31,10 @@
 
 // must be the first include!
 #include <WNS/Python.hpp>
+
 #include <WIFIMAC/management/protocolCalculatorPlugins/ConfigGetter.hpp>
 #include <WIFIMAC/management/protocolCalculatorPlugins/FrameLength.hpp>
+#include <WIFIMAC/convergence/PhyMode.hpp>
 
 #include <WNS/pyconfig/View.hpp>
 #include <WNS/simulator/Time.hpp>
@@ -61,61 +63,60 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
         virtual ~Duration() {};
 
         unsigned int
-        getOFDMSymbols(Bit length, Bit dbps, unsigned int streams, unsigned int bandwidth) const;
+        ofdmSymbols(Bit length, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getFrame(Bit psduLength, Bit dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
+        frame(Bit psduLength, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getACK(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
+        ack(const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getSIFS() const;
+        aifs(unsigned int n) const;
 
         wns::simulator::Time
-        getAIFS(unsigned int n) const;
+        eifs(const wifimac::convergence::PhyMode& pm, unsigned int aifsn) const;
 
         wns::simulator::Time
-        getEIFS(unsigned int streams, unsigned int bandwidth, std::string plcpMode, unsigned int aifsn) const;
+        rts(const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getRTS(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
+        cts(const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getCTS(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
+        preamble(const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getPreamble(unsigned int streams, std::string plcpMode) const;
+        preambleProcessing(const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getPreambleProcessing(unsigned int streams, std::string plcpMode) const;
+        blockACK(const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getBlockACK(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
+        MSDU_PPDU(Bit msduFrameSize, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getMSDU_PPDU(Bit msduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
-        wns::simulator::Time
-        getMPDU_PPDU(Bit mpduSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
+        MPDU_PPDU(Bit mpduSize, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getA_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
+        A_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, const wifimac::convergence::PhyMode& pm) const;
+        wns::simulator::Time
+        A_MPDU_PPDU(const std::vector<Bit>& mpduFrameSize, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getA_MPDU_PPDU(const std::vector<Bit>& mpduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
+        A_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, const wifimac::convergence::PhyMode& pm) const;
+        wns::simulator::Time
+        A_MSDU_PPDU(const std::vector<Bit>& msduFrameSize, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
-        getA_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
+        symbol(const wifimac::convergence::PhyMode &pm) const;
 
-        wns::simulator::Time
-        getA_MSDU_PPDU(const std::vector<Bit>& msduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const;
-
-        const wns::simulator::Time symbol;
+        const wns::simulator::Time sifs;
         const wns::simulator::Time slot;
 
     private:
+        const wns::simulator::Time symbolWithoutGI;
         const wifimac::management::protocolCalculatorPlugins::FrameLength* fl;
-        const Bit basicDBPS;
 
 
     };

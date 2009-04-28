@@ -32,86 +32,63 @@
 using namespace wifimac::management::protocolCalculatorPlugins;
 
 Duration::Duration( FrameLength* fl_, const wns::pyconfig::View& config):
-    symbol(config.get<wns::simulator::Time>("symbol")),
+    symbolWithoutGI(config.get<wns::simulator::Time>("symbolDurationWithoutGI")),
     slot(config.get<wns::simulator::Time>("slot")),
-    basicDBPS(config.get<Bit>("basicDBPS")),
+    sifs(config.get<wns::simulator::Time>("sifs")),
     fl(fl_)
 {
 
 }
 
 Duration::Duration( FrameLength* fl_, const ConfigGetter& config ):
-    symbol(config.get<wns::simulator::Time>("symbol", "d")),
+    symbolWithoutGI(config.get<wns::simulator::Time>("symbolDurationWithoutGI", "d")),
     slot(config.get<wns::simulator::Time>("slot", "d")),
-    basicDBPS(config.get<Bit>("basicDBPS", "i")),
+    sifs(config.get<wns::simulator::Time>("sifs", "d")),
     fl(fl_)
 {
 
 }
 
 unsigned int
-Duration::getOFDMSymbols(Bit psduLength, Bit dbps, unsigned int streams, unsigned int bandwidth) const
+Duration::ofdmSymbols(Bit psduLength, const wifimac::convergence::PhyMode& pm) const
 {
     unsigned int n_es = 1;
-    if(bandwidth == 40)
-    {
-        if(dbps >= 208 and streams >= 3)
-        {
-            n_es = 2;
-        }
-        if(dbps == 156 and streams == 4)
-        {
-            n_es = 2;
-        }
-    }
-
-    assure(bandwidth == 20 or bandwidth == 40,
-           "Unknown bandwidth");
-
-    if(bandwidth == 20)
-    {
-        dbps = dbps * streams;
-    }
-    else
-    {
-        dbps = dbps * streams * 54 / 26;
-    }
-
-    return(static_cast<int>(ceil(static_cast<double>(psduLength + fl->service + fl->tail*n_es)/static_cast<double>(dbps))));
+    // TODO: correct n_es for higher phy modes
+    return(static_cast<int>(ceil(static_cast<double>(psduLength + fl->service + fl->tail*n_es) /
+                                 static_cast<double>(pm.getDataBitsPerSymbol()))));
 }
 
 wns::simulator::Time
-Duration::getFrame(Bit psduLength, Bit dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::frame(Bit psduLength, const wifimac::convergence::PhyMode& pm) const
 {
-    unsigned int numSym = getOFDMSymbols(psduLength, dbps, streams, bandwidth);
-    wns::simulator::Time preamble = getPreamble(streams, plcpMode);
-    return(preamble + numSym * symbol);
+    return(preamble(pm) + ofdmSymbols(psduLength, pm) * symbol(pm));
 }
 
 wns::simulator::Time
-Duration::getPreamble(unsigned int streams, std::string plcpMode) const
+Duration::preamble(const wifimac::convergence::PhyMode& pm) const
 {
     // number of DLFT and ELFT in HT-preamble (D802.11n,D4.00, Table 20-11~13)
     // here: N_ss=N_sts=Mt, and N_ess=0
 
     unsigned int dltf = 0;
     unsigned int eltf = 0;
+    wns::simulator::Time s = symbol(pm);
 
-    if(streams == 3)
+    if(pm.getNumberOfSpatialStreams() == 3)
     {
         dltf = 4;
     }
     else
     {
-        dltf = streams;
+        dltf = pm.getNumberOfSpatialStreams();
     }
 
-    if(plcpMode == "Basic")
+    if(pm.getPreambleMode() == "Basic")
     {
-        return(16e-6 + symbol);
+        return(16e-6 + s);
     }
 
-    if(plcpMode == "HT-Mix")
+    if(pm.getPreambleMode() == "HT-Mix")
     {
         // Non-HT short training sequence (D802.11n,D4.00, Table 20-5): 8 us
         // Non-HT long training sequence (D802.11n,D4.00, Table 20-5): 8 us
@@ -122,10 +99,10 @@ Duration::getPreamble(unsigned int streams, std::string plcpMode) const
         // HT second, and subsequent, long training fields duration: 4 us
         //  --> HT-preamble for mixed mode: 4+4+ (DLTF+ELTF)*4
 
-        return(16e-6 + symbol + (2 + dltf + eltf - 1)*4e-6 + 2*symbol);
+        return(16e-6 + s + (2 + dltf + eltf - 1)*4e-6 + 2*s);
     }
 
-    if(plcpMode == "HT-GF")
+    if(pm.getPreambleMode() == "HT-GF")
     {
         // Greenfield mode
         // HT-GF short traning field duration
@@ -139,138 +116,94 @@ Duration::getPreamble(unsigned int streams, std::string plcpMode) const
         // signal symbol for HT mode
         // t_HT_SIG = 8
         // total duration of HT-GF mode: t_HT_PRE + t_HT_SIG
-        return(8e-6 + 8e-6 + (dltf + eltf - 1)*4e-6 + 2*symbol);
+        return(8e-6 + 8e-6 + (dltf + eltf - 1)*4e-6 + 2*s);
     }
 
-    assure(plcpMode == "Basic" or plcpMode == "HT-Mix" or plcpMode == "HT-GF", "Unknown plcpMode");
+    assure(pm.getPreambleMode() == "Basic" or pm.getPreambleMode() == "HT-Mix" or pm.getPreambleMode() == "HT-GF", "Unknown plcpMode");
 
     return(1);
 }
 
 wns::simulator::Time
-Duration::getPreambleProcessing(unsigned int streams, std::string plcpMode) const
+Duration::preambleProcessing(const wifimac::convergence::PhyMode& pm) const
 {
-    return(getPreamble(streams, plcpMode) + 1e-6);
+    return(preamble(pm) + 1e-6);
 }
 
 wns::simulator::Time
-Duration::getACK(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::ack(const wifimac::convergence::PhyMode& pm) const
 {
-    return(getFrame(fl->ack,
-                    basicDBPS,
-                    streams,
-                    bandwidth,
-                    plcpMode));
+    return(this->frame(fl->ack, pm));
 }
 
 wns::simulator::Time
-Duration::getSIFS() const
+Duration::aifs(unsigned int n) const
 {
-    return(4 * symbol);
+    return(sifs + n * slot);
 }
 
 wns::simulator::Time
-Duration::getAIFS(unsigned int n) const
+Duration::eifs(const wifimac::convergence::PhyMode& pm, unsigned int aifsn) const
 {
-    return(getSIFS() + n * slot);
+    return(sifs + ack(pm) + aifs(aifsn));
 }
 
 wns::simulator::Time
-Duration::getEIFS(unsigned int streams, unsigned int bandwidth, std::string plcpMode, unsigned int aifsn) const
+Duration::rts(const wifimac::convergence::PhyMode& pm) const
 {
-    return(getSIFS() + getACK(streams, bandwidth, plcpMode) + getAIFS(aifsn));
+    return(this->frame(fl->rts, pm));
 }
 
 wns::simulator::Time
-Duration::getRTS(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::cts(const wifimac::convergence::PhyMode& pm) const
 {
-    return(getFrame(fl->rts,
-                    basicDBPS,
-                    streams,
-                    bandwidth,
-                    plcpMode));
+    return(frame(fl->cts, pm));
 }
 
 wns::simulator::Time
-Duration::getCTS(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::blockACK(const wifimac::convergence::PhyMode& pm) const
 {
-    return(getFrame(fl->cts,
-                    basicDBPS,
-                    streams,
-                    bandwidth,
-                    plcpMode));
+    return(frame(fl->blockACK, pm));
 }
 
 wns::simulator::Time
-Duration::getBlockACK(unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::MSDU_PPDU(Bit msduFrameSize, const wifimac::convergence::PhyMode& pm) const
 {
-    return(getFrame(fl->blockACK,
-                    basicDBPS,
-                    streams,
-                    bandwidth,
-                    plcpMode));
+    return(frame(fl->getPSDU(msduFrameSize), pm));
 }
 
 wns::simulator::Time
-Duration::getMSDU_PPDU(Bit msduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::MPDU_PPDU(Bit mpduSize, const wifimac::convergence::PhyMode& pm) const
 {
-    return(getFrame(fl->getPSDU(msduFrameSize),
-                    dbps,
-                    streams,
-                    bandwidth,
-                    plcpMode));
+    return(frame(mpduSize, pm));
 }
 
 wns::simulator::Time
-Duration::getMPDU_PPDU(Bit mpduSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::A_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, const wifimac::convergence::PhyMode& pm) const
 {
-    return(getFrame(mpduSize,
-                    dbps,
-                    streams,
-                    bandwidth,
-                    plcpMode));
-}
-
-
-wns::simulator::Time
-Duration::getA_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
-{
-    return(getFrame(fl->getA_MPDU_PSDU(mpduFrameSize, n_aggFrames),
-                    dbps,
-                    streams,
-                    bandwidth,
-                    plcpMode));
-}
-
-
-wns::simulator::Time
-Duration::getA_MPDU_PPDU(const std::vector<Bit>& mpduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
-{
-    return(getFrame(fl->getA_MPDU_PSDU(mpduFrameSize),
-                    dbps,
-                    streams,
-                    bandwidth,
-                    plcpMode));
+    return(frame(fl->getA_MPDU_PSDU(mpduFrameSize, n_aggFrames), pm));
 }
 
 wns::simulator::Time
-Duration::getA_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::A_MPDU_PPDU(const std::vector<Bit>& mpduFrameSize, const wifimac::convergence::PhyMode& pm) const
 {
-    return(getFrame(fl->getA_MSDU_PSDU(msduFrameSize, n_aggFrames),
-                    dbps,
-                    streams,
-                    bandwidth,
-                    plcpMode));
+    return(frame(fl->getA_MPDU_PSDU(mpduFrameSize), pm));
 }
 
 wns::simulator::Time
-Duration::getA_MSDU_PPDU(const std::vector<Bit>& msduFrameSize, unsigned int dbps, unsigned int streams, unsigned int bandwidth, std::string plcpMode) const
+Duration::A_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, const wifimac::convergence::PhyMode& pm) const
 {
-    return(getFrame(fl->getA_MSDU_PSDU(msduFrameSize),
-                    dbps,
-                    streams,
-                    bandwidth,
-                    plcpMode));
+    return(frame(fl->getA_MSDU_PSDU(msduFrameSize, n_aggFrames), pm));
 }
 
+wns::simulator::Time
+Duration::A_MSDU_PPDU(const std::vector<Bit>& msduFrameSize, const wifimac::convergence::PhyMode& pm) const
+{
+    return(frame(fl->getA_MSDU_PSDU(msduFrameSize), pm));
+}
 
+wns::simulator::Time
+Duration::symbol(const wifimac::convergence::PhyMode &pm) const
+{
+    return(this->symbolWithoutGI + pm.getGuardIntervalDuration());
+}

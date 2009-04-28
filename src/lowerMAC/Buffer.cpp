@@ -265,9 +265,6 @@ wns::simulator::Time Buffer::firstCompoundDuration() const
         return 0;
     }
     wifimac::convergence::PhyMode phyMode = friends.ra->getPhyMode(buffer.front());
-    return(protocolCalculator->getDuration()->getMPDU_PPDU(buffer.front()->getLengthInBits(),
-                                                           phyMode.getDataBitsPerSymbol(),
-                                                           phyMode.getNumberOfSpatialStreams(),
-                                                           20,
-                                                           std::string("Basic")));
+    return(protocolCalculator->getDuration()->MPDU_PPDU(buffer.front()->getLengthInBits(),
+                                                        phyMode));
 }

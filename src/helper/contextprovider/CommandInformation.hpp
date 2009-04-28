@@ -347,9 +347,9 @@ namespace wifimac { namespace helper { namespace contextprovider {
 
             if(commandReader->commandIsActivated(compound->getCommandPool()) == true)
             {
-                wifimac::convergence::PhyMode mcs = commandReader->readCommand<wifimac::lowerMAC::ManagerCommand>
+                wifimac::convergence::PhyMode phymode = commandReader->readCommand<wifimac::lowerMAC::ManagerCommand>
                     (compound->getCommandPool())->getPhyMode();
-                c.insertInt(this->key, mcs.getIndex());
+                c.insertInt(this->key, phymode.getMCS().getIndex());
             }
         }
     };

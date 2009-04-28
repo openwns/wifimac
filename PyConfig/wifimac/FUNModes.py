@@ -53,13 +53,8 @@ class Basic(Sealed):
 									  config = config.perMIB,
 									  parentLogger = self.logger))
 		myServices.append(wifimac.protocolCalculator.ProtocolCalculator(serviceName = self.names['protocolCalculator'] + str(self.transceiverAddress),
+										config = config.protocolCalculator,
 										parentLogger = self.logger))
 		return(myServices)
-
-class DraftN(Basic):
-	def createLowerMAC(self, config, myFUN):
-		return(wifimac.draftn.getLowerMACFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
-	def createConvergence(self, config, myFUN):
-                return(wifimac.draftn.getConvergenceFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
 
 

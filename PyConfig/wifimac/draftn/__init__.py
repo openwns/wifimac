@@ -29,8 +29,10 @@ from BlockUntilReply import *
 from BlockACK import *
 from Aggregation import *
 from DeAggregation import *
+from PhyMode import *
 import wifimac.lowerMAC
 import wifimac.convergence
+import wifimac.FUNModes
 
 import dll.CompoundSwitch
 import openwns.Multiplexer
@@ -260,3 +262,10 @@ def getConvergenceFUN(transceiverAddress, names, config, myFUN, logger, probeLoc
         FUs[num].connect(FUs[num+1])
 
     return([FUs[0], FUs[-1]])
+
+
+class FUNTemplate(wifimac.FUNModes.Basic):
+    def createLowerMAC(self, config, myFUN):
+        return(getLowerMACFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
+    def createConvergence(self, config, myFUN):
+        return(getConvergenceFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))

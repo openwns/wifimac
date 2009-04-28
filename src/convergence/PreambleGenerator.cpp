@@ -86,19 +86,18 @@ void
 PreambleGenerator::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
     // compute transmission duration of the frame, dependent on the mcs
-    wifimac::convergence::PhyMode phyMode = friends.manager->getPhyMode(compound->getCommandPool());
-    wns::simulator::Time frameTxDuration = protocolCalculator->getDuration()->getMPDU_PPDU(compound->getLengthInBits(),
-                                                                                           phyMode.getDataBitsPerSymbol(),
-                                                                                           phyMode.getNumberOfSpatialStreams(),
-                                                                                           20, std::string("Basic"))
-        - protocolCalculator->getDuration()->getPreamble(phyMode.getNumberOfSpatialStreams(),std::string("Basic"));
+    wifimac::convergence::PhyMode phyMode =
+        friends.manager->getPhyMode(compound->getCommandPool());
+    wns::simulator::Time frameTxDuration =
+        protocolCalculator->getDuration()->MPDU_PPDU(compound->getLengthInBits(), phyMode) -
+        protocolCalculator->getDuration()->preamble(phyMode);
 
     // First we generate a preamble
     this->pendingPreamble = compound->copy();
     friends.manager->setFrameType(this->pendingPreamble->getCommandPool(),
                                   PREAMBLE);
     friends.manager->setPhyMode(this->pendingPreamble->getCommandPool(),
-                                friends.phyUser->getPhyModeProvider()->getPreamblePhyMode());
+                                friends.phyUser->getPhyModeProvider()->getPreamblePhyMode(phyMode));
     friends.manager->setFrameExchangeDuration(this->pendingPreamble->getCommandPool(),
                                               frameTxDuration);
     PreambleGeneratorCommand* preambleCommand = activateCommand(this->pendingPreamble->getCommandPool());

@@ -32,6 +32,7 @@
 #include <WIFIMAC/management/ILinkNotification.hpp>
 #include <WIFIMAC/pathselection/IPathSelection.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
+#include <WIFIMAC/convergence/PhyMode.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Delayed.hpp>
@@ -128,7 +129,7 @@ namespace wifimac { namespace management {
         wns::pyconfig::Sequence scanFrequencies;
         wns::pyconfig::Sequence::iterator<double> freqIter;
 
-        const int beaconPhyModeId;
+        const wifimac::convergence::PhyMode beaconPhyMode;
 
 
         /**

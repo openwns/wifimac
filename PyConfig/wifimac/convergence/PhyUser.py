@@ -36,38 +36,24 @@ from openwns import dB, fromdB
 
 class PhyUserConfig(object):
 	initFrequency = None
+	initBandwidthMHz = 20
 
-	numPhyModes = 8
-	symbolDuration = 4E-6
-	PLCPPreambleDuration = 16E-6
-	PLCPServiceBits = 16
-	PLCPTailBits = 6
 	# Turnaround time must be below 2E-6 for OFDM-Phy, see IEEE 802.11-2007, Table 17-15
 	txrxTurnaroundDelay = 1E-6
-	bandwidth = 20
-	phyModes = None
+	phyModesDeliverer = None
 
-	switchingPointOffset = dB(1.0)
-
-	def __init__(self, initFrequency):
+	def __init__(self, initFrequency, phyModesDeliverer = None):
 		self.initFrequency = initFrequency
-		self.phyModes = wifimac.convergence.PhyMode.PhyModes
+		if phyModesDeliverer is None:
+			self.phyModesDeliverer = wifimac.convergence.PhyMode.IEEE80211a()
+		else:
+			self.phyModesDeliverer = phyModesDeliverer()
 
 class PhyUser(openwns.FUN.FunctionalUnit):
 	__plugin__ = 'wifimac.convergence.PhyUser'
 	"""Name in FunctionalUnitFactory"""
 
 	logger = None
-	# Declaration of PHY-Modes
-	PhyModePreamble = None
-	PhyMode0 = None
-	PhyMode1 = None
-	PhyMode2 = None
-	PhyMode3 = None
-	PhyMode4 = None
-	PhyMode5 = None
-	PhyMode6 = None
-	PhyMode7 = None
 
 	managerName = None
 	txDurationProviderCommandName = None
@@ -90,15 +76,5 @@ class PhyUser(openwns.FUN.FunctionalUnit):
 		assert(config.__class__ == PhyUserConfig)
 		self.myConfig = config
 
-		phyModes = config.phyModes(self.logger)
 		openwns.pyconfig.attrsetter(self, kw)
 
-		self.PhyModePreamble = phyModes.getPhyModePreamble()
-		self.PhyMode0 = phyModes.getPhyMode0()
-		self.PhyMode1 = phyModes.getPhyMode1()
-		self.PhyMode2 = phyModes.getPhyMode2()
-		self.PhyMode3 = phyModes.getPhyMode3()
-		self.PhyMode4 = phyModes.getPhyMode4()
-		self.PhyMode5 = phyModes.getPhyMode5()
-		self.PhyMode6 = phyModes.getPhyMode6()
-		self.PhyMode7 = phyModes.getPhyMode7()
