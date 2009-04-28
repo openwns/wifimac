@@ -394,9 +394,7 @@ RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& mpdu)
 
     wns::simulator::Time duration =
         protocolCalculator->getDuration()->MPDU_PPDU(mpdu->getLengthInBits(),
-                                                     rtsctsPhyMode);
-    /// REACTIVATE!
-    ///friends.manager->getPhyMode(mpdu->getCommandPool()));
+                                                     friends.manager->getPhyMode(mpdu->getCommandPool()));
 
     wns::simulator::Time nav =
         sifsDuration
