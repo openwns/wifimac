@@ -36,14 +36,13 @@ class PhyModes(wifimac.convergence.PhyMode.PhyModesDeliverer):
 		self.phyModePreamble = makeBasicPhyMode("BPSK", "1/2", dB(6.0))
 		self.defaultPhyMode = makeBasicPhyMode("BPSK", "1/2", dB(6.0))
 		self.MCSs = [wifimac.convergence.PhyMode.MCS("BPSK", "1/2",  dB(6.0)),
-			     wifimac.convergence.PhyMode.MCS("BPSK", "3/4",  dB(8.7)), # no longer existent in DraftN
 			     wifimac.convergence.PhyMode.MCS("QPSK", "1/2",  dB(8.8)),
 			     wifimac.convergence.PhyMode.MCS("QPSK", "3/4",  dB(12.0)),
 			     wifimac.convergence.PhyMode.MCS("QAM16", "1/2", dB(15.4)),
 			     wifimac.convergence.PhyMode.MCS("QAM16", "3/4", dB(18.8)),
 			     wifimac.convergence.PhyMode.MCS("QAM64", "2/3", dB(23.5)),
 			     wifimac.convergence.PhyMode.MCS("QAM64", "3/4", dB(24.8)),
-			     ###wifimac.convergence.PhyMode.MCS("QAM64", "5/6", dB(26.5))
+			     wifimac.convergence.PhyMode.MCS("QAM64", "5/6", dB(26.5))
 			     ]
 
 	def getLowest(self):
@@ -54,8 +53,8 @@ def makeBasicPhyMode(modulation, codingRate, minSINR):
 	return wifimac.convergence.PhyMode.PhyMode(modulation = modulation,
 						   codingRate = codingRate,
 						   numberOfSpatialStreams = 1,
-						   numberOfDataSubcarriers = 48,#52, #increased n_DS in comparison to basic
-						   plcpMode = "Basic", #"HT-GF", # can also be HT-Mix
+						   numberOfDataSubcarriers = 52, #increased n_DS in comparison to basic
+						   plcpMode = "HT-GF", # can also be HT-Mix
 						   guardIntervalDuration = 0.8e-6, # set to 0.4e-6 for short GI
 						   minSINR = minSINR)
 
