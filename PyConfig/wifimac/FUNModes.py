@@ -1,5 +1,4 @@
 import wifimac.convergence
-import wifimac.draftn
 import wifimac.lowerMAC
 import wifimac.pathselection
 import wifimac.management
@@ -33,7 +32,6 @@ class Basic(Sealed):
 		self.names.update(wifimac.pathselection.names)
 		self.names.update(wifimac.management.names)
 		self.names.update(wifimac.lowerMAC.names)
-		self.names.update(wifimac.draftn.names)
 		self.names.update(wifimac.protocolCalculator.names)
 
 	def createLowerMAC(self, config, myFUN):
