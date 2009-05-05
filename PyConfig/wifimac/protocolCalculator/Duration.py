@@ -48,34 +48,3 @@ class Duration:
             self.fl = fl
         else:
             self.fl = FrameLength.FrameLength()
-
-
-    def getIdleSlot(self):
-        return(self.slot)
-
-    def getCollisionSlot(self, n_streams, bandwidth, plcpMode, aifsn):
-        return(self.getRTS(n_streams, bandwidth, plcpMode) + self.getEIFS(n_streams, bandwidth, plcpMode, aifsn))
-
-    def getErrorSlot(self, msduFrameSize_bit, aggMode, n_aggFrames, n_dbps, n_streams, bandwidth, plcpMode, aifsn):
-        return(self.getRTS(n_streams, bandwidth, plcpMode) +
-               self.getCTS(n_streams, bandwidth, plcpMode) +
-               self.getPPDU(msduFrameSize_bit, aggMode, n_aggFrames, n_dbps, n_streams, bandwidth, plcpMode) +
-               self.getEIFS(n_streams, bandwidth, plcpMode, aifsn) +
-               2 * self.getSIFS())
-
-    def getSuccessSlot(self, msduFrameSize_bit, aggMode, n_aggFrames, n_dbps, n_streams, bandwidth, plcpMode, aifsn):
-        ### TODO: BlockACK only in case of A-MPDU aggregation
-        if(aggMode == "No"):
-            return(self.getRTS(n_streams, bandwidth, plcpMode) +
-                   self.getCTS(n_streams, bandwidth, plcpMode) +
-                   self.getPPDU(msduFrameSize_bit, aggMode, n_aggFrames, n_dbps, n_streams, bandwidth, plcpMode) +
-                   self.getACK(n_streams, bandwidth, plcpMode) +
-                   3 * self.getSIFS() +
-                   self.getAIFS())
-        else:
-            return(self.getRTS(n_streams, bandwidth, plcpMode) +
-                   self.getCTS(n_streams, bandwidth, plcpMode) +
-                   self.getPPDU(msduFrameSize_bit, aggMode, n_aggFrames, n_dbps, n_streams, bandwidth, plcpMode) +
-                   self.getBlockACK(n_streams, bandwidth, plcpMode) +
-                   3 * self.getSIFS() +
-                   self.getAIFS())

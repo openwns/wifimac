@@ -72,7 +72,6 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
     {
     public:
         ErrorProbability();
-        virtual ~ErrorProbability() {};
 
         ErrorStatistic
         getError(wns::Ratio postSNR, Bit packetLength, wifimac::convergence::PhyMode phyMode) const;

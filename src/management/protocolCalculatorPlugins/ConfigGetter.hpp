@@ -40,7 +40,14 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
     public:
         ConfigGetter(PyObject* config_) :
             config(config_)
-            { };
+            {
+                Py_XINCREF(config);
+            };
+
+        ~ConfigGetter()
+            {
+                Py_DECREF(config);
+            }
 
         template <class T>
         T

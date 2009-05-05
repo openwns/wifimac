@@ -26,7 +26,6 @@
 ###############################################################################
 
 from Duration import Duration
-from MIMO import MIMO
 from FrameLength import FrameLength
 
 import wifimac.Logger

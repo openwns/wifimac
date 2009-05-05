@@ -51,6 +51,9 @@ class PhyMode(MCS):
 	self.plcpMode = plcpMode
 	self.guardIntervalDuration = guardIntervalDuration
 
+    def __str__(self):
+        return "(%s-%s)*%d*%d" % (self.modulation, self.codingRate, self.numberOfDataSubcarriers, self.numberOfSpatialStreams)
+
 class PhyModesDeliverer(object):
     """ Super class for all phy modes """
     defaultPhyMode = None

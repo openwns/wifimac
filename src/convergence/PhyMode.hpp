@@ -53,7 +53,6 @@ namespace wifimac { namespace convergence {
         MCS(const wns::pyconfig::View& config);
         MCS(const MCS& other);
         MCS(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& config);
-        
 
         std::string getModulation() const
             { return this->modulation;};
@@ -111,6 +110,7 @@ namespace wifimac { namespace convergence {
         PhyMode();
         PhyMode(const wns::pyconfig::View& config);
         PhyMode(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& config);
+
         /**
          * @brief Returns the number of data bits per symbol
          */

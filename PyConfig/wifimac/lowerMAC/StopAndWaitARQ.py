@@ -41,7 +41,9 @@ class StopAndWaitARQConfig(object):
     rtsctsThreshold = 3000*8
 
     ackPhyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
-    """ PhyMode with which the ack is transmitted --> default the lowest for most robustness"""
+    """ PhyMode with which the ack is transmitted --> default the lowest
+        for most robustness
+    """
 
     sifsDuration = 16E-6
     expectedACKDuration = 44E-6

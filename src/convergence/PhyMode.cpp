@@ -62,14 +62,14 @@ MCS::MCS(const wns::pyconfig::View& config) :
 }
 
 MCS::MCS(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& config):
-    modulation(config.get<std::string>("modulation", "s")),
-    codingRate(config.get<std::string>("codingRate", "s")),
+    modulation(config.get<char*>("modulation", "s")),
+    codingRate(config.get<char*>("codingRate", "s")),
     minSINR(wns::Ratio::from_dB(0.0)),
     index(0),
     nominator(1),
     denominator(1)
 {
-    std::istringstream os(config.get<std::string>("minSINR", "s"));
+    std::istringstream os(config.get<char*>("minSINR", "s"));
     os >> minSINR;
 
     this->setModulation(modulation);
