@@ -28,6 +28,7 @@
 
 #include <WIFIMAC/pathselection/PathSelectionOverVPS.hpp>
 #include <WIFIMAC/Layer2.hpp>
+#include <WNS/service/dll/StationTypes.hpp>
 
 using namespace wifimac::pathselection;
 
@@ -48,14 +49,14 @@ PathSelectionOverVPS::PathSelectionOverVPS( wns::ldk::ManagementServiceRegistry*
 void
 PathSelectionOverVPS::onMSRCreated()
 {
-	assure(getMSR()->getLayer<wifimac::Layer2*>()->getStationType() != dll::StationTypes::UT(),
+	assure(getMSR()->getLayer<wifimac::Layer2*>()->getStationType() != wns::service::dll::StationTypes::UT(),
 		   "PathSelectionOverVPS cannot belong to a UT");
 
 	assure(TheVPSService::Instance().getVPS(), "No virtual path selection service found");
 
 	this->startObserving(getMSR()->getLayer<wifimac::Layer2*>()->getControlService<dll::services::control::Association>("ASSOCIATION"));
 
-	if(getMSR()->getLayer<wifimac::Layer2*>()->getStationType() == dll::StationTypes::AP())
+	if(getMSR()->getLayer<wifimac::Layer2*>()->getStationType() == wns::service::dll::StationTypes::AP())
 	{
 		TheVPSService::Instance().getVPS()->registerPortal(this->getMSR()->getLayer<wifimac::Layer2*>()->getDLLAddress(),
 														   this->getMSR()->getLayer<wifimac::Layer2*>()->getFUN()

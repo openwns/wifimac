@@ -48,7 +48,6 @@ class BlockACKConfig(object):
     blockACKRequestBits = 24*8
     """ Size of BlockACKrequest """
 
-
     sizeUnit = 'PDU'
     """ size unit for all size calculations (e.g. capacity, maxOnAir)"""
     capacity = 100

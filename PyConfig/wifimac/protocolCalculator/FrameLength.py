@@ -30,7 +30,7 @@ class FrameLength(object):
     macDataHdr = None
     """ mac header length for data and management frames in bit """
     macDataFCS = None
-    """ FCS field length in bit """
+    """ FCS field of data frames length in bit """
     amsdu_subhdr = None
     """ Subheader for each aggregated msdu for A-MSDU"""
     ampdu_delimiter = None
@@ -38,17 +38,23 @@ class FrameLength(object):
     service = None
     tail = None
     ack = None
-    """ ACK frame length in bit (transmitted in Wrapper Control Frame,
-        which is 20 bytes including FCS.) (D802.11n,D4.00, 7.2.1.9) """
+    """ ACK frame length in bit 
+        * Basic IEEE 802.11: 10B + 4B FCS
+        * IEEE 802.11n: transmitted in Wrapper Control Frame,
+        which is 20 bytes including FCS. (D802.11n,D4.00, 7.2.1.9) """
     rts = None
-    """ RTS frame length in bit (transmitted in wrapper control frame,
-        which is 22 bytes including FCS.)(D802.11n, D4.00, 7.2.1.9) """
+    """ RTS frame length in bit 
+        * Basic IEEE 802.11: 16B + 4B FCS
+        * IEEE 802.11n: transmitted in wrapper control frame,
+        which is 22 bytes including FCS (D802.11n, D4.00, 7.2.1.9) """
     cts = None
-    """ CTS frame length in bit (transmitted in wrapper control frame,
-        which is 20 bytes including FCS.)(D802.11n, D4.00, 7.2.1.9) """
+    """ CTS frame length in bit
+        * Basic IEEE 802.11: 10B + 4B FCS
+        * IEEE 802.11n: transmitted in wrapper control frame,
+        which is 20 bytes including FCS (D802.11n, D4.00, 7.2.1.9) """
     blockACK = None
     """ BlockACK frame length in bit (transmitted in wrapper control
-        frame, and compressed info field, which is 43 bytes including
+        frame, and compressed info field, which is 32 bytes including
         FCS.)(D802.11n, D4.00, 7.2.1.8.1) """
     blockACKreq = None
     beacon = None
@@ -61,9 +67,9 @@ class FrameLength(object):
         self.ampdu_delimiter = 4*8
         self.service = 16
         self.tail = 6
-        self.ack = 20*8
-        self.rts = 22*8
-        self.cts = 20*8
+        self.ack = 10*8+4*8
+        self.rts = 16*8+4*8
+        self.cts = 10*8+4*8
         self.blockACK = 32*8
         self.blockACKreq = 24*8
         # managementHdr + timestamp + Interval + capability + ssid + supportedRates + tim

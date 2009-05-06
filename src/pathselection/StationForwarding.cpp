@@ -31,6 +31,7 @@
 
 #include <WNS/ldk/CommandPool.hpp>
 #include <WNS/Exception.hpp>
+#include <WNS/service/dll/StationTypes.hpp>
 
 using namespace wifimac::pathselection;
 
@@ -59,7 +60,7 @@ StationForwarding::onFUNCreated()
 {
     layer2 = getFUN()->getLayer<wifimac::Layer2*>();
 
-	if(layer2->getStationType() != dll::StationTypes::UT())
+	if(layer2->getStationType() != wns::service::dll::StationTypes::UT())
 	{
 		throw wns::Exception("StationForwarding is only allowed for StationType = UT");
 	}

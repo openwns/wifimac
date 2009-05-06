@@ -56,7 +56,7 @@ class StopAndWaitARQConfig(object):
     frameSizeThreshold = 1000
 
     bitsPerIFrame = 0
-    bitsPerRRFrame = 10*8
+    bitsPerRRFrame = 10*8+4*8
 
 class StopAndWaitARQ(openwns.Probe.Probe):
     """ Special version of StopAndWait for CSMACAMAC, includes StatusCollection via

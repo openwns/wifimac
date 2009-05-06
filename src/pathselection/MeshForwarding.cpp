@@ -28,6 +28,7 @@
 
 #include <WIFIMAC/pathselection/MeshForwarding.hpp>
 
+#include <WNS/service/dll/StationTypes.hpp>
 #include <WNS/ldk/CommandPool.hpp>
 #include <WNS/Exception.hpp>
 
@@ -58,7 +59,7 @@ void
 MeshForwarding::onFUNCreated()
 {
 
-    if(getFUN()->getLayer<wifimac::Layer2*>()->getStationType() == dll::StationTypes::UT())
+    if(getFUN()->getLayer<wifimac::Layer2*>()->getStationType() == wns::service::dll::StationTypes::UT())
     {
         throw wns::Exception("MeshForwarding is only allowed for StationType != UT");
     }
@@ -134,12 +135,12 @@ MeshForwarding::doOnData(const wns::ldk::CompoundPtr& _compound)
     assure(layer2->isTransceiverMAC(uc->peer.targetMACAddress),
            "Recieved compound with targetMACAddress " << uc->peer.targetMACAddress << " which is not a transceiver of me");
 
-    if (layer2->getStationType() == dll::StationTypes::AP())
+    if (layer2->getStationType() == wns::service::dll::StationTypes::AP())
     {
         this->doOnDataAP(compound, fc, uc);
         return;
     }
-    if (layer2->getStationType() == dll::StationTypes::FRS())
+    if (layer2->getStationType() == wns::service::dll::StationTypes::FRS())
     {
         this->doOnDataFRS(compound, fc, uc);
         return;
@@ -150,7 +151,7 @@ MeshForwarding::doOnData(const wns::ldk::CompoundPtr& _compound)
 
 void MeshForwarding::doOnDataAP(const wns::ldk::CompoundPtr& compound, ForwardingCommand*& fc, dll::UpperCommand*& uc)
 {
-    assure(layer2->getStationType() == dll::StationTypes::AP(), "Forwarding only valid for AP!");
+    assure(layer2->getStationType() == wns::service::dll::StationTypes::AP(), "Forwarding only valid for AP!");
     assure(fc->peer.toDS, "received frame NOT to DS");
 
     // special handling if one of the hops on the selected path goes over the
@@ -407,7 +408,7 @@ bool MeshForwarding::doOnDataFRS(const wns::ldk::CompoundPtr& compound, Forwardi
 void
 MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
 {
-    if(layer2->getStationType() != dll::StationTypes::AP() and layer2->getStationType() != dll::StationTypes::FRS())
+    if(layer2->getStationType() != wns::service::dll::StationTypes::AP() and layer2->getStationType() != wns::service::dll::StationTypes::FRS())
     {
         throw wns::Exception("doSendData not valid for node types other than AP");
     }
