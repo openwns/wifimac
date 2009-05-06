@@ -211,11 +211,7 @@ pyconfigs = [
 
     'wifimac/protocolCalculator/__init__.py',
     'wifimac/protocolCalculator/Duration.py',
-    'wifimac/protocolCalculator/MIMO.py',
-    'wifimac/protocolCalculator/PhyMode.py',
     'wifimac/protocolCalculator/FrameLength.py',
-    'wifimac/protocolCalculator/Throughput.py',
-
 ]
 dependencies = []
 Return('libname srcFiles hppFiles pyconfigs dependencies')
