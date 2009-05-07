@@ -79,7 +79,8 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_
             + friends.phyUser->getExpectedPostSINRFactor(numSS, numRx);
         if(friends.phyUser->getPhyModeProvider()->getMinSINR() < postSINR)
         {
-            wifimac::convergence::PhyMode pm = friends.phyUser->getPhyModeProvider()->getPhyMode(postSINR);
+            wifimac::convergence::PhyMode pm = friends.phyUser->getPhyModeProvider()->getDefaultPhyMode();
+            pm.setMCS(friends.phyUser->getPhyModeProvider()->getMCS(postSINR));
             pm.setNumberOfSpatialStreams(numSS);
 
             // check performance of numSS
@@ -104,7 +105,7 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_
         m << " postSINR with 1 stream: " << lqm;
         m << " too bad for any transmission, selecting lowest phy mode";
         MESSAGE_END();
-        bestPM = friends.phyUser->getPhyModeProvider()->getLowest();
+        bestPM = friends.phyUser->getPhyModeProvider()->getDefaultPhyMode();
         bestPM.setNumberOfSpatialStreams(1);
         return(bestPM);
     }

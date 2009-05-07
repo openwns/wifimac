@@ -29,8 +29,10 @@ from BlockUntilReply import *
 from BlockACK import *
 from Aggregation import *
 from DeAggregation import *
+from PhyMode import *
 import wifimac.lowerMAC
 import wifimac.convergence
+import wifimac.FUNModes
 
 import dll.CompoundSwitch
 import openwns.Multiplexer
@@ -41,6 +43,18 @@ names = dict()
 names['aggregation'] = 'Aggregation'
 names['blockUntilReply'] = 'BlockUntilReply'
 names['deAggregation'] = 'DeAggregation'
+
+class FUNTemplate(wifimac.FUNModes.Basic):
+
+    def __init__(self, logger, transceiverAddress, upperConvergenceName):
+        super(FUNTemplate, self).__init__(logger, transceiverAddress, upperConvergenceName)
+        self.names.update(names)
+
+    def createLowerMAC(self, config, myFUN):
+        return(getLowerMACFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
+
+    def createConvergence(self, config, myFUN):
+        return(getConvergenceFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
 
 def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs =  wifimac.lowerMAC.__getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)

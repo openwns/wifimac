@@ -62,7 +62,7 @@ StopAndWaitARQ::StopAndWaitARQ(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::V
     sifsDuration(config.get<wns::simulator::Time>("sifsDuration")),
     expectedACKDuration(config.get<wns::simulator::Time>("expectedACKDuration")),
     preambleProcessingDelay(config.get<wns::simulator::Time>("preambleProcessingDelay")),
-    ackPhyModeId(config.get<int>("ackPhyModeId")),
+    ackPhyMode(config.getView("ackPhyMode")),
     ackState(none)
 {
     friends.manager = NULL;
@@ -240,9 +240,17 @@ void StopAndWaitARQ::processIncoming(const wns::ldk::CompoundPtr& compound)
         wns::ldk::CommandPool* ackPCI = this->getFUN()->getProxy()->createReply(compound->getCommandPool(), this);
         this->ackCompound = wns::ldk::CompoundPtr(new wns::ldk::Compound(ackPCI));
         friends.manager->setFrameType(ackPCI, ACK);
-        friends.manager->setPhyMode(ackPCI, ackPhyModeId);
+        friends.manager->setPhyMode(ackPCI, ackPhyMode);
+        wns::simulator::Time fxDur = friends.manager->getFrameExchangeDuration(compound->getCommandPool()) - sifsDuration - expectedACKDuration;
+        if (fxDur < sifsDuration)
+        {
+            fxDur = 0;
+        }
+
+        MESSAGE_SINGLE(NORMAL,logger,"create ACK with exchange duration : " << fxDur);
+
         friends.manager->setFrameExchangeDuration(ackPCI,
-                                                  friends.manager->getFrameExchangeDuration(compound->getCommandPool()) - this->sifsDuration - this->expectedACKDuration);
+                                                  fxDur);
         wns::ldk::arq::StopAndWaitCommand* ackCommand = this->activateCommand(ackPCI);
         ackCommand->peer.type = wns::ldk::arq::StopAndWaitCommand::RR;
         this->ackState = sendingACK;

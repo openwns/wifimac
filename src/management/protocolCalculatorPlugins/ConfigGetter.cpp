@@ -26,46 +26,25 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/management/ProtocolCalculator.hpp>
+#include <WIFIMAC/management/protocolCalculatorPlugins/ConfigGetter.hpp>
 
-using namespace wifimac::management;
+using namespace wifimac::management::protocolCalculatorPlugins;
 
-STATIC_FACTORY_REGISTER_WITH_CREATOR(ProtocolCalculator,
-                                     wns::ldk::ManagementServiceInterface,
-                                     "wifimac.management.ProtocolCalculator",
-                                     wns::ldk::MSRConfigCreator);
-
-ProtocolCalculator::ProtocolCalculator( wns::ldk::ManagementServiceRegistry* msr, const wns::pyconfig::View& config_):
-    wns::ldk::ManagementService(msr),
-    logger(config_.get("logger")),
+ConfigGetter::ConfigGetter(PyObject* config_) :
     config(config_)
 {
-    errorProbability = new protocolCalculatorPlugins::ErrorProbability();
-    frameLength = new protocolCalculatorPlugins::FrameLength(config_.get<wns::pyconfig::View>("myConfig.frameLength"));
-    duration = new protocolCalculatorPlugins::Duration(frameLength, config_.get<wns::pyconfig::View>("myConfig.duration"));
+
 }
 
-void
-ProtocolCalculator::onMSRCreated()
+template <class T>
+T
+ConfigGetter::get(const char* varName, const char* format) const
 {
-    MESSAGE_SINGLE(NORMAL, logger, "Created.");
-}
+    T t;
+    if(not PyArg_Parse(PyObject_GetAttrString(this->config, varName), format, &t))
+    {
+        return 0;
+    }
 
-
-protocolCalculatorPlugins::ErrorProbability*
-ProtocolCalculator::getErrorProbability() const
-{
-    return errorProbability;
-}
-
-protocolCalculatorPlugins::FrameLength*
-ProtocolCalculator::getFrameLength() const
-{
-    return frameLength;
-}
-
-protocolCalculatorPlugins::Duration*
-ProtocolCalculator::getDuration() const
-{
-    return duration;
+    return t;
 }

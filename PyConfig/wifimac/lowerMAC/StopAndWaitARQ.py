@@ -27,8 +27,10 @@
 
 import openwns.FUN
 import openwns.pyconfig
+from openwns import dB
 
 import wifimac.Logger
+import wifimac.convergence.PhyMode
 
 class StopAndWaitARQConfig(object):
 
@@ -38,7 +40,10 @@ class StopAndWaitARQConfig(object):
     """ retry limit of frames >= RTSThreshold """
     rtsctsThreshold = 3000*8
 
-    ackPhyModeId = 0
+    ackPhyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
+    """ PhyMode with which the ack is transmitted --> default the lowest
+        for most robustness
+    """
 
     sifsDuration = 16E-6
     expectedACKDuration = 44E-6
@@ -51,7 +56,7 @@ class StopAndWaitARQConfig(object):
     frameSizeThreshold = 1000
 
     bitsPerIFrame = 0
-    bitsPerRRFrame = 10*8
+    bitsPerRRFrame = 10*8+4*8
 
 class StopAndWaitARQ(openwns.Probe.Probe):
     """ Special version of StopAndWait for CSMACAMAC, includes StatusCollection via
@@ -75,7 +80,7 @@ class StopAndWaitARQ(openwns.Probe.Probe):
     sifsDuration = None
     expectedACKDuration = None
     preambleProcessingDelay = None
-    ackPhyModeId = None
+    ackPhyMode = None
 
     arqStatusCollector = None
     functionalUnitName = None
@@ -108,7 +113,7 @@ class StopAndWaitARQ(openwns.Probe.Probe):
         self.sifsDuration = config.sifsDuration
         self.expectedACKDuration = config.expectedACKDuration
         self.preambleProcessingDelay = config.preambleProcessingDelay
-        self.ackPhyModeId = config.ackPhyModeId
+        self.ackPhyMode = config.ackPhyMode
         self.bitsPerIFrame = config.bitsPerIFrame
         self.bitsPerRRFrame = config.bitsPerRRFrame
         self.arqStatusCollector = config.statusCollector(self.logger)

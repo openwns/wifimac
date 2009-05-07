@@ -29,7 +29,7 @@
 #include <WIFIMAC/management/Beacon.hpp>
 #include <WIFIMAC/convergence/PhyUserCommand.hpp>
 #include <WIFIMAC/Layer2.hpp>
-
+#include <WNS/service/dll/StationTypes.hpp>
 #include <WNS/Exception.hpp>
 #include <DLL/StationManager.hpp>
 
@@ -48,7 +48,7 @@ Beacon::Beacon(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     currentBeacon(),
     phyUserCommandName(config.get<std::string>("phyUserCommandName")),
     scanFrequencies(config.getSequence("myConfig.scanFrequencies")),
-    beaconPhyModeId(config.get<int>("myConfig.beaconPhyModeId")),
+    beaconPhyMode(config.getView("myConfig.beaconPhyMode")),
     bssId(config.get<std::string>("myConfig.bssId")),
     beaconRxStrength(),
     bssFrequencies()
@@ -70,7 +70,7 @@ Beacon::onFUNCreated()
 
     if (config.get<bool>("myConfig.enabled"))
     {
-        assure(friends.manager->getStationType() != dll::StationTypes::UT(),
+        assure(friends.manager->getStationType() != wns::service::dll::StationTypes::UT(),
                "STAs cannot transmit a beacon, as nobody can synchonize to them");
         // starting the periodic beacon transmission
         wns::simulator::Time delay = config.get<wns::simulator::Time>("myConfig.delay");
@@ -79,7 +79,7 @@ Beacon::onFUNCreated()
         MESSAGE_SINGLE(NORMAL, this->logger, "Starting beacon with delay " << delay << " and period " << period);
     }
 
-    if (friends.manager->getStationType() == dll::StationTypes::UT())
+    if (friends.manager->getStationType() == wns::service::dll::StationTypes::UT())
     {
         scanFrequencies = config.getSequence("myConfig.scanFrequencies");
         freqIter = scanFrequencies.begin<double>();
@@ -103,7 +103,7 @@ void Beacon::processIncoming(const wns::ldk::CompoundPtr& compound)
     }
 
     // store the received power in case of later association
-    if(friends.manager->getStationType() == dll::StationTypes::UT() and this->hasTimeoutSet())
+    if(friends.manager->getStationType() == wns::service::dll::StationTypes::UT() and this->hasTimeoutSet())
     {
 
         // to strings are equal if compare returns 0
@@ -160,7 +160,7 @@ void
 Beacon::periodically()
 {
     this->currentBeacon = friends.manager->createCompound(friends.manager->getMACAddress(), wns::service::dll::UnicastAddress(), BEACON, 0.0);
-    friends.manager->setPhyMode(this->currentBeacon->getCommandPool(), beaconPhyModeId);
+    friends.manager->setPhyMode(this->currentBeacon->getCommandPool(), beaconPhyMode);
     BeaconCommand* bc = this->activateCommand(this->currentBeacon->getCommandPool());
     bc->peer.bssId = this->bssId;
     tryToSend();
@@ -169,7 +169,7 @@ Beacon::periodically()
 void
 Beacon::onTimeout()
 {
-    assure(friends.manager->getStationType() == dll::StationTypes::UT(), "Only STAs (UTs) can become associated");
+    assure(friends.manager->getStationType() == wns::service::dll::StationTypes::UT(), "Only STAs (UTs) can become associated");
 
     MESSAGE_SINGLE(NORMAL, this->logger, "Timeout for beacon scanning on frequency " << *freqIter);
     ++freqIter;

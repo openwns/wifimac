@@ -29,13 +29,17 @@ import openwns.FUN
 import openwns.pyconfig
 
 import wifimac.Logger
+import wifimac.convergence.PhyMode
 
 class Constant:
     __plugin__ = 'Constant'
-    phyModeId = None
+    phyMode = None
 
-    def __init__(self, phyModeId = 0):
-        self.phyModeId = phyModeId
+    def __init__(self, phyMode = None):
+        if(phyMode is None):
+            self.phyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
+        else:
+            self.phyMode = phyMode
 
 class Opportunistic:
     __plugin__ = 'Opportunistic'
@@ -44,6 +48,14 @@ class Opportunistic:
     """ if the per is above this value, then the next lower phy mode will be used """
     perForGoingUp = 0.01
     """ if the per is below this value, then the next higher phy mode will be used """
+    initialPhyMode = None
+
+    def __init__(self, phyMode = None):
+        if(phyMode is None):
+            self.initialPhyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
+        else:
+            self.initialPhyMode = phyMode
+
 
 class OpportunisticwithMIMO(Opportunistic):
     __plugin__ = 'OpportunisticwithMIMO'

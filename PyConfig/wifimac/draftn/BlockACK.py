@@ -29,8 +29,10 @@ import openwns.FUN
 import openwns.pyconfig
 import openwns.ARQ
 import openwns.Probe
+from openwns import dB
 
 import wifimac.Logger
+import wifimac.convergence.PhyMode
 
 class BlockACKConfig(object):
 
@@ -39,6 +41,12 @@ class BlockACKConfig(object):
 
     expectedACKDuration = 68E-6
     """ expected ACK duration for a BA is higher than the legacy ACK"""
+
+    blockACKBits = 32*8
+    """ Size of BlockACK """
+
+    blockACKRequestBits = 24*8
+    """ Size of BlockACKrequest """
 
     sizeUnit = 'PDU'
     """ size unit for all size calculations (e.g. capacity, maxOnAir)"""
@@ -51,10 +59,6 @@ class BlockACKConfig(object):
     maximumTransmissions = 4
     """ maximum number of transmission tries (including first one) before the frame is dropped """
 
-    blockACKBits = 32*8
-    """ Size of BlockACK """
-    blockACKRequestBits = 24*8
-    """ Size of BlockACKrequest """
     impatient = True
     """ Transmission of the BAreq can be done according to two strategies:
     a) impatient: Send BAreq as soon as no other frames are in the reception queue, i.e. after a minimum of
@@ -62,6 +66,9 @@ class BlockACKConfig(object):
     b) non-impatient: Send BAreq only if maxOnAir is exploited.
     Impatient means lower waiting time for the BA, but higher overhead for non-saturated, non-error-prone links
     """
+
+    blockACKPhyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
+
 class BlockACK(openwns.Probe.Probe):
 
     __plugin__ = 'wifimac.draftn.BlockACK'

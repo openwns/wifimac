@@ -57,6 +57,7 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
     expectedACKDuration(config_.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
     preambleProcessingDelay(config_.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
+    blockACKPhyMode(config_.getView("myConfig.blockACKPhyMode")),
     capacity(config_.get<Bit>("myConfig.capacity")),
     maxOnAir(config_.get<size_t>("myConfig.maxOnAir")),
     baBits(config_.get<Bit>("myConfig.blockACKBits")),
@@ -954,12 +955,21 @@ void ReceptionQueue::processIncomingACKreq(const wns::ldk::CompoundPtr& compound
     }
 
     // create BlockACK
+   wns::simulator::Time fxDur = parent->friends.manager->getFrameExchangeDuration(compound->getCommandPool()) - parent->sifsDuration - parent->expectedACKDuration;
+   if (fxDur < parent->sifsDuration)
+   {
+	fxDur = 0;
+    }
+
+MESSAGE_SINGLE(NORMAL,parent->logger,"create BA with exchange duration : " << fxDur);
     this->blockACK = parent->friends.manager->createCompound(parent->friends.manager->getMACAddress(),
                                                              adr,
                                                              ACK,
-                                                             parent->friends.manager->getFrameExchangeDuration(compound->getCommandPool())
-                                                             - parent->sifsDuration - parent->expectedACKDuration,
+							     fxDur,
                                                              false);
+    parent->friends.manager->setPhyMode(this->blockACK->getCommandPool(),
+                                        parent->blockACKPhyMode);
+
     // set baCommand information
     BlockACKCommand* baCommand = parent->activateCommand(this->blockACK->getCommandPool());
     baCommand->peer.type = BA;

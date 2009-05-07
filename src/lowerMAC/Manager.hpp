@@ -205,10 +205,6 @@ namespace wifimac { namespace lowerMAC {
         void
         setPhyMode(const wns::ldk::CommandPool* commandPool, const wifimac::convergence::PhyMode phyMode);
 
-        /** @brief Set the PhyMode using a PhyModeId*/
-        void
-        setPhyMode(const wns::ldk::CommandPool* commandPool, const int phyModeId);
-
         /** @brief Get the "requires direct reply" flag
          *
          *  If a compound requires a direct (i.e. after a short, constant

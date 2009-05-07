@@ -516,6 +516,9 @@ namespace wifimac {
             const std::string txStartEndName;
             const std::string sendBufferName;
             const std::string perMIBServiceName;
+
+            const wifimac::convergence::PhyMode blockACKPhyMode;
+
             /// Pointer to the transmission buffer to check if frames are pending
             wns::ldk::DelayedInterface *sendBuffer;
             /// Duration of the Short InterFrame Space

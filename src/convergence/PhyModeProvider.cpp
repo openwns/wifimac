@@ -32,121 +32,114 @@
 
 using namespace wifimac::convergence;
 
-PhyModeProvider::PhyModeProvider(const wns::pyconfig::View& config):
-	numPhyModes(config.get<int>("myConfig.numPhyModes")),
-    symbolDuration(config.get<wns::simulator::Time>("myConfig.symbolDuration")),
-    switchingPointOffset(config.get<wns::Ratio>("myConfig.switchingPointOffset"))
+PhyModeProvider::PhyModeProvider(const wns::pyconfig::View& config) :
+    switchingPointOffset(config.get<wns::Ratio>("switchingPointOffset"))
 {
-	assure(numPhyModes > 0, "There must be at least one PhyMode!");
-	assure(numPhyModes < 1000, "There can be at most 1000 PhyModes!");
-	char bf[12];
+    assure(config.get<int>("len(MCSs)") > 0, "There must be at least one MCS!");
 
-	for (int id=0; id < numPhyModes; ++id)
-	{
-		sprintf(bf, "PhyMode%d", id);
-		wns::pyconfig::View configview = config.getView(bf);
-		PhyMode pm(configview, id+1);
-		id2phyMode.insert(id, pm);
-		phyMode2id.insert(pm, id);
-	}
+    char bf[15];
 
-	wns::pyconfig::View configview = config.getView("PhyModePreamble");
-	PhyMode pm(configview, 0);
-	preamblePhyMode = pm;
-    assure(preamblePhyMode.getNumSymbols(1) > 0, "wrong preamblePhyMode");
-}
-
-PhyMode PhyModeProvider::rateUp(PhyMode pm) const
-{
-	return(rateUp(phyMode2id.find(pm)));
-}
-
-PhyMode PhyModeProvider::rateUp(int id) const
-{
-
-	if (id == numPhyModes-1)
-		return(id2phyMode.find(id));
-
-	return(id2phyMode.find(id+1));
-}
-
-PhyMode PhyModeProvider::rateDown(PhyMode pm) const
-{
-	return(rateDown(phyMode2id.find(pm)));
-}
-
-PhyMode PhyModeProvider::rateDown(int id) const
-{
-	if (id == 0)
-		return(id2phyMode.find(id));
-
-	return(id2phyMode.find(id-1));
-}
-
-PhyMode PhyModeProvider::getLowest() const
-{
-	return(id2phyMode.find(0));
-}
-
-int PhyModeProvider::getLowestId() const
-{
-	return(0);
-}
-
-int PhyModeProvider::getHighestId() const
-{
-	return(numPhyModes-1);
-}
-
-PhyMode PhyModeProvider::getHighest() const
-{
-	return(id2phyMode.find(numPhyModes-1));
-}
-
-PhyMode PhyModeProvider::getPreamblePhyMode() const
-{
-	return(preamblePhyMode);
-}
-
-PhyMode PhyModeProvider::getPhyMode(const int id) const
-{
-	assure(id >= 0, "id must be higher than 0!");
-	assure(id < numPhyModes, "id must be lower than numPhyModes!");
-
-	return(id2phyMode.find(id));
-}
-
-wns::simulator::Time PhyModeProvider::getSymbolDuration() const
-{
-	return(symbolDuration);
-}
-
-int PhyModeProvider::getPhyModeId(wns::Ratio sinr) const
-{
-    if(this->getMinSINR() > sinr)
+    for (int id=0; id < config.get<int>("len(MCSs)"); ++id)
     {
-        return(this->getLowestId());
+        sprintf(bf, "MCSs[%d]", id);
+        wns::pyconfig::View configview = config.getView(bf);
+        MCS mcs(configview);
+        assure(sinr2mcs.find(mcs.getMinSINR()) == sinr2mcs.end(),
+               "Cannot have two MCS with the same minSINR " << mcs.getMinSINR());
+        sinr2mcs[mcs.getMinSINR()] = mcs;
     }
-    int optId = this->getLowestId();
 
-    for (int id=0; id < numPhyModes; ++id)
+    unsigned int index = 0;
+    for(std::map<wns::Ratio, MCS>::iterator it = sinr2mcs.begin();
+        it != sinr2mcs.end();
+        ++it)
     {
-        PhyMode cand = id2phyMode.find(id);
-        if((cand.getMinSINR() < (sinr-switchingPointOffset)) and (getPhyMode(optId) < cand))
-        {
-            optId = id;
-        }
+        it->second.setIndex(index);
+        ++index;
     }
-    return(optId);
+
+    wns::pyconfig::View configPreamble = config.getView("phyModePreamble");
+    preamblePhyMode = PhyMode(configPreamble);
+
+    wns::pyconfig::View configPhyMode = config.getView("defaultPhyMode");
+    defaultPhyMode = PhyMode(configPhyMode);
+}
+
+void
+PhyModeProvider::mcsUp(PhyMode& pm) const
+{
+    std::map<wns::Ratio, MCS>::const_iterator it = sinr2mcs.find(pm.getMCS().getMinSINR());
+    ++it;
+    if(it != sinr2mcs.end())
+    {
+        pm.setMCS(it->second);
+    }
+}
+
+void
+PhyModeProvider::mcsDown(PhyMode& pm) const
+{
+    std::map<wns::Ratio, MCS>::const_iterator it = sinr2mcs.find(pm.getMinSINR());
+    if(it != sinr2mcs.begin())
+    {
+        --it;
+        pm.setMCS(it->second);
+    }
+}
+
+bool
+PhyModeProvider::hasLowestMCS(const PhyMode& pm) const
+{
+    return(pm.getMCS() == sinr2mcs.begin()->second);
 }
 
 
-PhyMode PhyModeProvider::getPhyMode(wns::Ratio sinr) const
+bool
+PhyModeProvider::hasHighestMCS(const PhyMode& pm) const
 {
-    return(getPhyMode(getPhyModeId(sinr)));
+    return(pm.getMCS() == (--sinr2mcs.end())->second);
 }
 
-wns::Ratio PhyModeProvider::getMinSINR() const
+PhyMode
+PhyModeProvider::getPreamblePhyMode(PhyMode pmFrame) const
 {
-    return(this->getLowest().getMinSINR() + switchingPointOffset);
+    PhyMode pm = preamblePhyMode;
+    pm.setGuardIntervalDuration(pmFrame.getGuardIntervalDuration());
+    pm.setNumberOfSpatialStreams(pmFrame.getNumberOfSpatialStreams());
+    pm.setPreambleMode(pmFrame.getPreambleMode());
+
+    return(pm);
+}
+
+PhyMode
+PhyModeProvider::getDefaultPhyMode() const
+{
+    PhyMode pm = defaultPhyMode;
+    return pm;
+}
+
+MCS
+PhyModeProvider::getMCS(wns::Ratio sinr) const
+{
+    sinr = sinr - switchingPointOffset;
+
+    if(sinr < sinr2mcs.begin()->second.getMinSINR())
+    {
+        return(sinr2mcs.begin()->second);
+    }
+
+    if(sinr > (--sinr2mcs.end())->second.getMinSINR())
+    {
+        return( (--sinr2mcs.end())->second);
+    }
+
+    std::map<wns::Ratio, MCS>::const_iterator it = sinr2mcs.lower_bound(sinr);
+    --it;
+    return(it->second);
+}
+
+wns::Ratio
+PhyModeProvider::getMinSINR() const
+{
+    return(sinr2mcs.begin()->second.getMinSINR());
 }

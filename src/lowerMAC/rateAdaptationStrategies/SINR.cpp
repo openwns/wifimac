@@ -27,7 +27,6 @@
  ******************************************************************************/
 
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/SINR.hpp>
-#include <WIFIMAC/management/VirtualCapabilityInformationBase.hpp>
 
 using namespace wifimac::lowerMAC::rateAdaptationStrategies;
 
@@ -48,12 +47,14 @@ SINR::SINR(
 }
 
 wifimac::convergence::PhyMode
-SINR::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t numTransmissions, const wns::Ratio lqm)
+SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio lqm)
 {
     // Reduce lqm by retransmissionLQMReduction dB for every retransmission
     wns::Ratio myLQM = wns::Ratio::from_dB(lqm.get_dB() - (numTransmissions-1)*retransmissionLQMReduction);
-    MESSAGE_SINGLE(NORMAL, *logger, "RA getPhyMode with lqm " << lqm << " and " << numTransmissions << " transmissions, suggested phyMode " << friends.phyUser->getPhyModeProvider()->getPhyMode(myLQM));
-    return(friends.phyUser->getPhyModeProvider()->getPhyMode(myLQM));
+    wifimac::convergence::PhyMode pm = friends.phyUser->getPhyModeProvider()->getDefaultPhyMode();
+    pm.setMCS(friends.phyUser->getPhyModeProvider()->getMCS(myLQM));
+    MESSAGE_SINGLE(NORMAL, *logger, "RA getPhyMode with lqm " << lqm << " and " << numTransmissions << " transmissions, suggested phyMode " << pm);
+    return(pm);
 }
 
 wifimac::convergence::PhyMode

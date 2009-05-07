@@ -63,7 +63,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
                    const wns::Ratio lqm);
 
     private:
-        wifimac::convergence::PhyMode myPM;
+        const wifimac::convergence::PhyMode myPM;
 
         struct Friends
         {

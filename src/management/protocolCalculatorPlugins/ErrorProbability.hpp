@@ -71,8 +71,7 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
     class ErrorProbability
     {
     public:
-        ErrorProbability( const wns::pyconfig::View& config );
-        virtual ~ErrorProbability() {};
+        ErrorProbability();
 
         ErrorStatistic
         getError(wns::Ratio postSNR, Bit packetLength, wifimac::convergence::PhyMode phyMode) const;
@@ -81,9 +80,6 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
         getPER(wns::Ratio postSNR, Bit packetLength, wifimac::convergence::PhyMode phyMode) const;
 
     private:
-        const wns::simulator::Time guardInterval;
-        double cyclicPrefixReduction;
-
         /// @brief Calculate probability of error in pairwise comparison of two
         /// paths that differ in d bits
         double Pd(double rawBer, double d) const;

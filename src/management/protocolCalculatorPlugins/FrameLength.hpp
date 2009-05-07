@@ -29,6 +29,11 @@
 #ifndef WIFIMAC_MANAGEMENT_PROTOCOLCALCULATORPLUGINS_FRAMELENGTH_HPP
 #define WIFIMAC_MANAGEMENT_PROTOCOLCALCULATORPLUGINS_FRAMELENGTH_HPP
 
+// must be the first include!
+#include <WNS/Python.hpp>
+
+#include <WIFIMAC/management/protocolCalculatorPlugins/ConfigGetter.hpp>
+
 #include <WNS/pyconfig/View.hpp>
 #include <WNS/simulator/Bit.hpp>
 
@@ -42,22 +47,27 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
     class FrameLength
     {
     public:
+        /// @brief Constructor with python config
         FrameLength( const wns::pyconfig::View& config );
+
+        /// @brief Constructor with python object
+        FrameLength( const ConfigGetter& config);
+
         virtual ~FrameLength() {};
 
-	// @brief returns size of the resulting PSDU
+        /// @brief returns size of the resulting PSDU
         Bit getPSDU(Bit msduFrameSize) const;
 
- 	// @brief calculates PSDU size of A-MPDU with fixed sized frames
+        /// @brief calculates PSDU size of A-MPDU with fixed sized frames
         Bit getA_MPDU_PSDU(Bit mpduFrameSize, unsigned int n_aggFrames) const;
 
- 	// @brief calculates PSDU size of A-MPDU with arbitrary sized frames
+        /// @brief calculates PSDU size of A-MPDU with arbitrary sized frames
         Bit getA_MPDU_PSDU(const std::vector<Bit>& mpduFrameSize) const;
 
- 	// @brief calculates PSDU size of A-MSDU with fixed sized frames
+        /// @brief calculates PSDU size of A-MSDU with fixed sized frames
         Bit getA_MSDU_PSDU(Bit msduFrameSize, unsigned int n_aggFrames) const;
 
- 	// @brief calculates PSDU size of A-MSDU with arbitrary sized frames
+        /// @brief calculates PSDU size of A-MSDU with arbitrary sized frames
         Bit getA_MSDU_PSDU(const std::vector<Bit>& msduFrameSize) const;
 
         Bit pad(Bit frameSize, Bit multiple) const;

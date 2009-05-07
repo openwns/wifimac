@@ -29,6 +29,7 @@ import wifimac.draftn
 import wifimac.lowerMAC
 import wifimac.pathselection
 import wifimac.management
+import wifimac.protocolCalculator
 import wifimac.FUNModes
 import wifimac.helper.Probes
 
@@ -230,6 +231,7 @@ class Config(Sealed):
     broadcastDCF = None
     arq = None
     perMIB = None
+    protocolCalculator = None
     ra = None
     rtscts = None
     manager = None
@@ -272,6 +274,7 @@ class Config(Sealed):
         self.broadcastDCF = wifimac.lowerMAC.DCFConfig(cwMin = 7, cwMax = 7)
         self.arq = wifimac.lowerMAC.StopAndWaitARQConfig()
         self.perMIB = wifimac.management.InformationBases.PERConfig()
+        self.protocolCalculator = wifimac.protocolCalculator.Config()
         self.ra = wifimac.lowerMAC.RateAdaptationConfig()
         self.rtscts = wifimac.lowerMAC.RTSCTSConfig()
         self.manager = wifimac.lowerMAC.ManagerConfig()

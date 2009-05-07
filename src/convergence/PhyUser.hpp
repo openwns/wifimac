@@ -110,25 +110,21 @@ namespace wifimac { namespace convergence {
 		wns::service::phy::ofdma::Notification* notificationService;
 		PhyModeProvider phyModes;
 
-		const wns::simulator::Time preambleDuration;
-		const Bit service;
-		const Bit tail;
-		const std::string managerName;
-
-		const std::string txDurationProviderCommandName;
-		const wns::simulator::Time txrxTurnaroundDelay;
+        const std::string managerName;
+        const std::string txDurationProviderCommandName;
+        const wns::simulator::Time txrxTurnaroundDelay;
 
         struct Friends
         {
             wifimac::lowerMAC::Manager* manager;
         } friends;
 
-		enum PhyUserStatus
-		{
-			transmitting,
-			receiving,
-			txrxTurnaround
-		} phyUserStatus;
+        enum PhyUserStatus
+        {
+            transmitting,
+            receiving,
+            txrxTurnaround
+        } phyUserStatus;
 
 		wns::ldk::CompoundPtr currentTxCompound;
 	};

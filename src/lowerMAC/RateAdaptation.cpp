@@ -46,7 +46,6 @@ RateAdaptation::RateAdaptation(wns::ldk::fun::FUN* fun, const wns::pyconfig::Vie
     sinrMIBServiceName(config_.get<std::string>("sinrMIBServiceName")),
     perMIBServiceName(config_.get<std::string>("perMIBServiceName")),
     raForACKFrames(config_.get<bool>("myConfig.raForACKFrames")),
-    ackFramesRateId(config_.get<int>("myConfig.ackFramesRateId")),
 
     config(config_),
     logger(config_.get("logger"))
@@ -74,8 +73,6 @@ void RateAdaptation::onFUNCreated()
 
     sinrMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::SINRInformationBase>(sinrMIBServiceName);
     perMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
-
-    ackFramesRate = friends.phyUser->getPhyModeProvider()->getPhyMode(ackFramesRateId);
 }
 
 void RateAdaptation::processIncoming(const wns::ldk::CompoundPtr& /*compound*/)
@@ -87,8 +84,6 @@ void RateAdaptation::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
     if((not raForACKFrames) and (friends.manager->getFrameType(compound->getCommandPool()) == ACK))
     {
-        friends.manager->setPhyMode(compound->getCommandPool(), this->ackFramesRate);
-
         MESSAGE_BEGIN(NORMAL, logger, m, "Send ACK frame to ");
         m << " rx: " << friends.manager->getReceiverAddress(compound->getCommandPool());
         m << " with " << friends.manager->getPhyMode(compound->getCommandPool());

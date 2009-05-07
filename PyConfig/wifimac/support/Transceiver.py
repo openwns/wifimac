@@ -30,6 +30,7 @@ from openwns import dBm, dB
 from wifimac.lowerMAC.RateAdaptation import OpportunisticwithMIMO
 
 import wifimac.Layer2
+import wifimac.draftn
 
 # begin example "wifimac.pyconfig.support.transceiver.Basic"
 class Basic(object):
@@ -62,7 +63,8 @@ class Station(Basic):
 class DraftN(Basic):
     def __init__(self, frequency, numAntennas, maxAggregation):
         super(DraftN, self).__init__(frequency)
-        self.layer2.funTemplate = wifimac.FUNModes.DraftN
+        self.layer2.funTemplate = wifimac.draftn.FUNTemplate
+        self.layer2.phyUser.phyModesDeliverer = wifimac.draftn.PhyModes()
         self.layer2.expectedACKDuration = 68E-6
         self.layer2.ra.raStrategy = OpportunisticwithMIMO()
         self.layer2.manager.numAntennas = numAntennas

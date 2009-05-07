@@ -53,7 +53,7 @@ RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     expectedACKDuration(config_.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
     expectedCTSDuration(config_.get<wns::simulator::Time>("myConfig.expectedCTSDuration")),
     preambleProcessingDelay(config_.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
-    phyModeId(config_.get<int>("myConfig.rtsctsPhyModeId")),
+    rtsctsPhyMode(config_.getView("myConfig.rtsctsPhyMode")),
     rtsBits(config_.get<Bit>("myConfig.rtsBits")),
     ctsBits(config_.get<Bit>("myConfig.ctsBits")),
     rtsctsThreshold(config_.get<Bit>("myConfig.rtsctsThreshold")),
@@ -391,12 +391,13 @@ wns::ldk::CompoundPtr
 RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& mpdu)
 {
     // Calculate duration of the mpdu for NAV setting
-	wifimac::convergence::PhyMode phyMode = friends.phyUser->getPhyModeProvider()->getPhyMode(phyModeId);
-	wns::simulator::Time duration = 
-	protocolCalculator->getDuration()->getMPDU_PPDU(mpdu->getLengthInBits(),phyMode.getDataBitsPerSymbol(), 
-							phyMode.getNumberOfSpatialStreams(), 20, std::string("Basic"));
 
-    wns::simulator::Time nav = sifsDuration
+    wns::simulator::Time duration =
+        protocolCalculator->getDuration()->MPDU_PPDU(mpdu->getLengthInBits(),
+                                                     friends.manager->getPhyMode(mpdu->getCommandPool()));
+
+    wns::simulator::Time nav =
+        sifsDuration
         + expectedCTSDuration
         + sifsDuration
         + duration
@@ -411,7 +412,7 @@ RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& mpdu)
                                         true);                                                            // requires direct reply
 
     wns::ldk::CommandPool* rtsCP = rts->getCommandPool();
-    friends.manager->setPhyMode(rtsCP, friends.phyUser->getPhyModeProvider()->getPhyMode(phyModeId));
+    friends.manager->setPhyMode(rtsCP, rtsctsPhyMode);
     RTSCTSCommand* rtsctsC = this->activateCommand(rtsCP);
     rtsctsC->peer.isRTS = true;
 
@@ -438,7 +439,7 @@ RTSCTS::prepareCTS(const wns::ldk::CompoundPtr& rts)
                                                                 ACK,
                                                                 nav,
                                                                 true);
-    friends.manager->setPhyMode(cts->getCommandPool(), friends.phyUser->getPhyModeProvider()->getPhyMode(phyModeId));
+    friends.manager->setPhyMode(cts->getCommandPool(), rtsctsPhyMode);
     RTSCTSCommand* rtsctsC = this->activateCommand(cts->getCommandPool());
     rtsctsC->peer.isRTS = false;
 

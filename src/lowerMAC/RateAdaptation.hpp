@@ -81,8 +81,6 @@ namespace wifimac { namespace lowerMAC {
 
         /// Setting of constant rate for ACK frames
         const bool raForACKFrames;
-        const int ackFramesRateId;
-        wifimac::convergence::PhyMode ackFramesRate;
 
         /**
 		 * @brief Rate adaption per receiver

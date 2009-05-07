@@ -73,6 +73,12 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
                    const wns::Ratio lqm);
 
     private:
+        void
+        reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS);
+
+        void
+        increasePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS);
+
         wifimac::management::PERInformationBase* per;
 
         struct Friends
@@ -88,8 +94,7 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
 
         wns::logger::Logger* logger;
 
-        int curPhyModeId;
-        unsigned int curSpatialStreams;
+        wifimac::convergence::PhyMode curPhyMode;
     };
 }}}
 

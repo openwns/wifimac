@@ -26,31 +26,46 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/Constant.hpp>
+#ifndef WIFIMAC_MANAGEMENT_PROTOCOLCALCULATORPLUGINS_CONFIGGETTER_HPP
+#define WIFIMAC_MANAGEMENT_PROTOCOLCALCULATORPLUGINS_CONFIGGETTER_HPP
 
-using namespace wifimac::lowerMAC::rateAdaptationStrategies;
+// must be the first include!
+#include <WNS/Python.hpp>
+#include <WNS/simulator/Bit.hpp>
 
-STATIC_FACTORY_REGISTER_WITH_CREATOR(Constant, IRateAdaptationStrategy, "Constant", IRateAdaptationStrategyCreator);
+namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
 
-Constant::Constant(const wns::pyconfig::View& _config,
-                   wifimac::management::PERInformationBase* _per,
-                   wifimac::lowerMAC::Manager* _manager,
-                   wifimac::convergence::PhyUser* _phyUser,
-                   wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger),
-    myPM(_config.getView("phyMode"))
-{
-    friends.phyUser = _phyUser;
-}
+    class ConfigGetter
+    {
+    public:
+        ConfigGetter(PyObject* config_) :
+            config(config_)
+            {
+                Py_XINCREF(config);
+            };
 
-wifimac::convergence::PhyMode
-Constant::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/)
-{
-    return(this->myPM);
-}
+        ~ConfigGetter()
+            {
+                Py_DECREF(config);
+            }
 
-wifimac::convergence::PhyMode
-Constant::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/, const wns::Ratio /*lqm*/)
-{
-    return(this->myPM);
-}
+        template <class T>
+        T
+        get(const char* varName, const char* format) const
+            {
+                T t;
+                if(not PyArg_Parse(PyObject_GetAttrString(this->config, varName), format, &t))
+                {
+                    return 0;
+                }
+                return t;
+            };
+
+    private:
+        PyObject* config;
+    };
+} // protocolCalculatorPlugins
+} // management
+} // wifimac
+
+#endif

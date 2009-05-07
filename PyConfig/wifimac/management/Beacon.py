@@ -27,8 +27,10 @@
 
 import openwns.FUN
 import openwns.pyconfig
+from openwns import dB
 
 import wifimac.Logger
+import wifimac.convergence.PhyMode
 
 # begin example "wifimac.pyconfig.layer2.management.beacon.beaconconfig"
 class BeaconConfig(object):
@@ -41,8 +43,8 @@ class BeaconConfig(object):
     """ duration of scanning(for each frequency) before association for STAs """
     scanFrequencies = None
     """ freqencies to scan for beacons """
-    beaconPhyModeId = 0
-    """ PhyModeId with which the beacon is transmitted --> default the lowest for most robustness"""
+    beaconPhyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
+    """ PhyMode with which the beacon is transmitted --> default the lowest for most robustness"""
     bssId = 'ComNetsWLAN'
     """ for APs: bssId set in the beacon; for STAs: Only associate to bssIds with this name """
 

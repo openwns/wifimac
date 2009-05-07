@@ -82,7 +82,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
         wns::logger::Logger* logger;
 
-        int curPhyModeId;
+        wifimac::convergence::PhyMode curPhyMode;
     };
 }}}
 
