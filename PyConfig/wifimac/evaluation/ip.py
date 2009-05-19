@@ -41,33 +41,18 @@ def getTop(sim, sourceName, settlingTime, nodeIds):
     node.getLeafs().appendChildren(SeparateByNodeId(nodeIds))
     return node
 
-def installEvaluation(sim, staIds, rangId, settlingTime, maxPacketDelay, maxBitThroughput, resolution=100):
+def installEvaluation(sim, staIds, rangId, settlingTime, maxPacketDelay, maxBitThroughput, resolution=100, useDLRE = False):
 
-    sourceName = 'ip.endToEnd.packet.incoming.delay'
-    node = getTop(sim, sourceName, settlingTime, [rangId])
-    node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = maxPacketDelay, resolution = resolution,
-                                       name = 'ip.endToEnd.packet.incoming.delay',
-                                       description = 'End-to-End Packet Delay (Uplink) [s]'))
-##     node.getLeafs().appendChildren(Moments())
-##     node.getLeafs().appendChildren(DLRE(mode = 'g',
-##                                         name = sourceName,
-##                                         description = 'Incoming packet delay [s]',
-##                                         xMin = 0.0,
-##                                         xMax = maxPacketDelay,
-##                                         intervalWidth = intervalWidth))
-
-    sourceName = 'ip.endToEnd.packet.outgoing.delay'
-    node = getTop(sim, sourceName, settlingTime, [rangId])
-    node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = maxPacketDelay, resolution = resolution,
-                                       name = 'ip.endToEnd.packet.outgoing.delay',
-                                       description = 'End-to-End Packet Delay (Downlink) [s]'))
-##     node.getLeafs().appendChildren(Moments())
-##     node.getLeafs().appendChildren(DLRE(mode = 'g',
-##                                         name = sourceName,
-##                                         description = 'Outgoing packet delay [s]',
-##                                         xMin = 0.0,
-##                                         xMax = maxPacketDelay,
-##                                         intervalWidth = intervalWidth))
+    for sourceName in ['ip.endToEnd.packet.incoming.delay', 'ip.endToEnd.packet.outgoing.delay']:
+        node = getTop(sim, sourceName, settlingTime, [rangId])
+        if(useDLRE):
+            node.getLeafs().appendChildren(DLRE(mode = 'g', xMin = 0.0, xMax = maxPacketDelay, intervalWidth = 0.1/resolution,
+                                                name = sourceName,
+                                                description = "End-to-End Packet Delay [s]"))
+        else:
+            node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = maxPacketDelay, resolution = resolution,
+                                               name = sourceName,
+                                               description = 'End-to-End Packet Delay [s]'))
 
     for direction in ['incoming', 'outgoing', 'aggregated']:
         sourceName = 'ip.%s.window.%s.bitThroughput' % ('endToEnd', direction)
