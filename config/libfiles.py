@@ -41,6 +41,7 @@ srcFiles = [
     'src/convergence/PreambleGenerator.cpp',
     'src/convergence/TxDurationSetter.cpp',
     'src/convergence/ChannelState.cpp',
+    'src/convergence/NetworkStateProbe.cpp',
 
     # lower MAC
     'src/lowerMAC/Manager.cpp',
@@ -113,12 +114,14 @@ hppFiles = [
     'src/convergence/PhyUserCommand.hpp',
     'src/convergence/PreambleGenerator.hpp',
     'src/convergence/TxDurationSetter.hpp',
+    'src/convergence/NetworkStateProbe.hpp',
     'src/helper/FilterFrameType.hpp',
     'src/helper/FilterSize.hpp',
     'src/helper/HopContextWindowProbe.hpp',
     'src/helper/Keys.hpp',
     'src/helper/ThroughputProbe.hpp',
     'src/helper/contextprovider/CommandInformation.hpp',
+    'src/helper/contextprovider/CompoundSize.hpp',
     'src/draftn/Aggregation.hpp',
     'src/lowerMAC/ITXOPWindow.hpp',
     'src/lowerMAC/Buffer.hpp',
@@ -160,6 +163,7 @@ hppFiles = [
     'src/pathselection/StationForwarding.hpp',
     'src/pathselection/VirtualPathSelection.hpp'
 ]
+
 pyconfigs = [
     'wifimac/FUNModes.py',
     'wifimac/Layer2.py',
@@ -175,6 +179,7 @@ pyconfigs = [
     'wifimac/convergence/PreambleGenerator.py',
     'wifimac/convergence/TxDurationSetter.py',
     'wifimac/convergence/__init__.py',
+    'wifimac/convergence/NetworkStateProbe.py',
     'wifimac/draftn/Aggregation.py',
     'wifimac/draftn/BlockACK.py',
     'wifimac/draftn/BlockUntilReply.py',

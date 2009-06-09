@@ -75,22 +75,27 @@ namespace wifimac { namespace convergence {
     class PreambleGenerator:
         public wns::ldk::fu::Plain<PreambleGenerator, PreambleGeneratorCommand>,
         public wns::ldk::Delayed<PreambleGenerator>
-	{
-	public:
-		PreambleGenerator(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
+    {
+    public:
+        PreambleGenerator(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
 
-		virtual
-		~PreambleGenerator();
+        virtual
+        ~PreambleGenerator();
 
-	private:
-		/** @brief Delayed Interface */
-		void processIncoming(const wns::ldk::CompoundPtr& compound);
+    private:
+        /** @brief Delayed Interface */
+        void processIncoming(const wns::ldk::CompoundPtr& compound);
         void processOutgoing(const wns::ldk::CompoundPtr& compound);
         bool hasCapacity() const;
         const wns::ldk::CompoundPtr hasSomethingToSend() const;
         wns::ldk::CompoundPtr getSomethingToSend();
 
         void onFUNCreated();
+
+        /**
+		 * @brief SDU and PCI size calculation for preambles -> no size!
+		 */
+        void calculateSizes(const wns::ldk::CommandPool* commandPool, Bit& commandPoolSize, Bit& dataSize) const;
 
         const std::string phyUserName;
         const std::string protocolCalculatorName;
@@ -100,16 +105,14 @@ namespace wifimac { namespace convergence {
 
         wns::ldk::CompoundPtr pendingCompound;
         wns::ldk::CompoundPtr pendingPreamble;
-	wifimac::management::ProtocolCalculator* protocolCalculator;
+        wifimac::management::ProtocolCalculator* protocolCalculator;
 
-	struct Friends
-	{
-		wifimac::convergence::PhyUser* phyUser;
-        	wifimac::lowerMAC::Manager* manager;
-	} friends;
-	};
-
-
+        struct Friends
+        {
+            wifimac::convergence::PhyUser* phyUser;
+            wifimac::lowerMAC::Manager* manager;
+        } friends;
+    };
 } // mac
 } // wifimac
 
