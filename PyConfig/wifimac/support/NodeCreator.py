@@ -153,8 +153,8 @@ class NodeCreator(object):
                            config = config.transceivers[i+1])
         # create Mobility component
         newAP.mobility = rise.Mobility.Component(node = newAP,
-                	                                 name = "Mobility AP"+str(id),
-                        	                         mobility = rise.Mobility.No(openwns.Position()))
+                                                     name = "Mobility AP"+str(id),
+                                                     mobility = rise.Mobility.No(openwns.geometry.position.Position()))
         newAP.mobility.mobility.setCoords(config.position)
 
         return newAP
@@ -205,7 +205,7 @@ class NodeCreator(object):
 
         newMP.mobility = rise.Mobility.Component ( node = newMP,
                                        name = "Mobility MP"+str ( id ),
-                               mobility = rise.Mobility.No ( openwns.Position() ))
+                                     mobility = rise.Mobility.No ( openwns.geometry.position.Position() ))
         newMP.mobility.mobility.setCoords ( config.position )
 
         return newMP
@@ -261,7 +261,7 @@ class NodeCreator(object):
         # create mobility component
         newSTA.mobility = rise.Mobility.Component ( node = newSTA,
                                 name = "Mobility STA"+str ( id ),
-                                mobility = rise.Mobility.No ( openwns.Position() ))
+                                mobility = rise.Mobility.No ( openwns.geometry.position.Position() ))
         newSTA.mobility.mobility.setCoords ( config.position )
 
         newSTA.logger.level = loggerLevel
