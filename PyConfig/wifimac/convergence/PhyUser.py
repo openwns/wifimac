@@ -35,46 +35,46 @@ import wifimac.convergence.PhyMode
 from openwns import dB, fromdB
 
 class PhyUserConfig(object):
-	initFrequency = None
-	initBandwidthMHz = 20
+    initFrequency = None
+    initBandwidthMHz = 20
 
-	# Turnaround time must be below 2E-6 for OFDM-Phy, see IEEE 802.11-2007, Table 17-15
-	txrxTurnaroundDelay = 1E-6
-	phyModesDeliverer = None
+    # Turnaround time must be below 2E-6 for OFDM-Phy, see IEEE 802.11-2007, Table 17-15
+    txrxTurnaroundDelay = 1E-6
+    phyModesDeliverer = None
 
-	def __init__(self, initFrequency, phyModesDeliverer = None):
-		self.initFrequency = initFrequency
-		if phyModesDeliverer is None:
-			self.phyModesDeliverer = wifimac.convergence.PhyMode.IEEE80211a()
-		else:
-			self.phyModesDeliverer = phyModesDeliverer()
+    def __init__(self, initFrequency, phyModesDeliverer = None):
+        self.initFrequency = initFrequency
+        if phyModesDeliverer is None:
+            self.phyModesDeliverer = wifimac.convergence.PhyMode.IEEE80211a()
+        else:
+            self.phyModesDeliverer = phyModesDeliverer()
 
 class PhyUser(openwns.FUN.FunctionalUnit):
-	__plugin__ = 'wifimac.convergence.PhyUser'
-	"""Name in FunctionalUnitFactory"""
+    __plugin__ = 'wifimac.convergence.PhyUser'
+    """Name in FunctionalUnitFactory"""
 
-	logger = None
+    logger = None
 
-	managerName = None
-	txDurationProviderCommandName = None
+    managerName = None
+    txDurationProviderCommandName = None
 
-	myConfig = None
+    myConfig = None
 
-	def __init__(self,
-		     functionalUnitName,
-		     commandName,
-		     managerName,
-		     txDurationProviderCommandName,
-		     config,
-		     parentLogger = None,
-		     **kw):
-		super(PhyUser, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
-		self.logger = wifimac.Logger.Logger("PhyUser", parentLogger)
-		self.managerName = managerName
-		self.txDurationProviderCommandName = txDurationProviderCommandName
+    def __init__(self,
+             functionalUnitName,
+             commandName,
+             managerName,
+             txDurationProviderCommandName,
+             config,
+             parentLogger = None,
+             **kw):
+        super(PhyUser, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
+        self.logger = wifimac.Logger.Logger("PhyUser", parentLogger)
+        self.managerName = managerName
+        self.txDurationProviderCommandName = txDurationProviderCommandName
 
-		assert(config.__class__ == PhyUserConfig)
-		self.myConfig = config
+        assert(config.__class__ == PhyUserConfig)
+        self.myConfig = config
 
-		openwns.pyconfig.attrsetter(self, kw)
+        openwns.pyconfig.attrsetter(self, kw)
 

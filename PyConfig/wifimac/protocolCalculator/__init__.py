@@ -38,32 +38,32 @@ names = dict()
 names['protocolCalculator'] = 'protocolCalculator'
 
 class Service(object):
-	nameInServiceFactory  = None
-	serviceName = None
+    nameInServiceFactory  = None
+    serviceName = None
 
 class Config:
-	duration = None
-	frameLength = None
+    duration = None
+    frameLength = None
 
-	def __init__(self, dur = None, fl = None):
-		if(dur is None):
-			self.duration = Duration(fl)
-		else:
-			self.duration = dur(fl)
+    def __init__(self, dur = None, fl = None):
+        if(dur is None):
+            self.duration = Duration(fl)
+        else:
+            self.duration = dur(fl)
 
-		if(fl is None):
-			self.frameLength = FrameLength()
-		else:
-			self.frameLength = fl
+        if(fl is None):
+            self.frameLength = FrameLength()
+        else:
+            self.frameLength = fl
 
 class ProtocolCalculator(Service):
-	logger  = None
-	myConfig = None
+    logger  = None
+    myConfig = None
 
-	def __init__(self, serviceName, config, parentLogger=None, **kw):
-		self.nameInServiceFactory = 'wifimac.management.ProtocolCalculator'
-        	self.serviceName = serviceName
-		self.myConfig = config
+    def __init__(self, serviceName, config, parentLogger=None, **kw):
+        self.nameInServiceFactory = 'wifimac.management.ProtocolCalculator'
+        self.serviceName = serviceName
+        self.myConfig = config
 
-        	openwns.pyconfig.attrsetter(self, kw)
-        	self.logger = wifimac.Logger.Logger(name = 'PC', parent = parentLogger)
+        openwns.pyconfig.attrsetter(self, kw)
+        self.logger = wifimac.Logger.Logger(name = 'PC', parent = parentLogger)
