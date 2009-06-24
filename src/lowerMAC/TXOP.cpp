@@ -111,7 +111,6 @@ TXOP::processIncoming(const wns::ldk::CompoundPtr& compound)
 void
 TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
-    int i;
     switch(friends.manager->getFrameType(compound->getCommandPool()))
     {
     case DATA:
@@ -230,10 +229,9 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
 
 void TXOP::closeTXOP() 
 {
-    int i;
     this->remainingTXOPDuration = 0;
     TXOPDurationProbe->put(this->txopLimit - this->remainingTXOPDuration);
-    for(i=0; i < observers.size();i++)
+    for(int i=0; i < observers.size();i++)
     {
 	observers[i]->onTXOPClosed(firstTXOPCompound);
     }
@@ -283,7 +281,7 @@ bool TXOP::doIsAccepting(const wns::ldk::CompoundPtr& compound) const
 bool
 TXOP::startTXOP(wns::simulator::Time duration) 
 {
-// only start an TXOP round in patient mode if the passed time window is big enough and there are compounds waiting
+    // only start an TXOP round in patient mode if the passed time window is big enough and there are compounds waiting
     if (duration <= this->sifsDuration + this->expectedACKDuration)
     {
 	return false;
@@ -297,6 +295,10 @@ TXOP::startTXOP(wns::simulator::Time duration)
     {
 	return false;
     }
+    // This starts a recursion:
+    // 1. waking up the upper FU(s), which then
+    // 2. Try to send data to the TXOP
+    // 3. processOutgoing of the TXOP is called
     this->getReceptor()->wakeup();
     if (!useTXOP)
     {
