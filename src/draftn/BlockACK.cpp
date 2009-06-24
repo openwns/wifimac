@@ -726,6 +726,7 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
     MESSAGE_SINGLE(NORMAL, parent->logger, "TxQ" << adr << ": Received ACK, iterate through compounds on air");
 
     bool insertBack = false;
+    bool blockACKsuccess = true;
     std::deque<CompoundPtrWithSize>::iterator txQueueFirst;
     if(txQueue.empty())
     {
@@ -751,7 +752,7 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
              // retransmission
             int txCounter = ++(parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
             perMIB->onFailedTransmission(adr);
-
+	    blockACKsuccess = false;
             if(parent->getManager()->lifetimeExpired((onAirIt->first)->getCommandPool()))
             {
                 MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
@@ -796,10 +797,14 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
     } // for-loop over onAirQueue
 
     // nothing is onAir now
+    for (int i=0; i < parent->observers.size(); i++)
+    {
+	parent->observers[i]->onBlockACKReception(blockACKsuccess);
+    }
     onAirQueue.clear();
 
 } // TransmissionQueue::processACK
-
+  
 bool TransmissionQueue::isSortedBySN(const std::deque<CompoundPtrWithSize> q) const
 {
     if(q.empty())

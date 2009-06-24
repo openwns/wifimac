@@ -47,6 +47,8 @@
 #include <WNS/Observer.hpp>
 #include <WNS/RoundRobin.hpp>
 
+#include <WIFIMAC/draftn/IBlockACKObserver.hpp>
+
 namespace wifimac {
     namespace draftn {
 
@@ -375,6 +377,9 @@ namespace wifimac {
             void
             onFUNCreated();
 
+	    /// observers get called after an (un)successful transmission
+	    void registerObserver(IBlockACKObserver *o) {observers.push_back(o);}
+
             /**
              * @brief Processing of incoming (received) compounds
              *
@@ -605,6 +610,8 @@ namespace wifimac {
             /// via a wakeup call - required to avoid recursion.
             bool inWakeup;
 
+
+	    std::vector<IBlockACKObserver *> observers;
         };
 
 } // mac

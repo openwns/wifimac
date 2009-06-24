@@ -44,14 +44,11 @@ namespace wifimac { namespace lowerMAC {
 	 * @brief Discarding FIFO buffer of a fixed size.
 	 *
 	 * FIFO buffer, discarding some compounds, when the buffer is full.
-     *
-     * The maximum size is given as number of compounds to store.  The
+	 *
+	 * The maximum size is given as number of compounds to store.  The
 	 * Buffer class also implements the TXOPTimeWindow interface in order
-	 * to let the TXOP FU determine wether a waiting compound passes to the next
-	 * lower FU (if its transmission fits into the (remaining) TXOP duration or
-	 * it has to wait till a new TXOP "run" starts.  The buffer gets activated
-	 * by calling setDuration() which also sets the time frame in which PDU
-	 * transmissions have to fit
+	 * to let the TXOP FU determine the size of the next compound waiting to
+	 * be passed to the FU below the buffer and /or the corresponding receiver
 	 */
 	class Buffer :
 		public wns::ldk::buffer::Buffer,
@@ -127,33 +124,20 @@ namespace wifimac { namespace lowerMAC {
 		virtual uint32_t
 		getMaxSize();
 
-		/** 
-         * @brief sets the time window for outgoing compounds
-         *
-         * this method limits the transmission time for the next
-         * outgoing compound. If the compound doesn't fit into it
-         * it is not passed to the next FU. This method also activates
-         * the buffer
-         */
-		virtual void
-		setDuration(wns::simulator::Time duration);
 
-		/**
-         * @brief returns the actually used transmission time
-         *
-         * assing a time window this method returns the transmission
-         * time of the next waiting PDU, if it fits into the window
-         */
-		virtual wns::simulator::Time 
-		getActualDuration(wns::simulator::Time duration);
+		/** @brief returns transmission duration of next compound (if any) */
+		virtual wns::simulator::Time
+		nextTransmission(wns::simulator::Time);
 
+		/** @brief returns receiver address of next compound (if any) */
+		virtual wns::service::dll::UnicastAddress
+		getNextReceiver() const;
 	protected:
 		wns::ldk::buffer::dropping::ContainerType buffer;
 
 	private:
 		void onFUNCreated();
-		wns::simulator::Time firstCompoundDuration() const;	
-        void checkLifetime();
+	        void checkLifetime();
 
 		uint32_t maxSize;
 		uint32_t currentSize;
@@ -176,7 +160,6 @@ namespace wifimac { namespace lowerMAC {
         } friends;
 
         wns::logger::Logger logger;
-        wns::simulator::Time maxDuration;
     };
 
 }}

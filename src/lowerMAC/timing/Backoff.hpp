@@ -71,21 +71,29 @@ namespace wifimac { namespace lowerMAC { namespace timing {
 
 		/** @brief Transmission request by the scheduler */
 		virtual bool
-        transmissionRequest(int transmissionCounter);
+        	transmissionRequest(int transmissionCounter);
 
 		/** @brief Indicates a channel state transition idle->busy */
 		virtual void
-        onChannelBusy();
+        	onChannelBusy();
 
 		/** @brief Indicates a channel state transition busy->idle */
 		virtual void
-        onChannelIdle();
+        	onChannelIdle();
 
 		int getCurrentCW() const
 		{
 			return(cw);
 		}
 
+		/// time the backoff will be finished at (when called during AIFS the maximum waiting time will be used)
+		/// wns::simulator::Time() if backoff hasn't started, current time when finished and idle
+		wns::simulator::Time 
+		finishedAt() const;
+
+		/// notifying observers every time the backoff has finished, wether or not a transmission is waiting	
+		void
+		registerEOBObserver(BackoffObserver * observer);
 	private:
 
 		void startNewBackoffCountdown(wns::simulator::Time ifsDuration);
@@ -96,6 +104,7 @@ namespace wifimac { namespace lowerMAC { namespace timing {
 		void waitForTimer(const wns::simulator::Time& waitDuration);
 
 		BackoffObserver* backoffObserver;
+		std::vector<BackoffObserver*> eobObserver;
 
 		const wns::simulator::Time slotDuration;
 		const wns::simulator::Time aifsDuration;
@@ -109,6 +118,7 @@ namespace wifimac { namespace lowerMAC { namespace timing {
 		int cw;
 		wns::distribution::Uniform uniform;
 		wns::logger::Logger logger;
+		wns::simulator::Time aifsStart;
         bool channelIsBusy;
 
 	protected:

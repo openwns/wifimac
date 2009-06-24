@@ -25,24 +25,20 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_ITXOPWINDOW_HPP
-#define WIFIMAC_LOWERMAC_ITXOPWINDOW_HPP
+#ifndef WIFIMAC_LOWERMAC_ITXOPOBSERVER_HPP
+#define WIFIMAC_LOWERMAC_ITXOPOBSERVER_HPP
 
-#include <WNS/simulator/Time.hpp>
 #include <WNS/ldk/Compound.hpp>
-#include <WNS/service/dll/Address.hpp>
 
 namespace wifimac { namespace lowerMAC {
-	/** Interface class for FUs which implement "peeking" ability for TXOP **/
-	class ITXOPWindow
+	/** @brief TXOP observer on closed TXOP rounds
+	*/
+	class ITXOPObserver
 	{
 	public:
-		virtual wns::simulator::Time
-		nextTransmission(wns::simulator::Time window) = 0;
-
-		virtual wns::service::dll::UnicastAddress
-		getNextReceiver() const = 0;	
+		virtual void
+		onTXOPClosed(bool afterFirstCompound) = 0;
 	};
-} // lowerMAC
+} // draftn
 } // wifimac
-#endif // WIFIMAC_LOWERMAC_ITXOPWINDOW_HPP
+#endif // WIFIMAC_LOWERMAC_ITXOPOBSERVER_HPP

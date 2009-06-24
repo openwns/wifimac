@@ -60,6 +60,31 @@ Backoff::~Backoff()
 {
 }
 
+wns::simulator::Time Backoff::finishedAt() const
+{
+    wns::simulator::Time now = wns::simulator::getEventScheduler()->getTime();
+    if (not channelIsBusy)
+    {
+    	if (duringAIFS == true)
+	{
+		return now + cw*slotDuration + (aifsDuration - (now - aifsStart));
+	}
+	else
+	{
+		if (backoffFinished == true)
+		{
+			return now; 
+		}
+		else
+		{
+			return now + counter * slotDuration;
+		}
+	}
+    }
+    return wns::simulator::Time();
+}
+
+
 void
 Backoff::startNewBackoffCountdown(wns::simulator::Time ifsDuration)
 {
@@ -122,6 +147,10 @@ Backoff::onTimeout()
 
         MESSAGE_SINGLE(NORMAL, logger,"Backoff has finished, transmission is " <<
                        ((transmissionWaiting) ? "waiting" : "none"));
+	for(int i=0; i < eobObserver.size(); i++)
+	{
+		eobObserver[i]->backoffExpired();
+	}
         if (transmissionWaiting)
         {
             transmissionWaiting = false;
@@ -174,13 +203,14 @@ Backoff::onChannelIdle()
     channelIsBusy = false;
 
     // start post-backoff
+    aifsStart = wns::simulator::getEventScheduler()->getTime();
     startNewBackoffCountdown(aifsDuration);
 }
 
 void Backoff::onChannelBusy()
 {
     channelIsBusy = true;
-
+    aifsStart = wns::simulator::Time();
     if(hasTimeoutSet())
     {
         // abort countdown
@@ -189,3 +219,8 @@ void Backoff::onChannelBusy()
     }
 }
 
+
+void Backoff::registerEOBObserver(BackoffObserver * observer) 
+{
+	eobObserver.push_back(observer);
+}

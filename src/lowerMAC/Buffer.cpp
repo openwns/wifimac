@@ -56,8 +56,6 @@ Buffer::Buffer(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::View& config) :
     dropper(),
     totalPDUs(),
     droppedPDUs(),
-    maxDuration(0),
-    isActive(false),
     logger("WNS", config.get<std::string>("name"))
 {
     {
@@ -94,7 +92,6 @@ Buffer::Buffer(const Buffer& other) :
 	dropper(wns::clone(other.dropper)),
 	totalPDUs(other.totalPDUs),
 	droppedPDUs(other.droppedPDUs),
-	maxDuration(other.maxDuration),
 	logger(other.logger)
 {
 	friends.ra = other.friends.ra;
@@ -162,15 +159,10 @@ Buffer::processOutgoing(const wns::ldk::CompoundPtr& compound)
 const wns::ldk::CompoundPtr
 Buffer::hasSomethingToSend() const
 {
-    if(buffer.empty() or (isActive == false))
+    if(buffer.empty())
     {
         return wns::ldk::CompoundPtr();
     }
-    if ((maxDuration > 0) and (firstCompoundDuration() > maxDuration))
-    {
-        return wns::ldk::CompoundPtr();
-    }
-
     return buffer.front();
 } // somethingToSend
 
@@ -186,10 +178,6 @@ Buffer::getSomethingToSend()
 
     checkLifetime();
 
-    if(maxDuration > 0)
-    {
-        isActive = false;
-    }
 
     MESSAGE_SINGLE(NORMAL, this->logger, "Send compound, size is now " << currentSize);
 	return compound;
@@ -242,29 +230,29 @@ Buffer::getMaxSize()
 } // getMaxSize
 
 
-void Buffer::setDuration(wns::simulator::Time duration)
+wns::simulator::Time 
+Buffer::nextTransmission(wns::simulator::Time window)
 {
-    maxDuration = duration;
-    isActive = true;
-    MESSAGE_SINGLE(NORMAL, this->logger, "Got setDuration with duration " << duration);
-}
-
-wns::simulator::Time Buffer::getActualDuration(wns::simulator::Time duration)
-{
-    if (firstCompoundDuration() > duration)
-    {
-        return 0;
-    }
-    return firstCompoundDuration();
-}
-
-wns::simulator::Time Buffer::firstCompoundDuration() const
-{
+    wns::simulator::Time duration;
     if (buffer.empty())
     {
         return 0;
     }
     wifimac::convergence::PhyMode phyMode = friends.ra->getPhyMode(buffer.front());
-    return(protocolCalculator->getDuration()->MPDU_PPDU(buffer.front()->getLengthInBits(),
-                                                        phyMode));
+    duration = protocolCalculator->getDuration()->MPDU_PPDU(buffer.front()->getLengthInBits(),
+                                                        phyMode);
+    if (duration > window)
+	return 0;
+    else 
+	return duration;
+}
+
+wns::service::dll::UnicastAddress
+Buffer::getNextReceiver() const
+{
+    if (buffer.empty())
+    {
+        return wns::service::dll::UnicastAddress();
+    }
+    return friends.manager->getReceiverAddress(buffer.front()->getCommandPool());
 }
