@@ -606,11 +606,6 @@ namespace wifimac {
             /// calculation of size (e.g. by bits or pdus)
             std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
 
-            /// True if the ougoing compound routine tries to get more compounds
-            /// via a wakeup call - required to avoid recursion.
-            bool inWakeup;
-
-
 	    std::vector<IBlockACKObserver *> observers;
         };
 

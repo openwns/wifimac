@@ -64,6 +64,9 @@ namespace wifimac { namespace lowerMAC {
      * in order to trigger this FU and let compounds be passed down. Note that after the current TXOP duration
      * in patient mode has been exceeded, the FU is not accepting any further compounds from upper FUs until it has
      * been triggered once again. (not even ARQ retransmissions)
+     * Note that due to the layered nature of the FUN it is possible that TXOP observers get informed about 
+     * an end of the current TXOP round BEFORE the startTXOP call returned! FUs dealing with triggered TXOP should
+     * take this in account.
      */
     class TXOP:
         public wns::ldk::fu::Plain<TXOP, wns::ldk::EmptyCommand>,
@@ -87,10 +90,14 @@ namespace wifimac { namespace lowerMAC {
 	*
 	* after duration has been exceeded, the TXOP FU doesn't accept any further compounds
 	* from above FUs until another call off startTXOP()
+	* Note that closeTXOP() might be called before startTXOP returns, use the passed Bool
+	* to deal with this case properly
 	*/
 	bool
 	startTXOP(wns::simulator::Time duration);
 
+	/** @brief register observer which gets called when the current TXOP round is closed
+	*/
 	void
 	registerObserver(wifimac::lowerMAC::ITXOPObserver *observer) {observers.push_back(observer);}
 
@@ -103,7 +110,7 @@ namespace wifimac { namespace lowerMAC {
 
         void onFUNCreated();
 
-
+	/** @brief send probe values, call observers ... */
 	void closeTXOP();
 
         const std::string managerName;

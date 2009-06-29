@@ -293,19 +293,9 @@ TXOP::startTXOP(wns::simulator::Time duration)
 
     if (friends.txopWindow->nextTransmission(duration-this->sifsDuration - this->expectedACKDuration) == wns::simulator::Time())
     {
-	return false;
-    }
-    // This starts a recursion:
-    // 1. waking up the upper FU(s), which then
-    // 2. Try to send data to the TXOP
-    // 3. processOutgoing of the TXOP is called
-    this->getReceptor()->wakeup();
-    if (!useTXOP)
-    {
 	this->remainingTXOPDuration = 0;
 	return false;
     }
-    useTXOP = false;
-    return true;
+   return true;
 }
 

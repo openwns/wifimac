@@ -32,6 +32,9 @@
 
 namespace wifimac { namespace lowerMAC {
 	/** @brief TXOP observer on closed TXOP rounds
+	* note that for triggered TXOP (= patient) an end of the TXOP round
+	* might be indicated by calling the observer BEFORE the startTXOP() call returns
+	* due to the way the FUN mechanisms work! (use the passed Bool to deal with this properly)
 	*/
 	class ITXOPObserver
 	{

@@ -72,7 +72,6 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
     nextFirstCompound(),
     nextTransmissionSN(),
     baState(idle),
-    inWakeup(false),
 
     logger(config_.get("logger"))
 {
@@ -123,8 +122,7 @@ BlockACK::BlockACK(const BlockACK& other) :
     baReqBits(other.baReqBits),
     maximumTransmissions(other.maximumTransmissions),
     impatientBAreqTransmission(other.impatientBAreqTransmission),
-    sizeCalculator(wns::clone(other.sizeCalculator)),
-    inWakeup(other.inWakeup)
+    sizeCalculator(wns::clone(other.sizeCalculator))
 {
 }
 
@@ -238,18 +236,6 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
     }
     nextReceiver = receiver;
     MESSAGE_SINGLE(NORMAL, this->logger, "Stored outgoing frame, remaining capacity " << this->capacity - this->storageSize());
-
-    // try to get more frames to be send before sending
-    while(hasCapacity() and
-          (not inWakeup) and
-          (sendBuffer->hasSomethingToSend() != wns::ldk::CompoundPtr()))
-    {
-        MESSAGE_SINGLE(NORMAL, this->logger, "Ask sendBuffer for more frames");
-        // avoid recursion
-        inWakeup = true;
-        getReceptor()->wakeup();
-        inWakeup = false;
-    }
 }
 
 void
@@ -384,9 +370,10 @@ BlockACK::getACK()
 const wns::ldk::CompoundPtr
 BlockACK::hasData() const
 {
-    if(inWakeup)
+    if(hasCapacity() and
+       (sendBuffer->hasSomethingToSend() != wns::ldk::CompoundPtr()))
     {
-        // currently asking the sendBuffer for more frames -> delay transmission
+        // There are more compounds in the buffer and we still have capacity -> delay transmission
         return wns::ldk::CompoundPtr();
     }
 
