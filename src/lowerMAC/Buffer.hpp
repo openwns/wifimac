@@ -127,7 +127,7 @@ namespace wifimac { namespace lowerMAC {
 
 		/** @brief returns transmission duration of next compound (if any) */
 		virtual wns::simulator::Time
-		nextTransmission(wns::simulator::Time);
+		getNextTransmissionDuration();
 
 		/** @brief returns receiver address of next compound (if any) */
 		virtual wns::service::dll::UnicastAddress

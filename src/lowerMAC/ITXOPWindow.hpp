@@ -38,7 +38,7 @@ namespace wifimac { namespace lowerMAC {
 	{
 	public:
 		virtual wns::simulator::Time
-		nextTransmission(wns::simulator::Time window) = 0;
+		getNextTransmissionDuration() = 0;
 
 		virtual wns::service::dll::UnicastAddress
 		getNextReceiver() const = 0;	

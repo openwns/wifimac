@@ -231,20 +231,15 @@ Buffer::getMaxSize()
 
 
 wns::simulator::Time 
-Buffer::nextTransmission(wns::simulator::Time window)
+Buffer::getNextTransmissionDuration()
 {
-    wns::simulator::Time duration;
     if (buffer.empty())
     {
         return 0;
     }
     wifimac::convergence::PhyMode phyMode = friends.ra->getPhyMode(buffer.front());
-    duration = protocolCalculator->getDuration()->MPDU_PPDU(buffer.front()->getLengthInBits(),
-                                                        phyMode);
-    if (duration > window)
-	return 0;
-    else 
-	return duration;
+    return(protocolCalculator->getDuration()->MPDU_PPDU(buffer.front()->getLengthInBits(),
+                                                       phyMode));
 }
 
 wns::service::dll::UnicastAddress

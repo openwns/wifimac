@@ -40,7 +40,7 @@ namespace wifimac { namespace lowerMAC {
 	{
 	public:
 		virtual void
-		onTXOPClosed(bool afterFirstCompound) = 0;
+		onTXOPClosed() = 0;
 	};
 } // draftn
 } // wifimac

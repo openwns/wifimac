@@ -497,6 +497,10 @@ namespace wifimac {
                     return friends.manager;
                 }
 
+    protected:
+	    virtual bool
+	    doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
+
     private:
             /**
              * @brief Manages an incoming ACK (or rather the set of SNs)
@@ -509,6 +513,7 @@ namespace wifimac {
              * different receiver that has been stored temporarily)
              */
             void processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs);
+	    bool isAccepting(const wns::ldk::CompoundPtr& compound) const;
 
             /** @brief Debug helper function */
             void printTxQueueStatus() const;
@@ -553,14 +558,6 @@ namespace wifimac {
 
             /// Storage of outgoing, non-ack'ed frames
             TransmissionQueue *txQueue;
-
-            /// temporary storage of first compound for the next transmission
-            /// block with different receiver
-            wns::ldk::CompoundPtr nextFirstCompound;
-
-            // address of the receiver for the next transmission round after the
-            // current one has been transmitted successfully
-            wns::service::dll::UnicastAddress nextReceiver;
 
             /// Storage of incoming, non-ordered frames
             wns::container::Registry<wns::service::dll::UnicastAddress, ReceptionQueue*> rxQueues;
