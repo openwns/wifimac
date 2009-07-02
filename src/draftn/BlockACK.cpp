@@ -337,8 +337,10 @@ BlockACK::getACK()
 const wns::ldk::CompoundPtr
 BlockACK::hasData() const
 {
+    wns::ldk::CompoundPtr compound = sendBuffer->hasSomethingToSend();
     if(hasCapacity() and
-       (sendBuffer->hasSomethingToSend() != wns::ldk::CompoundPtr()))
+       (compound != wns::ldk::CompoundPtr())
+	and (friends.manager->getReceiverAddress(compound->getCommandPool()) == currentReceiver))
     {
         // There are more compounds in the buffer and we still have capacity -> delay transmission
         return wns::ldk::CompoundPtr();
