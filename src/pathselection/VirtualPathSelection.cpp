@@ -159,7 +159,7 @@ wns::service::dll::UnicastAddress
 VirtualPathSelection::getNextHop(const wns::service::dll::UnicastAddress current,
                                  const wns::service::dll::UnicastAddress finalDestination)
 {
-	MESSAGE_SINGLE(NORMAL, logger, "getNextHop query from " << current << " to " << finalDestination);
+	MESSAGE_SINGLE(VERBOSE, logger, "getNextHop query from " << current << " to " << finalDestination);
 
 	if(!pathMatrixIsConsistent)
 	{
@@ -191,7 +191,7 @@ VirtualPathSelection::getNextHop(const wns::service::dll::UnicastAddress current
 	}
 	else
 	{
-		MESSAGE_BEGIN(NORMAL, logger, m, "getNextHop query from ");
+		MESSAGE_BEGIN(VERBOSE, logger, m, "getNextHop query from ");
 		m << current << " to "<< fD;
 		m << " --> " << mapper.get(paths[mapper.get(current)][mapper.get(fD)]) << " with total pathcost " << pathCosts[mapper.get(current)][mapper.get(fD)];
 		MESSAGE_END();
@@ -424,33 +424,34 @@ VirtualPathSelection::createPeerLink(const wns::service::dll::UnicastAddress mys
 
         MESSAGE_SINGLE(NORMAL, logger, "createPeerLink: " << myself << " --> " << peer << " costs " << linkCosts[myselfId][peerId]);
 		pathMatrixIsConsistent = false;
+        onNewPathSelectionEntry();
 	}
 }
 
 
 void
 VirtualPathSelection::updatePeerLink(const wns::service::dll::UnicastAddress myself,
-									 const wns::service::dll::UnicastAddress peer,
-									 const Metric linkMetric)
+                                     const wns::service::dll::UnicastAddress peer,
+                                     const Metric linkMetric)
 {
-	assure(mapper.knows(myself), "myself (" << myself << ") is not a known address");
-	assure(mapper.knows(peer), "peer (" << peer << ") is not a known address");
-	assure(isMeshPoint(myself) , "myself (" << myself << ") is not a known MP");
-	assure(isMeshPoint(peer), "peer (" << peer << ") is not a known MP");
+    assure(mapper.knows(myself), "myself (" << myself << ") is not a known address");
+    assure(mapper.knows(peer), "peer (" << peer << ") is not a known address");
+    assure(isMeshPoint(myself) , "myself (" << myself << ") is not a known MP");
+    assure(isMeshPoint(peer), "peer (" << peer << ") is not a known MP");
 
-	int myselfId = mapper.get(myself);
-	int peerId = mapper.get(peer);
+    int myselfId = mapper.get(myself);
+    int peerId = mapper.get(peer);
 
-	if(linkCosts[myselfId][peerId].isInf())
-	{
-		throw wns::Exception("cannot update a link which has costs inf --> must be created first!");
-	}
+    if(linkCosts[myselfId][peerId].isInf())
+    {
+        throw wns::Exception("cannot update a link which has costs inf --> must be created first!");
+    }
 
-	if(isPortal(myself) && isPortal(peer))
-	{
-		// ignore wired link
-		return;
-	}
+    if(isPortal(myself) && isPortal(peer))
+    {
+        // ignore wired link
+        return;
+    }
 
     Metric newLinkMetric = linkMetric;
     if(preKnowledgeCosts[myselfId][peerId].isNotInf())
@@ -459,21 +460,22 @@ VirtualPathSelection::updatePeerLink(const wns::service::dll::UnicastAddress mys
         MESSAGE_SINGLE(NORMAL, logger, "updatePeerLink: " << myself << "->" << peer << " has preKnowledge of " << preKnowledgeCosts[myselfId][peerId] << ", " << linkMetric << "->" << newLinkMetric);
     }
 
-	if(linkCosts[myselfId][peerId] == newLinkMetric)
-	{
-		// same values, no update required
-		return;
-	}
+    if(linkCosts[myselfId][peerId] == newLinkMetric)
+    {
+        // same values, no update required
+        return;
+    }
 
-	MESSAGE_BEGIN(NORMAL, logger, m, "updatePeerLink: ");
-	m << myself << " --> " << peer;
-	m << " from costs " << linkCosts[myselfId][peerId];
-	m << " to " << newLinkMetric;
-	MESSAGE_END();
+    MESSAGE_BEGIN(NORMAL, logger, m, "updatePeerLink: ");
+    m << myself << " --> " << peer;
+    m << " from costs " << linkCosts[myselfId][peerId];
+    m << " to " << newLinkMetric;
+    MESSAGE_END();
 
-	linkCosts[myselfId][peerId] = newLinkMetric;
+    linkCosts[myselfId][peerId] = newLinkMetric;
 
-	pathMatrixIsConsistent = false;
+    pathMatrixIsConsistent = false;
+    onNewPathSelectionEntry();
 }
 
 void
@@ -502,119 +504,118 @@ VirtualPathSelection::closePeerLink(const wns::service::dll::UnicastAddress myse
 	linkCosts[myselfId][peerId] = Metric();
 
 	pathMatrixIsConsistent = false;
+    onNewPathSelectionEntry();
 }
 
 void
 VirtualPathSelection::onNewPathSelectionEntry()
 {
-	const addressMatrix::SizeType sizesMM[2] = {numNodes, numNodes};
-	addressMatrix pred = addressMatrix(sizesMM, 0);
+    const addressMatrix::SizeType sizesMM[2] = {numNodes, numNodes};
+    addressMatrix pred = addressMatrix(sizesMM, 0);
 
-	// initialize predecessor and pathCost matrix:
-	//   * predecessor: If direct link exists, predecessor is source itself
-	//   * pathCost: Same as linkCost if the link is bidirectional, inf
-	//     otherwise
-	pathCosts = linkCosts;
-	for (addressList::const_iterator i = mps.begin(); i != mps.end(); ++i)
-	{
-		for (addressList::const_iterator j = mps.begin(); j != mps.end(); ++j)
-		{
-			if((*i != *j) && (linkCosts[*i][*j].isNotInf()))
-			{
-				pred[*i][*j] = *i;
-			}
-			if((*i != *j) && (linkCosts[*i][*j].isNotInf()) && (linkCosts[*j][*i].isInf()))
-			{
-				pathCosts[*i][*j] = Metric();
-			}
-		}
-	}
+    // initialize predecessor and pathCost matrix:
+    //   * predecessor: If direct link exists, predecessor is source itself
+    //   * pathCost: Same as linkCost if the link is bidirectional, inf
+    //     otherwise
+    pathCosts = linkCosts;
+    for (addressList::const_iterator i = mps.begin(); i != mps.end(); ++i)
+    {
+        for (addressList::const_iterator j = mps.begin(); j != mps.end(); ++j)
+        {
+            if((*i != *j) && (linkCosts[*i][*j].isNotInf()))
+            {
+                pred[*i][*j] = *i;
+            }
+            if((*i != *j) && (linkCosts[*i][*j].isNotInf()) && (linkCosts[*j][*i].isInf()))
+            {
+                pathCosts[*i][*j] = Metric();
+            }
+        }
+    }
 
-	// Floyd-Warshall Algorithm to compute all-pairs shortest-path inclusive
-	// predecessor matrix in O(nodes^3)
-	for (addressList::const_iterator k = mps.begin(); k != mps.end(); ++k)
-	{
-		for (addressList::const_iterator i = mps.begin(); i != mps.end(); ++i)
-		{
-			for (addressList::const_iterator j = mps.begin(); j != mps.end(); ++j)
-			{
-				if(pathCosts[*i][*k].isNotInf() && pathCosts[*k][*j].isNotInf())
-				{
-					if(pathCosts[*i][*k] + pathCosts[*k][*j] < pathCosts[*i][*j])
-					{
-						pathCosts[*i][*j] = pathCosts[*i][*k] + pathCosts[*k][*j];
-						assure(pathCosts[*i][*j] >= 0, "found negative cycle in graph");
+    // Floyd-Warshall Algorithm to compute all-pairs shortest-path inclusive
+    // predecessor matrix in O(nodes^3)
+    for (addressList::const_iterator k = mps.begin(); k != mps.end(); ++k)
+    {
+        for (addressList::const_iterator i = mps.begin(); i != mps.end(); ++i)
+        {
+            for (addressList::const_iterator j = mps.begin(); j != mps.end(); ++j)
+            {
+                if(pathCosts[*i][*k].isNotInf() && pathCosts[*k][*j].isNotInf())
+                {
+                    if(pathCosts[*i][*k] + pathCosts[*k][*j] < pathCosts[*i][*j])
+                    {
+                        pathCosts[*i][*j] = pathCosts[*i][*k] + pathCosts[*k][*j];
+                        assure(pathCosts[*i][*j] >= 0, "found negative cycle in graph");
 
-						pred[*i][*j] = pred[*k][*j];
-					}
-				}
-			}
-		}
-	}
+                        pred[*i][*j] = pred[*k][*j];
+                    }
+                }
+            }
+        }
+    }
 
-	// convert the predecessor matrix into successor matrix paths
-	for (addressList::const_iterator i = mps.begin(); i != mps.end(); ++i)
-	{
-		for (addressList::const_iterator j = mps.begin(); j != mps.end(); ++j)
-		{
-			if((*i != *j) && (pathCosts[*i][*j].isNotInf()))
-			{
-				int firstHopOut = *j;
+    // convert the predecessor matrix into successor matrix paths
+    for (addressList::const_iterator i = mps.begin(); i != mps.end(); ++i)
+    {
+        for (addressList::const_iterator j = mps.begin(); j != mps.end(); ++j)
+        {
+            if((*i != *j) && (pathCosts[*i][*j].isNotInf()))
+            {
+                int firstHopOut = *j;
 
-				while(pred[*i][firstHopOut] != *i)
-				{
-					firstHopOut = pred[*i][firstHopOut];
-				}
-				paths[*i][*j] = firstHopOut;
-			}
-		}
-	}
+                while(pred[*i][firstHopOut] != *i)
+                {
+                    firstHopOut = pred[*i][firstHopOut];
+                }
+                paths[*i][*j] = firstHopOut;
+            }
+        }
+    }
 
-	pathMatrixIsConsistent = true;
+    pathMatrixIsConsistent = true;
 
-	// update portal settings for the clients
-	// iterate over all clients
-	for (addressMap::const_iterator clientsItr = clients2proxies.begin(); clientsItr != clients2proxies.end(); ++clientsItr)
-	{
-		// if the proxy is the portal, it remains the portal
-		if(isPortal(mapper.get(clientsItr->second)))
-		{
-			assure(clients2portals[clientsItr->first] == clientsItr->second,
-			       "Client " << mapper.get(clientsItr->first) <<
-				   " has proxy " << mapper.get(clientsItr->second) << 
-				   ", which is a portal but the client is assigned to the portal " << mapper.get(clients2portals[clientsItr->first]));
+    // update portal settings for the clients
+    // iterate over all clients
+    for (addressMap::const_iterator clientsItr = clients2proxies.begin(); clientsItr != clients2proxies.end(); ++clientsItr)
+    {
+        // if the proxy is the portal, it remains the portal
+        if(isPortal(mapper.get(clientsItr->second)))
+        {
+            assure(clients2portals[clientsItr->first] == clientsItr->second,
+                   "Client " << mapper.get(clientsItr->first) <<
+                   " has proxy " << mapper.get(clientsItr->second) <<
+                   ", which is a portal but the client is assigned to the portal " << mapper.get(clients2portals[clientsItr->first]));
 
-			MESSAGE_SINGLE(NORMAL, logger, "portal for " << mapper.get(clientsItr->first) << " remains " << mapper.get(clientsItr->second) << " beause it is also its proxy");
-			continue;
-		}
+            MESSAGE_SINGLE(NORMAL, logger, "portal for " << mapper.get(clientsItr->first) << " remains " << mapper.get(clientsItr->second) << " beause it is also its proxy");
+            continue;
+        }
 
-		// search the best portal for the new client (clientsItr->first)
-		// Attention: As the cost for portal->portal is zero, all portals have the same (minimum) cost
-		// Hence, we search for the first portal from which the first hop to the proxy is not another portal
-		for(adr2ucMap::iterator portalsItr = portals.begin(); portalsItr != portals.end(); ++portalsItr)
-		{
-			if(!isPortal(getNextHop(mapper.get(portalsItr->first), mapper.get(clientsItr->second))))
-			{
-				assure(pathCosts[clientsItr->second][portalsItr->first].isNotInf(), "Path cost from proxy to portal is inf -> network is not connected");
-				assure(pathCosts[portalsItr->first][clientsItr->second].isNotInf(), "Path cost from portal to proxy is inf -> network is not connected");
+        // search the best (= lowest DL path cost) portal for the new client (clientsItr->first)
+        // Attention: As the cost for portal->portal is zero, all portals have the same (minimum) cost
+        // Hence, we search for the one portal from which the first hop to the proxy is not another portal
+        for(adr2ucMap::iterator portalsItr = portals.begin(); portalsItr != portals.end(); ++portalsItr)
+        {
+            if(!isPortal(getNextHop(mapper.get(portalsItr->first), mapper.get(clientsItr->second))))
+            {
+                assure(pathCosts[clientsItr->second][portalsItr->first].isNotInf(),
+                       "Path cost from proxy to portal is inf -> network is not connected");
+                assure(pathCosts[portalsItr->first][clientsItr->second].isNotInf(),
+                       "Path cost from portal to proxy is inf -> network is not connected");
 
-				if(portalsItr->first != clients2portals.find(clientsItr->first)->second)
-				{
-					portalsItr->second->getRANG()->updateAPLookUp(mapper.get(clientsItr->first), portalsItr->second);
-					clients2portals[clientsItr->first] = portalsItr->first;
-					MESSAGE_SINGLE(NORMAL, logger, "change portal for " << mapper.get(clientsItr->first) << " to " << mapper.get(portalsItr->first));
-					break;
-				}
-				else
-				{
-					MESSAGE_SINGLE(NORMAL, logger, "portal for " << mapper.get(clientsItr->first) << " remains " << mapper.get(portalsItr->first));
-				}
-			}
-		}
-	}
+                if(portalsItr->first != clients2portals.find(clientsItr->first)->second)
+                {
+                    portalsItr->second->getRANG()->updateAPLookUp(mapper.get(clientsItr->first), portalsItr->second);
+                    clients2portals[clientsItr->first] = portalsItr->first;
+                    MESSAGE_SINGLE(NORMAL, logger, "change portal for " << mapper.get(clientsItr->first) << " to " << mapper.get(portalsItr->first));
+                }
+                break;
+            }
+        }
+    }
 
 #ifndef WNS_NO_LOGGING
-	printPathSelectionTable();
+    printPathSelectionTable();
 #endif
 }
 
