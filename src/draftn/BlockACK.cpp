@@ -191,7 +191,7 @@ BlockACK::hasCapacity() const
            ((txQueue == NULL) or
             (not txQueue->waitsForACK())) and
            ((txQueue == NULL) or
-            (txQueue->txQueueSize() < this->maxOnAir)));
+            (txQueue->storageSize() < this->maxOnAir)));
 }
 
 void
