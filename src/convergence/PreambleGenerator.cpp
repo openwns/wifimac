@@ -64,7 +64,7 @@ PreambleGenerator::onFUNCreated()
 
     friends.phyUser = getFUN()->findFriend<wifimac::convergence::PhyUser*>(phyUserName);
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
-    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
+    protocolCalculator = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
 }
 

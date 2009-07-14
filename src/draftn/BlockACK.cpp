@@ -150,7 +150,7 @@ void BlockACK::onFUNCreated()
         (getFUN()->findFriend<wifimac::convergence::TxStartEndNotification*>(txStartEndName));
 
     // signal packet success/errors to MIB
-    perMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
+    perMIB = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
     sendBuffer = getFUN()->findFriend<wns::ldk::DelayedInterface*>(sendBufferName);
 } // BlockACK::onFUNCreated
 

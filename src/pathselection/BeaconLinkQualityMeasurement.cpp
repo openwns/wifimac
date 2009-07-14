@@ -70,9 +70,9 @@ BroadcastLinkQuality::BroadcastLinkQuality(const wns::pyconfig::View& config_,
     scalingFactor(config.get<double>("myConfig.scalingFactor")),
     maxMissedBeacons(config.get<int>("myConfig.maxMissedBeacons"))
 {
-    ps = parent->getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::pathselection::IPathSelection>
+    ps = parent->getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::pathselection::IPathSelection>
         (config.get<std::string>("pathSelectionServiceName"));
-    sinrMIB = parent->getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::SINRInformationBase>
+    sinrMIB = parent->getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::SINRInformationBase>
         (config.get<std::string>("sinrMIBServiceName"));
     MESSAGE_SINGLE(VERBOSE, parent->logger, "BroadcastLinkQuality for "<< peerAddress << " created.");
 }
@@ -146,11 +146,11 @@ BroadcastLinkQuality::newPeerMeasurement(double peerSuccessRate, wns::Ratio peer
         linkCreated = true;
     }
 
-    if ( ps->getNextHop(myAddress, peerAddress) != wns::service::dll::UnicastAddress() and ps->getProxyFor(parent->getFUN()->getLayer<dll::Layer2*>()->getDLLAddress()) == wns::service::dll::UnicastAddress())
+    if ( ps->getNextHop(myAddress, peerAddress) != wns::service::dll::UnicastAddress() and ps->getProxyFor(parent->getFUN()->getLayer<dll::ILayer2*>()->getDLLAddress()) == wns::service::dll::UnicastAddress())
     {
 
         MESSAGE_SINGLE(NORMAL, parent->logger,"Registering mesh point as proxy for itself at VPS");
-        ps->registerProxy(myAddress,parent->getFUN()->getLayer<dll::Layer2*>()->getDLLAddress());
+        ps->registerProxy(myAddress,parent->getFUN()->getLayer<dll::ILayer2*>()->getDLLAddress());
     }
     return(m);
 }
@@ -268,7 +268,7 @@ BeaconLinkQualityMeasurement::onFUNCreated()
 
     if(friends.manager->getStationType() != wns::service::dll::StationTypes::UT())
     {
-        ps = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::pathselection::IPathSelection>
+        ps = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::pathselection::IPathSelection>
             (config.get<std::string>("pathSelectionServiceName"));
         assure(ps, "Could not get PathSelection Management Service");
     }

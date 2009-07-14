@@ -71,8 +71,8 @@ void RateAdaptation::onFUNCreated()
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
     friends.arq = getFUN()->findFriend<wifimac::lowerMAC::ITransmissionCounter*>(arqName);
 
-    sinrMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::SINRInformationBase>(sinrMIBServiceName);
-    perMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
+    sinrMIB = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::SINRInformationBase>(sinrMIBServiceName);
+    perMIB = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
 }
 
 void RateAdaptation::processIncoming(const wns::ldk::CompoundPtr& /*compound*/)

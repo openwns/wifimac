@@ -92,7 +92,7 @@ void TXOP::onFUNCreated()
     friends.manager = getFUN()->findFriend<Manager*>(managerName);
     friends.txopWindow = getFUN()->findFriend<ITXOPWindow*>(txopWindowName);
     friends.ra = getFUN()->findFriend<RateAdaptation*>(raName);
-    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
+    protocolCalculator = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
 
 void

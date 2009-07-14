@@ -104,7 +104,7 @@ void Buffer::onFUNCreated()
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
     friends.ra = getFUN()->findFriend<wifimac::lowerMAC::RateAdaptation*>(raName);
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
-    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
+    protocolCalculator = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
 
 

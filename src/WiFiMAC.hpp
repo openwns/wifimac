@@ -52,7 +52,7 @@
  * functionalities.
  *
  * The basis component of the WiFiMAC is wifimac::Layer2, derived from
- * dll::Layer2. It allows for multiple transceivers, each consisting of a lower
+ * dll::ILayer2. It allows for multiple transceivers, each consisting of a lower
  * MAC, a convergence and a OFDM-based radio. The multiple transceivers are
  * combined using the higher MAC, essentially a forwarding-entity that uses path
  * selection algorithms to determine the optimal transceiver for the given

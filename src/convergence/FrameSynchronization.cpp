@@ -338,7 +338,7 @@ void FrameSynchronization::processPSDU(const wns::ldk::CompoundPtr& compound)
 
 void FrameSynchronization::onFUNCreated()
 {
-    sinrMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::SINRInformationBase>(sinrMIBServiceName);
+    sinrMIB = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::SINRInformationBase>(sinrMIBServiceName);
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
 
 }
