@@ -53,7 +53,7 @@ Layer2::Layer2(wns::node::Interface* _node, const wns::pyconfig::View& _config) 
 
 void Layer2::doStartup()
 {
-    dll::ILayer2::doStartup();
+    dll::Layer2::doStartup();
 
 }
 
@@ -120,9 +120,9 @@ Layer2::registerManager(wifimac::lowerMAC::Manager* manager,
         ps->registerMP(address);
         // Hop-cost from this transceiver to the DLL is always for free and
         // works in both directions
-        ps->createPeerLink(address, this->dll::ILayer2::getDLLAddress(),
+        ps->createPeerLink(address, this->dll::Layer2::getDLLAddress(),
                            wifimac::pathselection::Metric::Metric(0));
-        ps->createPeerLink(this->dll::ILayer2::getDLLAddress(), address,
+        ps->createPeerLink(this->dll::Layer2::getDLLAddress(), address,
                            wifimac::pathselection::Metric(0));
     }
 }
