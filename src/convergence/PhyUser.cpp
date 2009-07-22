@@ -147,6 +147,10 @@ void PhyUser::onData(wns::osi::PDUPtr pdu, wns::service::phy::power::PowerMeasur
     // FIRST: create a copy instead of working on the real compound
     wns::ldk::CompoundPtr compound = wns::staticCast<wns::ldk::Compound>(pdu)->copy();
 
+    if(!getFUN()->getProxy()->commandIsActivated(
+        compound->getCommandPool(), this))     
+            return;
+
     // check if we have enough antennas to receive all streams
     unsigned int nss = friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams();
     if(nss > friends.manager->getNumAntennas())
