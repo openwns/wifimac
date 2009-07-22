@@ -114,6 +114,8 @@ namespace wifimac { namespace convergence {
         const std::string txDurationProviderCommandName;
         const wns::simulator::Time txrxTurnaroundDelay;
 
+        const double mimoCorrelation;
+
         struct Friends
         {
             wifimac::lowerMAC::Manager* manager;

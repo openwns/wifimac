@@ -28,12 +28,15 @@
 
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/TxDurationSetter.hpp>
+#include <WIFIMAC/helper/CholeskyDecomposition.hpp>
 
 #include <WNS/ldk/fun/FUN.hpp>
 #include <WNS/pyconfig/View.hpp>
 #include <WNS/logger/Logger.hpp>
 #include <WNS/module/Base.hpp>
 #include <WNS/ldk/concatenation/Concatenation.hpp>
+
+#include <boost/numeric/ublas/matrix.hpp>
 
 using namespace wifimac::convergence;
 
@@ -54,6 +57,7 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
     managerName(config.get<std::string>("managerName")),
     txDurationProviderCommandName(config.get<std::string>("txDurationProviderCommandName")),
     txrxTurnaroundDelay(config.get<wns::simulator::Time>("myConfig.txrxTurnaroundDelay")),
+    mimoCorrelation(config.get<double>("myConfig.mimoCorrelation")),
     phyUserStatus(receiving),
     currentTxCompound()
 {
@@ -181,7 +185,37 @@ void PhyUser::onData(wns::osi::PDUPtr pdu, wns::service::phy::power::PowerMeasur
 wns::Ratio PhyUser::getExpectedPostSINRFactor(unsigned int nss, unsigned int numRx)
 {
     assure(numRx >= nss, "Nss must be smaller or equal to numRx");
-    return( wns::Ratio::from_factor((static_cast<double>(numRx - nss + 1)) / (static_cast<double>(nss))));
+
+    double cF = 1.0;
+
+    if(mimoCorrelation > 0.0)
+    {
+        // there is a correlation among the MIMO channels, thus we have a
+        // correlation factor < 1.0
+
+        // generate covariance matrix
+        boost::numeric::ublas::matrix<double> m(nss, nss);
+        for(unsigned int i = 0; i < nss; ++i)
+        {
+            for(unsigned int j = 0; j < nss; ++j)
+            {
+                if(i == j)
+                {
+                    m(i,j) = 1;
+                }
+                else
+                {
+                    m(i,j) = mimoCorrelation;
+                }
+            }
+        }
+
+        // compute correlation matrix & correlation factor
+        choleskyDecompose< boost::numeric::ublas::matrix<double> >(m);
+        cF = m(nss-1, nss-1)*m(nss-1, nss-1);
+    }
+
+    return( wns::Ratio::from_factor(cF * (static_cast<double>(numRx - nss + 1)) / (static_cast<double>(nss))));
 }
 
 void PhyUser::onTimeout()

@@ -61,10 +61,11 @@ class Station(Basic):
         self.layer2.beacon.scanDuration = scanDuration
 
 class DraftN(Basic):
-    def __init__(self, frequency, numAntennas, maxAggregation):
+    def __init__(self, frequency, numAntennas, maxAggregation, mimoCorrelation = 0.0):
         super(DraftN, self).__init__(frequency)
         self.layer2.funTemplate = wifimac.draftn.FUNTemplate
         self.layer2.phyUser.phyModesDeliverer = wifimac.draftn.PhyModes()
+        self.layer2.phyUser.mimoCorrelation = mimoCorrelation
         self.layer2.expectedACKDuration = 68E-6
         self.layer2.ra.raStrategy = OpportunisticwithMIMO()
         self.layer2.manager.numAntennas = numAntennas
@@ -80,8 +81,8 @@ class DraftN(Basic):
         self.layer2.txop.txopLimit = 0.0
 
 class DraftNStation(DraftN):
-    def __init__(self, frequency, position, scanFrequencies, scanDuration, numAntennas, maxAggregation):
-        super(DraftNStation, self).__init__(frequency, numAntennas, maxAggregation)
+    def __init__(self, frequency, position, scanFrequencies, scanDuration, numAntennas, maxAggregation, mimoCorrelation = 0.0):
+        super(DraftNStation, self).__init__(frequency, numAntennas, maxAggregation, mimoCorrelation)
 
         self.position = position
         self.layer2.beacon.enabled = False
