@@ -99,7 +99,7 @@ class StationTypeToAddressTable(ITreeNodeGenerator):
                 yield treeNode
 
 
-def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, staAdrs, maxHopCount, performanceProbes=True, networkProbes=False, draftNProbes=False):
+def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, staAdrs, maxHopCount, performanceProbes=True, networkProbes=False, draftNProbes=False, useDLRE = False):
 
     if(performanceProbes):
         # packet delay probe
@@ -108,18 +108,25 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
         node = openwns.evaluation.createSourceNode(sim, 'wifimac.e2e.packet.incoming.delay')
         node.appendChildren(SettlingTimeGuard(settlingTime))
         n = node.getLeafs().appendChildren(Enumerated(by = 'MAC.StationType', keys = [1,3], names = ['ul', 'dl'], format = '%s'))
-        node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
-                                           name = "wifimac.e2e.packet.incoming.delay",
-                                           description = "Incoming packet delay [s]"))
-        #node.getLeafs().appendChildren(Moments())
-        #node.getLeafs().appendChildren(DLRE(mode='g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001, maxRoundingError = 0.001))
+        if(useDLRE):
+            node.getLeafs().appendChildren(DLRE(mode = 'g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001,
+                                                name = "wifimac.e2e.packet.incoming.delay",
+                                                description = "Incoming packet delay [s]"))
+        else:
+            node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
+                                               name = "wifimac.e2e.packet.incoming.delay",
+                                               description = "Incoming packet delay [s]"))
+
 
         n.appendChildren(Separate(by = "MAC.CompoundHopCount", forAll = range(1, maxHopCount+1), format = "hc%d"))
-        n.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
-                                        name = "wifimac.e2e.packet.incoming.delay",
-                                        description = "Incoming packet delay [s]"))
-        #n.getLeafs().appendChildren(Moments())
-        #n.getLeafs().appendChildren(DLRE(mode='g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001, maxRoundingError = 0.001))
+        if(useDLRE):
+            n.getLeafs().appendChildren(DLRE(mode = 'g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001,
+                                             name = "wifimac.e2e.packet.incoming.delay",
+                                            description = "Incoming packet delay [s]"))
+        else:
+            n.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
+                                            name = "wifimac.e2e.packet.incoming.delay",
+                                            description = "Incoming packet delay [s]"))
 
     if(networkProbes):
         # Table probe for bit throughput, separated by nodeId

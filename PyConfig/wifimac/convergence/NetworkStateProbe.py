@@ -24,22 +24,27 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+import openwns.FUN
+import openwns.pyconfig
+import openwns.Probe
 
-import dll.Layer2
-import openwns.node
+import wifimac.Logger
 
-class RANG( dll.Layer2.Layer2 ):
-    dllDataTransmissions = None
-    dllNotifications = None
-    learnAPfromIncomingData = None
+class NetworkStateProbe(openwns.Probe.Probe):
 
-    def __init__(self, node, parentLogger = None):
-        super(RANG,self).__init__(node, "RANG", parentLogger)
-        self.nameInComponentFactory = "dll.RANG"
-        self.dllDataTransmissions = []
-        self.dllNotifications = []
-        self.learnAPfromIncomingData = False
+    logger = None
+    txDurationProviderCommandName = None
+    localNetworkStateProbeName = None
+    __plugin__ = 'wifimac.convergence.NetworkStateProbe'
 
-    def addAP(self, ap):
-        self.dllDataTransmissions.append(openwns.node.FQSN(ap, ap.dll.dataTransmission))
-        self.dllNotifications.append(openwns.node.FQSN(ap, ap.dll.notification))
+    def __init__(self,
+                 name,
+                 commandName,
+                 localNetworkStateProbeName,
+                 txDurationProviderCommandName,
+                 parentLogger = None, **kw):
+        super(NetworkStateProbe, self).__init__(name=name, commandName=commandName)
+        self.localNetworkStateProbeName = localNetworkStateProbeName
+        self.txDurationProviderCommandName = txDurationProviderCommandName
+        self.logger = wifimac.Logger.Logger("NetworkStateProbe", parent = parentLogger)
+        openwns.pyconfig.attrsetter(self, kw)

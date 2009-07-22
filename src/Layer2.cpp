@@ -31,6 +31,7 @@
 #include <WIFIMAC/pathselection/IPathSelection.hpp>
 #include <WIFIMAC/pathselection/Metric.hpp>
 #include <WIFIMAC/helper/contextprovider/CommandInformation.hpp>
+#include <WIFIMAC/helper/contextprovider/CompoundSize.hpp>
 #include <WNS/service/dll/StationTypes.hpp>
 #include <WNS/Assure.hpp>
 #include <DLL/StationManager.hpp>
@@ -84,6 +85,15 @@ void Layer2::onNodeCreated()
         wifimac::helper::contextprovider::SpatialStreams(fun, "ManagerCommand"));
     getNode()->getContextProviderCollection().addProvider(
         wifimac::helper::contextprovider::IsForMe(fun, "upperConvergence"));
+
+    // Add compound-size context providers
+    getNode()->getContextProviderCollection().addProvider(
+        wifimac::helper::contextprovider::CompleteLengthInBits());
+    getNode()->getContextProviderCollection().addProvider(
+        wifimac::helper::contextprovider::CommandPoolLengthInBits());
+    getNode()->getContextProviderCollection().addProvider(
+        wifimac::helper::contextprovider::DataLengthInBits());
+
 }
 
 void

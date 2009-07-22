@@ -80,7 +80,7 @@ namespace wifimac { namespace helper { namespace contextprovider {
 
 	};
 
-	/**
+    /**
 	 * @brief Context provider for a given compound: 1 if the compound is a
 	 *   unicast transmission, 0 otherwise
 	 *

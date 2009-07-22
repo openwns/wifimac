@@ -147,3 +147,16 @@ PreambleGenerator::hasCapacity() const
     return(this->pendingCompound == wns::ldk::CompoundPtr());
 }
 
+void
+PreambleGenerator::calculateSizes(const wns::ldk::CommandPool* commandPool, Bit& commandPoolSize, Bit& dataSize) const
+{
+    if(friends.manager->getFrameType(commandPool) == PREAMBLE)
+    {
+        commandPoolSize = 0;
+        dataSize = 0;
+    }
+    else
+    {
+        getFUN()->getProxy()->calculateSizes(commandPool, commandPoolSize, dataSize, this);
+    }
+}

@@ -408,11 +408,6 @@ bool MeshForwarding::doOnDataFRS(const wns::ldk::CompoundPtr& compound, Forwardi
 void
 MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
 {
-    if(layer2->getStationType() != wns::service::dll::StationTypes::AP() and layer2->getStationType() != wns::service::dll::StationTypes::FRS())
-    {
-        throw wns::Exception("doSendData not valid for node types other than AP");
-    }
-
     // Received fresh packet from upper layer -> activate command
     ForwardingCommand* fc = activateCommand(compound->getCommandPool());
     fc->magic.path.push_back(layer2->getDLLAddress());
@@ -423,7 +418,7 @@ MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
     assure(uc->peer.sourceMACAddress.isValid(), "uc->peer.sourceMACAddress is not a valid MAC address");
 
     // locally generated traffic, destination not known
-    if (!uc->peer.targetMACAddress.isValid())
+    if (not uc->peer.targetMACAddress.isValid())
     {
         uc->peer.targetMACAddress = ps->getPortalFor(uc->peer.sourceMACAddress);
     }
@@ -445,6 +440,11 @@ MeshForwarding::doSendData(const wns::ldk::CompoundPtr& compound)
                    "Final destination is own transceiver MAC");
 
             MESSAGE_SINGLE(NORMAL, this->logger, "doSendDataAP: Destination " << uc->peer.targetMACAddress << " is known MP -> forward");
+
+            assure((layer2->getStationType() != wns::service::dll::StationTypes::AP()) or
+                   (ps->isPortal(ps->getNextHop(layer2->getDLLAddress(), uc->peer.targetMACAddress)) == false),
+                   "AP cannot forward to an other portal --> RANG has used outdated configuration!");
+
             sendFrameToMP(compound, fc, uc, layer2->getDLLAddress(), uc->peer.targetMACAddress);
         } // end isMeshPoint
         else

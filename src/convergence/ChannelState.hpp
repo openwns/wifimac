@@ -226,7 +226,7 @@ namespace wifimac { namespace convergence {
     };
 
 
-} // mac
-} // glue
+} // convergence
+} // wifimac
 
 #endif // WIFIMAC_CHANNELSTATE_HPP

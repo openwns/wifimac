@@ -31,6 +31,7 @@ from TxDurationSetter import *
 from PreambleGenerator import *
 from FrameSynchronization import *
 from ErrorModelling import *
+from NetworkStateProbe import *
 
 import openwns.Multiplexer
 import openwns.CRC
@@ -42,6 +43,7 @@ names['frameSynchronization'] = 'FrameSynchronization'
 names['crc'] = 'CRC'
 names['txDuration'] = 'TxDuration'
 names['errorModelling'] = 'ErrorModelling'
+names['networkStateProbe'] = 'NetworkStateProbe'
 
 def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs = __upperPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
@@ -93,6 +95,12 @@ def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalID
                             config = config.channelState,
                             parentLogger = logger,
                             localIDs = probeLocalIDs))
+    FUs.append(NetworkStateProbe(name = names['networkStateProbe'] + str(transceiverAddress),
+                                 commandName = names['networkStateProbe'] + 'Command',
+                                 localNetworkStateProbeName = 'wifimac.networkState',
+                                 txDurationProviderCommandName = names['txDuration'] + 'Command',
+                                 paretnLogger = logger,
+                                 localIDs = probeLocalIDs))
     FUs.append(FrameSynchronization(name = names['frameSynchronization'] + str(transceiverAddress),
                                     commandName = names['frameSynchronization'] + 'Command',
                                     managerName = names['manager'] + str(transceiverAddress),

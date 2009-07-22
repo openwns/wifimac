@@ -25,24 +25,20 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_ITXOPWINDOW_HPP
-#define WIFIMAC_LOWERMAC_ITXOPWINDOW_HPP
+#ifndef WIFIMAC_DRAFTN_IBLOCKACKOBSERVER_HPP
+#define WIFIMAC_DRAFTN_IBLOCKACKOBSERVER_HPP
 
-#include <WNS/simulator/Time.hpp>
 #include <WNS/ldk/Compound.hpp>
-#include <WNS/service/dll/Address.hpp>
 
-namespace wifimac { namespace lowerMAC {
-	/** Interface class for FUs which implement "peeking" ability for TXOP **/
-	class ITXOPWindow
+namespace wifimac { namespace draftn {
+	/** @brief observer, called on (un)successful ACK receptions
+	*/
+	class IBlockACKObserver
 	{
 	public:
-		virtual wns::simulator::Time
-		getNextTransmissionDuration() = 0;
-
-		virtual wns::service::dll::UnicastAddress
-		getNextReceiver() const = 0;	
+		virtual void
+		onBlockACKReception(bool success) = 0;
 	};
-} // lowerMAC
+} // draftn
 } // wifimac
-#endif // WIFIMAC_LOWERMAC_ITXOPWINDOW_HPP
+#endif // WIFIMAC_IBLOCKACKOBSERVER_HPP

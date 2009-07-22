@@ -44,17 +44,17 @@
 
 namespace wifimac { namespace convergence {
 
-	class FrameSynchronizationCommand:
-		public wns::ldk::EmptyCommand
-	{
-	};
+    class FrameSynchronizationCommand:
+        public wns::ldk::EmptyCommand
+    {
+    };
 
-	enum SyncStateType {
-		Idle,
-		Synchronized,
-		Garbled,
+    enum SyncStateType {
+        Idle,
+        Synchronized,
+        Garbled,
         waitForFinalDelivery
-	};
+    };
 
 	/**
 	 * @brief FrameSynchronization models the capture effect in OFDM-Receivers
@@ -84,51 +84,51 @@ namespace wifimac { namespace convergence {
 	 * information, see Lee et al., "An Experimental Study on the Capture Effect
 	 * in 802.11a"
 	 */
-	class FrameSynchronization:
-		public wns::ldk::fu::Plain<FrameSynchronization, FrameSynchronizationCommand>,
-		public wns::events::CanTimeout,
-		public RxStartEndNotification,
-		public wns::ldk::probe::Probe
-	{
-	public:
-		FrameSynchronization(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
-		virtual ~FrameSynchronization();
-	private:
-		// CompoundHandlerInterface
-		void doSendData(const wns::ldk::CompoundPtr& compound);
-		void doOnData(const wns::ldk::CompoundPtr& compound);
-		void onFUNCreated();
-		bool doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
-		void doWakeup();
+    class FrameSynchronization:
+        public wns::ldk::fu::Plain<FrameSynchronization, FrameSynchronizationCommand>,
+        public wns::events::CanTimeout,
+        public RxStartEndNotification,
+        public wns::ldk::probe::Probe
+    {
+    public:
+        FrameSynchronization(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
+        virtual ~FrameSynchronization();
+    private:
+        // CompoundHandlerInterface
+        void doSendData(const wns::ldk::CompoundPtr& compound);
+        void doOnData(const wns::ldk::CompoundPtr& compound);
+        void onFUNCreated();
+        bool doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
+        void doWakeup();
 
-		// CanTimeout Interface
-		void onTimeout();
+        // CanTimeout Interface
+        void onTimeout();
 
-		void processPreamble(const wns::ldk::CompoundPtr& compound);
-		void processPSDU(const wns::ldk::CompoundPtr& compound);
-		void failedSyncToNewPreamble(wns::simulator::Time fExDur);
-		void syncToNewPreamble(const wns::simulator::Time fExDur, const wns::service::dll::UnicastAddress transmitter);
+        void processPreamble(const wns::ldk::CompoundPtr& compound);
+        void processPSDU(const wns::ldk::CompoundPtr& compound);
+        void failedSyncToNewPreamble(wns::simulator::Time fExDur);
+        void syncToNewPreamble(const wns::simulator::Time fExDur, const wns::service::dll::UnicastAddress transmitter);
 
 
-		wns::logger::Logger logger;
-		SyncStateType curState;
-		wns::service::dll::UnicastAddress synchronizedToAddress;
-		const wns::Ratio slcCapture;
-		const wns::Ratio slgCapture;
-		const wns::Ratio idleCapture;
-		const wns::Ratio detectionThreshold;
-		wns::simulator::Time lastFrameEnd;
+        wns::logger::Logger logger;
+        SyncStateType curState;
+        wns::service::dll::UnicastAddress synchronizedToAddress;
+        const wns::Ratio slcCapture;
+        const wns::Ratio slgCapture;
+        const wns::Ratio idleCapture;
+        const wns::Ratio detectionThreshold;
+        wns::simulator::Time lastFrameEnd;
 
         const std::string managerName;
-		const std::string crcCommandName;
-		const std::string phyUserCommandName;
+        const std::string crcCommandName;
+        const std::string phyUserCommandName;
         const std::string errorModellingCommandName;
         const std::string sinrMIBServiceName;
 
-		/**
+        /**
 		 * @brief Probing of the PSDU success rate
 		 */
-		wns::probe::bus::ContextCollectorPtr successRateProbe;
+        wns::probe::bus::ContextCollectorPtr successRateProbe;
         /** @brief Probing the sinr of received MPDUs */
         wns::probe::bus::ContextCollectorPtr sinrProbe;
 
@@ -137,13 +137,12 @@ namespace wifimac { namespace convergence {
 
         wifimac::management::SINRInformationBase* sinrMIB;
 
-		struct Friends
-		{
+        struct Friends
+        {
             wifimac::lowerMAC::Manager* manager;
-		} friends;
-	};
+        } friends;
+    };
 } // end namespace convergence
 } // end namespace wifimac
-	
-	
+
 #endif // ifndef WIFIMAC_CONVERGENCE_FRAMESYNCHRONIZATION_HPP

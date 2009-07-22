@@ -69,6 +69,15 @@ namespace wifimac { namespace lowerMAC { namespace timing {
 
         virtual void onFUNCreated();
 
+	/// notifying observers every time the backoff has finished, wether or not a transmission is waiting
+	void
+	registerEOBObserver(BackoffObserver* observer) {backoff.registerEOBObserver(observer);}
+
+	/// time the backoff will be finished at (when called during AIFS the maximum waiting time will be used)
+	/// wns::simulator::Time() if backoff hasn't started, current time when finished and idle
+	wns::simulator::Time
+	backoffFinishedAt() {return backoff.finishedAt();}
+
     private:
 
         /** @brief BackoffObserver interface for the transmission of data frames */

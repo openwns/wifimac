@@ -35,8 +35,8 @@ class MCS(object):
 
     def __init__(self, modulation, codingRate, minSINR):
         self.modulation = modulation
-	self.codingRate = codingRate
-	self.minSINR = minSINR
+        self.codingRate = codingRate
+        self.minSINR = minSINR
 
 class PhyMode(MCS):
     numberOfSpatialStreams = None
@@ -46,10 +46,10 @@ class PhyMode(MCS):
 
     def __init__(self, modulation, codingRate, numberOfSpatialStreams, numberOfDataSubcarriers, plcpMode, guardIntervalDuration, minSINR):
         super(PhyMode, self).__init__(modulation=modulation, codingRate=codingRate, minSINR=minSINR)
-	self.numberOfSpatialStreams = numberOfSpatialStreams
-	self.numberOfDataSubcarriers = numberOfDataSubcarriers
-	self.plcpMode = plcpMode
-	self.guardIntervalDuration = guardIntervalDuration
+        self.numberOfSpatialStreams = numberOfSpatialStreams
+        self.numberOfDataSubcarriers = numberOfDataSubcarriers
+        self.plcpMode = plcpMode
+        self.guardIntervalDuration = guardIntervalDuration
 
     def __str__(self):
         return "(%s-%s)*%d*%d" % (self.modulation, self.codingRate, self.numberOfDataSubcarriers, self.numberOfSpatialStreams)
@@ -68,15 +68,15 @@ class IEEE80211a(PhyModesDeliverer):
     def __init__(self):
         self.switchingPointOffset = dB(1.0)
         self.phyModePreamble = makeBasicPhyMode("BPSK", "1/2", dB(6.0))
-	self.defaultPhyMode = makeBasicPhyMode("BPSK", "1/2", dB(6.0))
-	self.MCSs = [MCS("BPSK", "1/2",  dB(6.0)),
-		     MCS("BPSK", "3/4",  dB(8.7)),
-		     MCS("QPSK", "1/2",  dB(8.8)),
-		     MCS("QPSK", "3/4",  dB(12.0)),
-		     MCS("QAM16", "1/2", dB(15.4)),
-		     MCS("QAM16", "3/4", dB(18.8)),
-		     MCS("QAM64", "2/3", dB(23.5)),
-		     MCS("QAM64", "3/4", dB(24.8))]
+        self.defaultPhyMode = makeBasicPhyMode("BPSK", "1/2", dB(6.0))
+        self.MCSs = [MCS("BPSK", "1/2",  dB(6.0)),
+                     MCS("BPSK", "3/4",  dB(8.7)),
+                     MCS("QPSK", "1/2",  dB(8.8)),
+                     MCS("QPSK", "3/4",  dB(12.0)),
+                     MCS("QAM16", "1/2", dB(15.4)),
+                     MCS("QAM16", "3/4", dB(18.8)),
+                     MCS("QAM64", "2/3", dB(23.5)),
+                     MCS("QAM64", "3/4", dB(24.8))]
 
     def getLowest(self):
         return(makeBasicPhyMode("BPSK", "1/2", dB(6.0)))
@@ -84,10 +84,10 @@ class IEEE80211a(PhyModesDeliverer):
 
 def makeBasicPhyMode(modulation, codingRate, minSINR):
     return PhyMode(modulation = modulation,
-		   codingRate = codingRate,
-		   numberOfSpatialStreams = 1,
-		   numberOfDataSubcarriers = 48,
-		   plcpMode = "Basic",
-		   guardIntervalDuration = 0.8e-6,
-		   minSINR = minSINR)
+                   codingRate = codingRate,
+                   numberOfSpatialStreams = 1,
+                   numberOfDataSubcarriers = 48,
+                   plcpMode = "Basic",
+                   guardIntervalDuration = 0.8e-6,
+                   minSINR = minSINR)
 

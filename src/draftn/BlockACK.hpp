@@ -47,6 +47,8 @@
 #include <WNS/Observer.hpp>
 #include <WNS/RoundRobin.hpp>
 
+#include <WIFIMAC/draftn/IBlockACKObserver.hpp>
+
 namespace wifimac {
     namespace draftn {
 
@@ -375,6 +377,9 @@ namespace wifimac {
             void
             onFUNCreated();
 
+	    /// observers get called after an (un)successful transmission
+	    void registerObserver(IBlockACKObserver *o) {observers.push_back(o);}
+
             /**
              * @brief Processing of incoming (received) compounds
              *
@@ -492,6 +497,10 @@ namespace wifimac {
                     return friends.manager;
                 }
 
+    protected:
+	    virtual bool
+	    doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
+
     private:
             /**
              * @brief Manages an incoming ACK (or rather the set of SNs)
@@ -504,6 +513,7 @@ namespace wifimac {
              * different receiver that has been stored temporarily)
              */
             void processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs);
+	    bool isAccepting(const wns::ldk::CompoundPtr& compound) const;
 
             /** @brief Debug helper function */
             void printTxQueueStatus() const;
@@ -549,14 +559,6 @@ namespace wifimac {
             /// Storage of outgoing, non-ack'ed frames
             TransmissionQueue *txQueue;
 
-            /// temporary storage of first compound for the next transmission
-            /// block with different receiver
-            wns::ldk::CompoundPtr nextFirstCompound;
-
-            // address of the receiver for the next transmission round after the
-            // current one has been transmitted successfully
-            wns::service::dll::UnicastAddress nextReceiver;
-
             /// Storage of incoming, non-ordered frames
             wns::container::Registry<wns::service::dll::UnicastAddress, ReceptionQueue*> rxQueues;
 
@@ -601,10 +603,7 @@ namespace wifimac {
             /// calculation of size (e.g. by bits or pdus)
             std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
 
-            /// True if the ougoing compound routine tries to get more compounds
-            /// via a wakeup call - required to avoid recursion.
-            bool inWakeup;
-
+	    std::vector<IBlockACKObserver *> observers;
         };
 
 } // mac
