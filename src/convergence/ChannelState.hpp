@@ -42,6 +42,7 @@
 #include <WNS/logger/Logger.hpp>
 #include <WNS/events/CanTimeout.hpp>
 #include <WNS/service/phy/ofdma/Notification.hpp>
+#include <WNS/service/phy/ofdma/Handler.hpp>
 #include <WNS/Observer.hpp>
 #include <WNS/Functor.hpp>
 #include <WNS/ldk/crc/CRC.hpp>
@@ -85,7 +86,8 @@ namespace wifimac { namespace convergence {
         public wns::ldk::Processor<ChannelState>,
         public ChannelStateNotification,
         public NAVNotification,
-        public wns::Observer<wns::service::phy::ofdma::CarrierSensing>,
+        //public wns::Observer<wns::service::phy::ofdma::CarrierSensing>,
+        public wns::service::phy::ofdma::RSSHandler,
         public wns::Observer<wifimac::convergence::ITxStartEnd>,
         public wns::Observer<wifimac::convergence::IRxStartEnd>,
         public wns::events::CanTimeout,
@@ -110,7 +112,7 @@ namespace wifimac { namespace convergence {
         virtual void
         onFUNCreated();
 
-        /** @brief Notification from PhyUser on RSS change */
+        /** @brief Notification from PHY on RSS change */
         virtual void
         onRSSChange(wns::Power newRSS);
 
