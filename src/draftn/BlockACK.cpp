@@ -92,7 +92,7 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
 }
 
 BlockACK::BlockACK(const BlockACK& other) :
-    CompoundHandlerInterface(other),
+    //CompoundHandlerInterface(other),
     CommandTypeSpecifierInterface(other),
     HasReceptorInterface(other),
     HasConnectorInterface(other),
