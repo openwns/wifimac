@@ -146,8 +146,10 @@ void ChannelState::setCarrierSensingService(wns::service::Service* cs)
 {
     assure(cs, "must be non-NULL");
     assureType(cs, wns::service::phy::ofdma::Notification*);
-    this->wns::Observer<wns::service::phy::ofdma::CarrierSensing>::startObserving
-        (dynamic_cast<wns::service::phy::ofdma::Notification*>(cs));
+    dynamic_cast<wns::service::phy::ofdma::Notification*>(cs)->registerRSSHandler(this);
+
+    //this->wns::Observer<wns::service::phy::ofdma::CarrierSensing>::startObserving
+    //(dynamic_cast<wns::service::phy::ofdma::Notification*>(cs));
 } // setNotificationService
 
 void

@@ -117,16 +117,16 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
                                                name = "wifimac.e2e.packet.incoming.delay",
                                                description = "Incoming packet delay [s]"))
 
-
-        n.appendChildren(Separate(by = "MAC.CompoundHopCount", forAll = range(1, maxHopCount+1), format = "hc%d"))
-        if(useDLRE):
-            n.getLeafs().appendChildren(DLRE(mode = 'g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001,
-                                             name = "wifimac.e2e.packet.incoming.delay",
-                                            description = "Incoming packet delay [s]"))
-        else:
-            n.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
-                                            name = "wifimac.e2e.packet.incoming.delay",
-                                            description = "Incoming packet delay [s]"))
+        if(maxHopCount > 0):
+            n.appendChildren(Separate(by = "MAC.CompoundHopCount", forAll = range(1, maxHopCount+1), format = "hc%d"))
+            if(useDLRE):
+                n.getLeafs().appendChildren(DLRE(mode = 'g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001,
+                                                 name = "wifimac.e2e.packet.incoming.delay",
+                                                 description = "Incoming packet delay [s]"))
+            else:
+                n.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
+                                                name = "wifimac.e2e.packet.incoming.delay",
+                                                description = "Incoming packet delay [s]"))
 
     if(networkProbes):
         # Table probe for bit throughput, separated by nodeId

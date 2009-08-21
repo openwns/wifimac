@@ -120,6 +120,7 @@ hppFiles = [
     'src/helper/HopContextWindowProbe.hpp',
     'src/helper/Keys.hpp',
     'src/helper/ThroughputProbe.hpp',
+    'src/helper/CholeskyDecomposition.hpp',
     'src/helper/contextprovider/CommandInformation.hpp',
     'src/helper/contextprovider/CompoundSize.hpp',
     'src/draftn/Aggregation.hpp',

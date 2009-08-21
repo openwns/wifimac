@@ -72,7 +72,7 @@ Buffer::Buffer(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::View& config) :
 } // Buffer
 
 Buffer::Buffer(const Buffer& other) :
-	wns::ldk::CompoundHandlerInterface(other),
+    //wns::ldk::CompoundHandlerInterface<Buffer>(other),
 	wns::ldk::CommandTypeSpecifierInterface(other),
 	wns::ldk::HasReceptorInterface(other),
 	wns::ldk::HasConnectorInterface(other),
