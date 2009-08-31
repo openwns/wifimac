@@ -102,6 +102,9 @@ namespace wifimac { namespace convergence {
         void
         setCarrierSensingService(wns::service::Service* cs);
 
+	void
+	registerRSSObserver(wns::Observer<wns::service::phy::ofdma::CarrierSensing> *o) {rssObservers.push_back(o);}
+
     private:
         /** @brief Processor Interface Implementation */
         void
@@ -145,6 +148,9 @@ namespace wifimac { namespace convergence {
 
         wns::pyconfig::View config;
         wns::logger::Logger logger;
+
+	/** @brief units to be informed on RSS changes */
+	std::vector<wns::Observer<wns::service::phy::ofdma::CarrierSensing>*> rssObservers;
 
         /**
 		 * @brief identifies which indicators are switched on or off

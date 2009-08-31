@@ -303,6 +303,10 @@ void ChannelState::onRSSChange(wns::Power newRSS)
         checkNewCS();
     }
 
+    for(int i=0; i < rssObservers.size(); i++)
+    {
+	rssObservers[i]->onRSSChange(newRSS);
+    }
 }
 
 CS ChannelState::getCurrentChannelState() const
