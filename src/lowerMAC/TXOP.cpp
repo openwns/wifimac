@@ -51,7 +51,8 @@ TXOP::TXOP(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     expectedACKDuration(config_.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
     txopLimit(config_.get<wns::simulator::Time>("myConfig.txopLimit")),
     singleReceiver(config_.get<bool>("myConfig.singleReceiver")),
-    remainingTXOPDuration(0),
+    maxOutTXOP(config_.get<bool>("myConfig.maxOutTXOP")),
+   remainingTXOPDuration(0),
     txopReceiver(),
     logger(config_.get("logger"))
 {
@@ -185,11 +186,20 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
             return;
         }
 
-        wns::simulator::Time nextFrameExchangeDuration =
-            this->sifsDuration
-            + nextDuration
-            + this->sifsDuration
-            + this->expectedACKDuration;
+        wns::simulator::Time nextFrameExchangeDuration;
+
+	if (not maxOutTXOP)
+	{
+	    nextFrameExchangeDuration =  this->sifsDuration
+				        + nextDuration
+            				+ this->sifsDuration
+            				+ this->expectedACKDuration;
+	}
+	else
+	{
+	    nextFrameExchangeDuration = this->remainingTXOPDuration;
+	}
+
 
         if (this->remainingTXOPDuration < nextFrameExchangeDuration)
         {

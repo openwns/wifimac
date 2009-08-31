@@ -36,6 +36,9 @@ class TXOPConfig(object):
     txopLimit = 0
     singleReceiver = False
     """ when True, continuous TXOP operation, else TXOP has to be triggered with startTXOP() """
+    maxOutTXOP = False
+    """ when True, set NAV to cover the rest of the TXOP window, regardless of next frame transmission duration """
+
     
 class TXOP(openwns.Probe.Probe):
 

@@ -105,6 +105,9 @@ namespace wifimac { namespace lowerMAC {
         const wns::simulator::Time sifsDuration;
         const wns::simulator::Time expectedACKDuration;
         const bool singleReceiver;
+	
+	/** @brief indicates wether NAV should be set to cover complete TXOP window or not */
+	bool maxOutTXOP;
 
 	wns::simulator::Time txopLimit;
         wns::simulator::Time remainingTXOPDuration;
