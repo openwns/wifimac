@@ -352,7 +352,7 @@ VirtualPathSelection::registerProxy(const wns::service::dll::UnicastAddress prox
 	// Hence, we search for the first portal from which the first hop to the proxy is not another portal
 	for(adr2ucMap::iterator itr = portals.begin(); itr != portals.end(); ++itr)
 	{
-		if(!isPortal(getNextHop(mapper.get(itr->first), proxy)))
+		if(getNextHop(mapper.get(itr->first), proxy).isValid() and !isPortal(getNextHop(mapper.get(itr->first), proxy)))
 		{
 			assure(pathCosts[proxyId][itr->first].isNotInf(), "Path cost from proxy to portal is inf -> network is not connected");
 			assure(pathCosts[itr->first][proxyId].isNotInf(), "Path cost from portal to proxy is inf -> network is not connected");
@@ -596,7 +596,7 @@ VirtualPathSelection::onNewPathSelectionEntry()
         // Hence, we search for the one portal from which the first hop to the proxy is not another portal
         for(adr2ucMap::iterator portalsItr = portals.begin(); portalsItr != portals.end(); ++portalsItr)
         {
-            if(!isPortal(getNextHop(mapper.get(portalsItr->first), mapper.get(clientsItr->second))))
+            if(getNextHop(mapper.get(portalsItr->first), mapper.get(clientsItr->second)).isValid() and !isPortal(getNextHop(mapper.get(portalsItr->first), mapper.get(clientsItr->second))))
             {
                 assure(pathCosts[clientsItr->second][portalsItr->first].isNotInf(),
                        "Path cost from proxy to portal is inf -> network is not connected");
