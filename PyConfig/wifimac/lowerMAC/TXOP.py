@@ -31,8 +31,10 @@ import openwns.pyconfig
 import wifimac.Logger
 
 class TXOPConfig(object):
-    sifsDuration = 16E-6
-    expectedACKDuration = 44E-6
+    # Variables are set globally
+    sifsDuration = None
+    maximumACKDuration = None
+
     txopLimit = 0
     singleReceiver = False
     """ when True, continuous TXOP operation, else TXOP has to be triggered with startTXOP() """

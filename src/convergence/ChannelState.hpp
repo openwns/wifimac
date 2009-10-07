@@ -220,7 +220,7 @@ namespace wifimac { namespace convergence {
          */
         const wns::simulator::Time sifsDuration;
         const wns::simulator::Time preambleProcessingDelay;
-        const wns::simulator::Time expectedCTSDuration;
+        const wns::simulator::Time maximumCTSDuration;
         const wns::simulator::Time slotDuration;
 
         /**

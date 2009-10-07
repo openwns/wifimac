@@ -242,7 +242,7 @@ namespace wifimac { namespace lowerMAC {
         wns::logger::Logger logger_;
 
         /** @brief Expected duration of an ACK frame*/
-        const wns::simulator::Time expectedACKDuration;
+        const wns::simulator::Time maximumACKDuration;
 
         /** @brief Short Interframce Space duration */
         const wns::simulator::Time sifsDuration;

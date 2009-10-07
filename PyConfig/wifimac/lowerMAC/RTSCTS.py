@@ -33,10 +33,11 @@ import wifimac.Logger
 import wifimac.convergence.PhyMode
 
 class RTSCTSConfig(object):
-    sifsDuration = 16E-6
-    expectedACKDuration = 44E-6
-    expectedCTSDuration = 44E-6
-    preambleProcessingDelay = 21E-6
+    # Variables are set globally in Layer2.py
+    sifsDuration = None
+    maximumACKDuration = None
+    maximumCTSDuration = None
+    preambleProcessingDelay = None
 
     rtsctsPhyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
     """ PhyMode with which the rts and cts are transmitted --> default the lowest for most robustness"""
@@ -44,7 +45,10 @@ class RTSCTSConfig(object):
     # sizes include the CRC
     rtsBits = 16*8 + 4*8
     ctsBits = 10*8 + 4*8
-    rtsctsThreshold = 800e6*8
+
+    rtsctsThreshold = None
+    """ Set globally in Layer2.py """
+
     rtsctsOnTxopData = False
 
 class RTSCTS(openwns.FUN.FunctionalUnit):

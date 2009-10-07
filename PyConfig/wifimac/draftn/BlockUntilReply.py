@@ -31,8 +31,9 @@ import openwns.pyconfig
 import wifimac.Logger
 
 class BlockUntilReplyConfig(object):
-    sifsDuration = 16E-6
-    preambleProcessingDelay = 21E-6
+    # Variables are set globally in Layer2.py
+    sifsDuration = None
+    preambleProcessingDelay = None
 
 class BlockUntilReply(openwns.FUN.FunctionalUnit):
     __plugin__ = "wifimac.draftn.BlockUntilReply"

@@ -150,8 +150,8 @@ namespace wifimac { namespace lowerMAC {
         /** @brief Duration of the Short InterFrame Space */
         const wns::simulator::Time sifsDuration;
 
-        const wns::simulator::Time expectedACKDuration;
-        const wns::simulator::Time expectedCTSDuration;
+        const wns::simulator::Time maximumACKDuration;
+        const wns::simulator::Time maximumCTSDuration;
         const wns::simulator::Time preambleProcessingDelay;
 
         const wifimac::convergence::PhyMode rtsctsPhyMode;

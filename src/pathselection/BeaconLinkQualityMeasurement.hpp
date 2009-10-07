@@ -181,7 +181,7 @@ namespace wifimac { namespace pathselection {
         /** @brief frame size for metric calculation */
         const Bit meanFrameSize;
         /** @brief expected duration of an ACK for metric calculation */
-        const wns::simulator::Time expectedAckDuration;
+        const wns::simulator::Time maximumACKDuration;
         /** @brief Slot duration for metric calculation */
         const wns::simulator::Time slotDuration;
         /** @brief SIFS duration for metric calculation */

@@ -59,11 +59,8 @@ void BackoffTest::prepare()
 	   << "\n"
 	   << "backoffLogger = Logger(\"BO\")\n"
 	   << "class myConfig:\n"
-	   << "  sifsDuration = " << sifsDuration << "\n"
 	   << "  slotDuration = " << slotDuration << "\n"
-	   << "  expectedAckDuration = " << ackDuration << "\n"
 	   << "  aifsDuration = " << aifsDuration << "\n"
-	   << "  eifsDuration = " << eifsDuration << "\n"
 	   << "  cwMin = " << cwMin << "\n"
 	   << "  cwMax = " << cwMax << "\n"
 	   << "\n";

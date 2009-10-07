@@ -119,7 +119,7 @@ namespace wifimac { namespace lowerMAC {
         int longRetryCounter;
 
         const wns::simulator::Time sifsDuration;
-        const wns::simulator::Time expectedACKDuration;
+        const wns::simulator::Time maximumACKDuration;
         const wns::simulator::Time preambleProcessingDelay;
 
         const wifimac::convergence::PhyMode ackPhyMode;

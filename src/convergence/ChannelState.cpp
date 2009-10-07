@@ -70,7 +70,7 @@ ChannelState::ChannelState(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& c
 
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
     preambleProcessingDelay(config_.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
-    expectedCTSDuration(config_.get<wns::simulator::Time>("myConfig.expectedCTSDuration")),
+    maximumCTSDuration(config_.get<wns::simulator::Time>("myConfig.maximumCTSDuration")),
     slotDuration(config_.get<wns::simulator::Time>("myConfig.slotDuration")),
 
     // probing the channel busy fraction
@@ -213,36 +213,49 @@ ChannelState::processIncoming(const wns::ldk::CompoundPtr& compound)
     // Derive channel state from NAV information send in the MAC header
     if(friends.manager->getFrameType(compound->getCommandPool()) != PREAMBLE)
     {
-        wns::simulator::Time duration = friends.manager->getFrameExchangeDuration(compound->getCommandPool());
-        MESSAGE_SINGLE(NORMAL, logger, "Received valid compound with fExDur " << duration);
-
-        if(duration < this->sifsDuration)
+        if(friends.manager->isForMe(compound->getCommandPool()))
         {
+            // NAV is only set for frames NOT for me
             return;
         }
 
+        wns::simulator::Time duration = 0;
         if(isRTS(compound))
         {
+            assure(friends.manager->getFrameExchangeDuration(compound->getCommandPool()) > 0,
+                   "Received RTS with FrameExchangeDuration <= 0");
+
             // special handling of RTS frames: set duration only until expected
-            // reception start of the data frame
-            duration = 2*this->sifsDuration + this->expectedCTSDuration + this->preambleProcessingDelay + 2*this->slotDuration;
+            // reception start of the data frame:
+            //   SIFS + CTS + SIFS + Preamble + 2 slots
+            duration = this->sifsDuration +
+                this->maximumCTSDuration +
+                this->preambleProcessingDelay + 2*this->slotDuration;
         }
-
-        if(not friends.manager->isForMe(compound->getCommandPool()))
+        else
         {
-            // NAV is only set for frames not for me
-            if(wns::simulator::getEventScheduler()->getTime() + duration > this->latestNAV)
+            duration = friends.manager->getFrameExchangeDuration(compound->getCommandPool());
+            MESSAGE_SINGLE(NORMAL, logger, "Received valid compound with fExDur " << duration);
+
+            if(duration < this->sifsDuration)
             {
-                latestNAV = wns::simulator::getEventScheduler()->getTime() + duration;
-
-                // signal NAV
-                this->wns::Subject<INetworkAllocationVector>::forEachObserver
-                    (OnChangedNAV(true, friends.manager->getTransmitterAddress(compound->getCommandPool())));
-
-                this->setNewTimeout(duration);
-                this->checkNewCS();
+                return;
             }
+
         }
+
+        if(wns::simulator::getEventScheduler()->getTime() + duration > this->latestNAV)
+        {
+            latestNAV = wns::simulator::getEventScheduler()->getTime() + duration;
+
+            // signal NAV
+            this->wns::Subject<INetworkAllocationVector>::forEachObserver
+                (OnChangedNAV(true, friends.manager->getTransmitterAddress(compound->getCommandPool())));
+
+            this->setNewTimeout(duration);
+            this->checkNewCS();
+        }
+
     }
     else
     {

@@ -50,8 +50,8 @@ RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     txStartEndName(config_.get<std::string>("txStartEndName")),
 
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
-    expectedACKDuration(config_.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
-    expectedCTSDuration(config_.get<wns::simulator::Time>("myConfig.expectedCTSDuration")),
+    maximumACKDuration(config_.get<wns::simulator::Time>("myConfig.maximumACKDuration")),
+    maximumCTSDuration(config_.get<wns::simulator::Time>("myConfig.maximumCTSDuration")),
     preambleProcessingDelay(config_.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
     rtsctsPhyMode(config_.getView("myConfig.rtsctsPhyMode")),
     rtsBits(config_.get<Bit>("myConfig.rtsBits")),
@@ -325,11 +325,11 @@ RTSCTS::onRxStart(wns::simulator::Time /*expRxTime*/)
 {
     if(state == waitForCTS)
     {
-        assure(this->hasTimeoutSet(),
-               "state if waitForCTS but no timeout set?");
+        assure(this->hasTimeoutSet(), "state waitForCTS but no timeout set?");
+        assure(this->pendingMPDU, "state waitForCTS but no pendingMPDU?");
+        cancelTimeout();
         MESSAGE_SINGLE(NORMAL, logger,
-                       "got rxStartIndication, set timeout to expected cts duration " << this->expectedCTSDuration);
-        setNewTimeout(this->expectedCTSDuration + 10e-9);
+                       "got rxStartIndication, cancel timeout");
         state = receiveCTS;
     }
 }
@@ -339,10 +339,10 @@ RTSCTS::onRxEnd()
 {
     if(state == receiveCTS)
     {
+        assure(this->pendingMPDU, "state receiveCTS but no pendingMPDU?");
         MESSAGE_SINGLE(NORMAL, logger,
                        "onRxEnd and waiting for CTS -> set short timeout");
-        assure(this->hasTimeoutSet(),
-               "onRxEnd, but no timeout set");
+
         // wait some time for the delivery
         setNewTimeout(10e-9);
     }
@@ -351,7 +351,17 @@ RTSCTS::onRxEnd()
 void
 RTSCTS::onRxError()
 {
-    // do nothing, there will be a timeout
+    if(state == waitForCTS or state == receiveCTS)
+    {
+        assure(this->pendingMPDU, "state waitForCTS/receiveCTS but no pendingMPDU?");
+        MESSAGE_SINGLE(NORMAL, logger,
+                       "onRxError and waiting for CTS -> failure!");
+        if(hasTimeoutSet())
+        {
+            cancelTimeout();
+        }
+        this->onTimeout();
+    }
 }
 
 void RTSCTS::onNAVBusy(const wns::service::dll::UnicastAddress setter)
@@ -398,11 +408,11 @@ RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& mpdu)
 
     wns::simulator::Time nav =
         sifsDuration
-        + expectedCTSDuration
+        + maximumCTSDuration
         + sifsDuration
         + duration
         + sifsDuration
-        + expectedACKDuration;
+        + maximumACKDuration;
 
     wns::ldk::CompoundPtr rts =
         friends.manager->createCompound(friends.manager->getTransmitterAddress(mpdu->getCommandPool()),   // tx address
@@ -433,7 +443,7 @@ RTSCTS::prepareCTS(const wns::ldk::CompoundPtr& rts)
     wns::ldk::CommandPool* rtsCP = rts->getCommandPool();
 
     // calculate nav from rts
-    wns::simulator::Time nav = friends.manager->getFrameExchangeDuration(rtsCP) - sifsDuration - expectedCTSDuration;
+    wns::simulator::Time nav = friends.manager->getFrameExchangeDuration(rtsCP) - sifsDuration - maximumCTSDuration;
     wns::ldk::CompoundPtr cts = friends.manager->createCompound(friends.manager->getReceiverAddress(rtsCP),
                                                                 friends.manager->getTransmitterAddress(rtsCP),
                                                                 ACK,

@@ -31,8 +31,10 @@ import openwns.pyconfig
 import wifimac.Logger
 
 class ManagerConfig(object):
-    sifsDuration = 16E-6
-    expectedACKDuration = 44E-6
+    # Variables are set globally
+    sifsDuration = None
+    maximumACKDuration = None
+
     numAntennas = 1
     """ number of antennas for MIMO """
     msduLifetimeLimit = 0

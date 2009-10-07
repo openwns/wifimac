@@ -533,8 +533,8 @@ namespace wifimac {
             wns::ldk::DelayedInterface *sendBuffer;
             /// Duration of the Short InterFrame Space
             const wns::simulator::Time sifsDuration;
-            /// Expected duration of BlockACK
-            const wns::simulator::Time expectedACKDuration;
+            /// Maximum expected duration of BlockACK
+            const wns::simulator::Time maximumACKDuration;
             /// Duration between start of preamble and rx indication
             const wns::simulator::Time preambleProcessingDelay;
             /// Maximum number of stored bits (rx+tx+air)

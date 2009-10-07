@@ -61,7 +61,7 @@ class FrameLength(object):
     """ Size of beacon without any extra IEs"""
 
     def __init__(self):
-        self.macDataHdr = 30*8
+        self.macDataHdr = 32*8
         self.macDataFCS = 4*8
         self.amsdu_subhdr = 14*8
         self.ampdu_delimiter = 4*8

@@ -38,16 +38,18 @@ class StopAndWaitARQConfig(object):
     """ rety limit of frames <= RTSThreshold """
     longRetryLimit = 4
     """ retry limit of frames >= RTSThreshold """
-    rtsctsThreshold = 3000*8
+    rtsctsThreshold = None
+    """ set globally in Layer2.py"""
 
     ackPhyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
     """ PhyMode with which the ack is transmitted --> default the lowest
         for most robustness
     """
 
-    sifsDuration = 16E-6
-    expectedACKDuration = 44E-6
-    preambleProcessingDelay = 21E-6
+    """ Variables are set globally """
+    sifsDuration = None
+    maximumACKDuration = None
+    preambleProcessingDelay = None
 
     statusCollector = openwns.ARQ.StatusCollectorTwoSizesWindowed
     windowSize = 1.0
@@ -78,7 +80,7 @@ class StopAndWaitARQ(openwns.Probe.Probe):
     longRetryLimit = None
     rtsctsThreshold = None
     sifsDuration = None
-    expectedACKDuration = None
+    maximumACKDuration = None
     preambleProcessingDelay = None
     ackPhyMode = None
 
@@ -111,15 +113,15 @@ class StopAndWaitARQ(openwns.Probe.Probe):
         self.longRetryLimit = config.longRetryLimit
         self.rtsctsThreshold = config.rtsctsThreshold
         self.sifsDuration = config.sifsDuration
-        self.expectedACKDuration = config.expectedACKDuration
+        self.maximumACKDuration = config.maximumACKDuration
         self.preambleProcessingDelay = config.preambleProcessingDelay
         self.ackPhyMode = config.ackPhyMode
         self.bitsPerIFrame = config.bitsPerIFrame
         self.bitsPerRRFrame = config.bitsPerRRFrame
         self.arqStatusCollector = config.statusCollector(self.logger)
         self.arqStatusCollector.setParams(windowSize = config.windowSize,
-            minSamples = config.minSamples,
-            insufficientSamplesReturn = config.insufficientSamplesReturn,
-            frameSizeThreshold = config.frameSizeThreshold)
+                                          minSamples = config.minSamples,
+                                          insufficientSamplesReturn = config.insufficientSamplesReturn,
+                                          frameSizeThreshold = config.frameSizeThreshold)
         self.numTxAttemptsProbeName = probePrefix + '.numTxAttempts'
         openwns.pyconfig.attrsetter(self, kw)

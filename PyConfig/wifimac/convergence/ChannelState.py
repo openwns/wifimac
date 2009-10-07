@@ -46,10 +46,11 @@ class ChannelStateConfig(object):
     """ To probe the channel busy fraction """
     channelBusyFractionMeasurementPeriod = 0.5
 
-    sifsDuration = 16E-6
-    preambleProcessingDelay = 21E-6
-    slotDuration = 9E-6
-    expectedCTSDuration = 44E-6
+    """ Variables are set globally and copied here"""
+    sifsDuration = None
+    preambleProcessingDelay = None
+    slotDuration = None
+    maximumCTSDuration = None
 
 class ChannelState(openwns.Probe.Probe):
     __plugin__ = 'wifimac.convergence.ChannelState'

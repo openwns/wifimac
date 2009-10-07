@@ -31,9 +31,9 @@ import openwns.pyconfig
 import wifimac.Logger
 
 class DCFConfig(object):
-    """ Constants for the medium access waiting times, see IEEE Std 802.11-2007 """
-    slotDuration=9E-6
-    """ PHY-dependant, see 9.2.10 """
+    """ Constants for the medium access waiting times, see IEEE Std 802.11-2007"""
+    slotDuration = None
+    """ PHY-dependant, see 9.2.10 - Variable set globally in Layer2.py"""
     aifsDuration = 34E-6
     """ arbitration interframe space, see 9.2.3.4 """
     cwMin = None

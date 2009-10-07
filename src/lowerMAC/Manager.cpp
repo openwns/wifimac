@@ -48,7 +48,7 @@ Manager::Manager(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config) :
     wns::ldk::fu::Plain<Manager, ManagerCommand>(fun),
     config_(config),
     logger_(config_.get("logger")),
-    expectedACKDuration(config.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
+    maximumACKDuration(config.get<wns::simulator::Time>("myConfig.maximumACKDuration")),
     sifsDuration(config.get<wns::simulator::Time>("myConfig.sifsDuration")),
     myMACAddress_(config.get<wns::service::dll::UnicastAddress>("myMACAddress")),
     ucName_(config_.get<std::string>("upperConvergenceCommandName")),
@@ -127,7 +127,7 @@ Manager::processOutgoing(const wns::ldk::CompoundPtr& compound)
     // The command has to be activated to be considered in the createReply chain
     ManagerCommand* mc = activateCommand(compound->getCommandPool());
     mc->peer.type = DATA;
-    mc->peer.frameExchangeDuration = this->sifsDuration + this->expectedACKDuration;
+    mc->peer.frameExchangeDuration = this->sifsDuration + this->maximumACKDuration;
     if(this->msduLifetimeLimit > 0)
     {
         mc->local.expirationTime =  wns::simulator::getEventScheduler()->getTime() + this->msduLifetimeLimit;

@@ -36,10 +36,13 @@ class BeaconLinkQualityMeasurementConfig(object):
     windowLength = 9.5
     noiseLevel = dBm(-94)
     meanFrameSize = 1500*8
-    expectedAckDuration = 44E-6
-    slotDuration = 9E-6
-    sifsDuration = 16E-6
-    preambleDuration = 16E-6
+
+    # variables are set globally
+    maximumACKDuration = None
+    slotDuration = None
+    sifsDuration = None
+
+    preambleDuration = 20E-6
     scalingFactor = 0.00144
     maxMissedBeacons = 9
 

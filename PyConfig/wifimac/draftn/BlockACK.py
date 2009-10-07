@@ -36,11 +36,13 @@ import wifimac.convergence.PhyMode
 
 class BlockACKConfig(object):
 
-    sifsDuration = 16E-6
-    preambleProcessingDelay = 21E-6
+    sifsDuration = None
+    """ set globally in Layer2.py """
+    preambleProcessingDelay = None
+    """ set globally in Layer2.py """
 
-    expectedACKDuration = 68E-6
-    """ expected ACK duration for a BA is higher than the legacy ACK"""
+    maximumACKDuration = None
+    """ expected ACK duration for a BA is higher than the legacy ACK, default 68e-6 (set globally)"""
 
     blockACKBits = 32*8
     """ Size of BlockACK """

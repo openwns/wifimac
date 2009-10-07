@@ -245,7 +245,7 @@ class Config(Sealed):
     bufferSize = 10
     bufferSizeUnit = 'PDU'
 
-    headerBits = 30*8
+    headerBits = 32*8
     crcBits = 4*8
 
     maxFrameSize = 65538*8
@@ -256,11 +256,35 @@ class Config(Sealed):
     # begin example "wifimac.pyconfig.layer2.config.multiusevariables"
     # variables which are used multiple times
     rtsctsThreshold = None
+    """ This threshold (in bits) decides if (a) a rts/cts handshake
+        precedes a frame transmission and (b) if the frame is
+        considered as large or small (for the retransmission limit)
+    """
+
     sifsDuration = None
-    expectedACKDuration = None
-    expectedCTSDuration = None
+    """ Duration of the Short Interframe Space (SIFS) in seconds
+    """
+
+    maximumACKDuration = None
+    """ The maximum duration of a ACK frame [seconds]. This value is used
+        to set the frame exchange duration field in data (and rts/cts)
+        frames so that other STAs can set their NAV accordingly.
+    """
+
+    maximumCTSDuration = None
+    """ Similar to maximumACKDuration but for the CTS frame - used in the
+        RTS frame [seconds].
+    """
+
     slotDuration = None
+    """ The duration of a backoff slot [seconds]."""
+
     preambleProcessingDelay = None
+    """ Delay from the start of the preamble (which is small+long training
+        sequence plus PLCP Header) until the receiver has identified the
+        preamble as valid OFDM transmission and signals RxStartIndication -->
+        duration of preamble plus short delay
+    """
     # end example
 
     multipleUsedVariables = None
@@ -292,19 +316,19 @@ class Config(Sealed):
         self.multipleUsedVariables = dict()
         self.multipleUsedVariables['rtsctsThreshold'] = ['self', 'self.arq', 'self.rtscts']
         self.multipleUsedVariables['sifsDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockACK', 'self.blockUntilReply', 'self.channelState', 'self.beaconLQM']
-        self.multipleUsedVariables['expectedACKDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockACK', 'self.beaconLQM']
-        self.multipleUsedVariables['expectedCTSDuration'] = ['self', 'self.rtscts', 'self.channelState']
-        self.multipleUsedVariables['slotDuration'] =  ['self', 'self.unicastDCF', 'self.channelState', 'self.beaconLQM']
+        self.multipleUsedVariables['maximumACKDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockACK', 'self.beaconLQM']
+        self.multipleUsedVariables['maximumCTSDuration'] = ['self', 'self.rtscts', 'self.channelState']
+        self.multipleUsedVariables['slotDuration'] =  ['self', 'self.unicastDCF', 'self.broadcastDCF', 'self.channelState', 'self.beaconLQM']
         self.multipleUsedVariables['preambleProcessingDelay'] = ['self', 'self.rtscts', 'self.blockACK', 'self.arq', 'self.blockUntilReply', 'self.channelState']
 
         # this ensures consistency, no matter on what the variables are set by default
         self.rtsctsThreshold = 800*8
         self.sifsDuration = 16E-6
         self.preambleProcessingDelay = 21E-6
-        self.expectedCTSDuration = 44E-6
+        self.maximumCTSDuration = 44E-6
         self.slotDuration = 9E-6
         # value for normal ACK -- change e.g. for BlockACK to 68E-6
-        self.expectedACKDuration = 44E-6
+        self.maximumACKDuration = 44E-6
 
     def __setattr__(self, name, val):
         # special setattr for multiple used variables: Enable propagation of single setting to required FUs
@@ -313,5 +337,7 @@ class Config(Sealed):
                 exec(target + '.__dict__[\'' + name + '\']=' + str(val))
         else:
             self.__dict__[name] = val
+
+
 
 

@@ -66,7 +66,7 @@ class DraftN(Basic):
         self.layer2.funTemplate = wifimac.draftn.FUNTemplate
         self.layer2.phyUser.phyModesDeliverer = wifimac.draftn.PhyModes()
         self.layer2.phyUser.mimoCorrelation = mimoCorrelation
-        self.layer2.expectedACKDuration = 68E-6
+        self.layer2.maximumACKDuration = 68E-6
         self.layer2.ra.raStrategy = OpportunisticwithMIMO()
         self.layer2.manager.numAntennas = numAntennas
 

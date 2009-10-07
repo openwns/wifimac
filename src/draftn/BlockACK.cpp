@@ -55,7 +55,7 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
     sendBufferName(config_.get<std::string>("sendBufferName")),
     perMIBServiceName(config_.get<std::string>("perMIBServiceName")),
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
-    expectedACKDuration(config_.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
+    maximumACKDuration(config_.get<wns::simulator::Time>("myConfig.maximumACKDuration")),
     preambleProcessingDelay(config_.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
     blockACKPhyMode(config_.getView("myConfig.blockACKPhyMode")),
     capacity(config_.get<Bit>("myConfig.capacity")),
@@ -112,7 +112,7 @@ BlockACK::BlockACK(const BlockACK& other) :
     perMIBServiceName(other.perMIBServiceName),
     sendBuffer(other.sendBuffer),
     sifsDuration(other.sifsDuration),
-    expectedACKDuration(other.expectedACKDuration),
+    maximumACKDuration(other.maximumACKDuration),
     preambleProcessingDelay(other.preambleProcessingDelay),
     capacity(other.capacity),
     maxOnAir(other.maxOnAir),
@@ -531,7 +531,7 @@ TransmissionQueue::TransmissionQueue(BlockACK* parent_,
     this->baREQ = parent->friends.manager->createCompound(parent->friends.manager->getMACAddress(),
                                                           adr,
                                                           DATA,
-                                                          parent->sifsDuration + parent->expectedACKDuration,
+                                                          parent->sifsDuration + parent->maximumACKDuration,
                                                           true);
     // block ack settings
     BlockACKCommand* baReqCommand = parent->activateCommand(this->baREQ->getCommandPool());
@@ -916,7 +916,7 @@ void ReceptionQueue::processIncomingACKreq(const wns::ldk::CompoundPtr& compound
     }
 
     // create BlockACK
-   wns::simulator::Time fxDur = parent->friends.manager->getFrameExchangeDuration(compound->getCommandPool()) - parent->sifsDuration - parent->expectedACKDuration;
+   wns::simulator::Time fxDur = parent->friends.manager->getFrameExchangeDuration(compound->getCommandPool()) - parent->sifsDuration - parent->maximumACKDuration;
    if (fxDur < parent->sifsDuration)
    {
 	fxDur = 0;

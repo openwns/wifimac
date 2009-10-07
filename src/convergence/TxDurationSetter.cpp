@@ -77,11 +77,11 @@ TxDurationSetter::processOutgoing(const wns::ldk::CompoundPtr& compound)
     wifimac::convergence::PhyMode phyMode = friends.manager->getPhyMode(compound->getCommandPool());
 
     // calculate tx duration
-    wns::simulator::Time preambleTxDuration = protocolCalculator->getDuration()->preamble(phyMode);
+    wns::simulator::Time preambleDuration = protocolCalculator->getDuration()->preamble(phyMode);
 
     if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
     {
-        command->local.txDuration = preambleTxDuration;
+        command->local.txDuration = preambleDuration;
 
         MESSAGE_BEGIN(NORMAL, this->logger, m, "Preamble");
         m << ": duration " << command->local.txDuration;
@@ -89,12 +89,12 @@ TxDurationSetter::processOutgoing(const wns::ldk::CompoundPtr& compound)
     }
     else
     {
-        command->local.txDuration = protocolCalculator->getDuration()->MPDU_PPDU(compound->getLengthInBits(), phyMode) - preambleTxDuration;
+        command->local.txDuration = protocolCalculator->getDuration()->MPDU_PPDU(compound->getLengthInBits(), phyMode) - preambleDuration;
         MESSAGE_BEGIN(VERBOSE, this->logger, m, "Outgoing Compound with size ");
         m << compound->getLengthInBits();
         m << " at " << phyMode;
         m << " --> dur " << protocolCalculator->getDuration()->MPDU_PPDU(compound->getLengthInBits(), phyMode);
-        m << " - " << preambleTxDuration;
+        m << " - " << preambleDuration;
         m << " ( " << protocolCalculator->getDuration()->ofdmSymbols(compound->getLengthInBits(), phyMode) << " symb";
         m << " with " << protocolCalculator->getDuration()->symbol(phyMode) << " per symbol)";
         MESSAGE_END();

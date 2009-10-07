@@ -63,7 +63,7 @@ BroadcastLinkQuality::BroadcastLinkQuality(const wns::pyconfig::View& config_,
     missedBeaconsInRow(10),
     linkCreated(false),
     meanFrameSize(config.get<Bit>("myConfig.meanFrameSize")),
-    expectedAckDuration(config.get<wns::simulator::Time>("myConfig.expectedAckDuration")),
+    maximumACKDuration(config.get<wns::simulator::Time>("myConfig.maximumACKDuration")),
     slotDuration(config.get<wns::simulator::Time>("myConfig.slotDuration")),
     sifsDuration(config.get<wns::simulator::Time>("myConfig.sifsDuration")),
     preambleDuration(config.get<wns::simulator::Time>("myConfig.preambleDuration")),
@@ -126,7 +126,7 @@ BroadcastLinkQuality::newPeerMeasurement(double peerSuccessRate, wns::Ratio peer
 
     // Convert optSINR to frametime + PLCP preamble + ACK + SIFS
     // TODO: This should be a function provided by the protocol calculator
-    double frameTxTime = (this->meanFrameSize)/this->getBestRate(peerSINR) + this->preambleDuration + this->sifsDuration + this->expectedAckDuration;
+    double frameTxTime = (this->meanFrameSize)/this->getBestRate(peerSINR) + this->preambleDuration + this->sifsDuration + this->maximumACKDuration;
 
     // Convert rate to expected transmission time
     double ett = (1.0/peerSuccessRate) * frameTxTime + (pow(2,3+1.0/peerSuccessRate) - 1)/2*this->slotDuration;

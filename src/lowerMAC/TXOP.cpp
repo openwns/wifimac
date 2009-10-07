@@ -48,7 +48,7 @@ TXOP::TXOP(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     txopWindowName(config_.get<std::string>("txopWindowName")),
     raName(config_.get<std::string>("raName")),
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
-    expectedACKDuration(config_.get<wns::simulator::Time>("myConfig.expectedACKDuration")),
+    maximumACKDuration(config_.get<wns::simulator::Time>("myConfig.maximumACKDuration")),
     txopLimit(config_.get<wns::simulator::Time>("myConfig.txopLimit")),
     singleReceiver(config_.get<bool>("myConfig.singleReceiver")),
     maxOutTXOP(config_.get<bool>("myConfig.maxOutTXOP")),
@@ -59,8 +59,8 @@ TXOP::TXOP(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     // either no TXOP (==0) or TXOP limit long enough to contain SIFS duration and ACK response
 /*    if (txopLimit > 0)
     {
-        assure (txopLimit > sifsDuration + expectedACKDuration,
-                "TXOP limit too small (must be greater than SIFS duration + expected ACK Duration or 0 for no TXOP)");
+        assure (txopLimit > sifsDuration + maximumACKDuration,
+                "TXOP limit too small (must be greater than SIFS duration + maximum ACK Duration or 0 for no TXOP)");
     }
 */    MESSAGE_SINGLE(NORMAL, this->logger, "created");
 
@@ -152,7 +152,7 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
         this->remainingTXOPDuration = this->remainingTXOPDuration
                                         - duration
                                         - this->sifsDuration
-                                        - this->expectedACKDuration;
+                                        - this->maximumACKDuration;
 
         MESSAGE_SINGLE(NORMAL, this->logger, "Current compound cuts TXOP to " << this->remainingTXOPDuration);
 
@@ -188,18 +188,17 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
 
         wns::simulator::Time nextFrameExchangeDuration;
 
-	if (not maxOutTXOP)
-	{
-	    nextFrameExchangeDuration =  this->sifsDuration
-				        + nextDuration
-            				+ this->sifsDuration
-            				+ this->expectedACKDuration;
-	}
-	else
-	{
-	    nextFrameExchangeDuration = this->remainingTXOPDuration;
-	}
-
+        if (not maxOutTXOP)
+        {
+            nextFrameExchangeDuration =  this->sifsDuration
+                + nextDuration
+                + this->sifsDuration
+                + this->maximumACKDuration;
+        }
+        else
+        {
+            nextFrameExchangeDuration = this->remainingTXOPDuration;
+        }
 
         if (this->remainingTXOPDuration < nextFrameExchangeDuration)
         {
@@ -280,8 +279,8 @@ void TXOP::setTXOPLimit(wns::simulator::Time limit)
 {
 /*    if (limit > 0)
     {
-        assure (txopLimit > sifsDuration + expectedACKDuration,
-                "TXOP limit too small (must be greater than SIFS duration + expected ACK Duration or 0 for no TXOP)");
+        assure (txopLimit > sifsDuration + maximumACKDuration,
+                "TXOP limit too small (must be greater than SIFS duration + maximum ACK Duration or 0 for no TXOP)");
     }
 */    this->txopLimit = limit;
     this->remainingTXOPDuration = 0;

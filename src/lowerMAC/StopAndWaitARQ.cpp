@@ -60,7 +60,7 @@ StopAndWaitARQ::StopAndWaitARQ(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::V
     longRetryCounter(0),
     rtsctsThreshold(config.get<Bit>("rtsctsThreshold")),
     sifsDuration(config.get<wns::simulator::Time>("sifsDuration")),
-    expectedACKDuration(config.get<wns::simulator::Time>("expectedACKDuration")),
+    maximumACKDuration(config.get<wns::simulator::Time>("maximumACKDuration")),
     preambleProcessingDelay(config.get<wns::simulator::Time>("preambleProcessingDelay")),
     ackPhyMode(config.getView("ackPhyMode")),
     ackState(none)
@@ -129,7 +129,18 @@ void StopAndWaitARQ::onRxEnd()
 
 void StopAndWaitARQ::onRxError()
 {
-    // we do nothing and let the timeout pass
+    if(ackState == waitForACK or ackState == receiving)
+    {
+        assure(this->activeCompound, "state is waitForACK/receiving but no active compound");
+        MESSAGE_SINGLE(NORMAL, logger, "onRxError and waiting for ACK -> failure");
+
+        if(hasTimeoutSet())
+
+        {
+            cancelTimeout();
+        }
+        this->onTimeout();
+    }
 }
 
 void
@@ -188,6 +199,7 @@ void StopAndWaitARQ::processOutgoing(const wns::ldk::CompoundPtr& compound)
     }
     else
     {
+        // TODO: Set the frame exchange duration here
         wns::ldk::arq::StopAndWait::processOutgoing(compound);
     }
 }
@@ -241,7 +253,7 @@ void StopAndWaitARQ::processIncoming(const wns::ldk::CompoundPtr& compound)
         this->ackCompound = wns::ldk::CompoundPtr(new wns::ldk::Compound(ackPCI));
         friends.manager->setFrameType(ackPCI, ACK);
         friends.manager->setPhyMode(ackPCI, ackPhyMode);
-        wns::simulator::Time fxDur = friends.manager->getFrameExchangeDuration(compound->getCommandPool()) - sifsDuration - expectedACKDuration;
+        wns::simulator::Time fxDur = friends.manager->getFrameExchangeDuration(compound->getCommandPool()) - sifsDuration - maximumACKDuration;
         if (fxDur < sifsDuration)
         {
             fxDur = 0;
