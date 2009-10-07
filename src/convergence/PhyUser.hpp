@@ -129,6 +129,7 @@ namespace wifimac { namespace convergence {
         } phyUserStatus;
 
 		wns::ldk::CompoundPtr currentTxCompound;
+		wns::simulator::Time lastTxRxTurnaround;
 	};
 
 } // namespace convergence
