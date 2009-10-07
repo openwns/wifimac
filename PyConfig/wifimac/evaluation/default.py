@@ -128,6 +128,24 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
                                                 name = "wifimac.e2e.packet.incoming.delay",
                                                 description = "Incoming packet delay [s]"))
 
+        # packet head-of-line delay probe measures the duration when
+        # the packet leaves the queue until it is received
+        # successfully. In contrast to the usual definition, the delay
+        # does not include the duration for the (successful) ACK
+        # transmission. E.g. if the frame is received successfully,
+        # but the ACK not, the frame is re-transmitted (probably
+        # several times!). This is NOT included here.
+        node = openwns.evaluation.createSourceNode(sim, 'wifimac.hol.packet.incoming.delay')
+        node.appendChildren(SettlingTimeGuard(settlingTime))
+        if(useDLRE):
+            node.getLeafs().appendChildren(DLRE(mode = 'g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001,
+                                                name = "wifimac.hol.packet.delay",
+                                                description = "Packet service time [s]"))
+        else:
+            node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
+                                               name = "wifimac.hol.packet.delay",
+                                               description = "Packet service time [s]"))
+
     if(networkProbes):
         # Table probe for bit throughput, separated by nodeId
         for sourceName in ['wifimac.e2e.window.incoming.bitThroughput.hop', 'wifimac.e2e.window.aggregated.bitThroughput.hop']:

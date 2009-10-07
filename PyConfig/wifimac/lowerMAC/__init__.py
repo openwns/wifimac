@@ -50,6 +50,7 @@ names['rxFilter'] = 'RxFilter'
 names['overhead'] = 'Overhead'
 names['p2pWindowProbe'] = 'p2pWindowProbe'
 names['buffer'] = 'Buffer'
+names['holDelayProbe'] = 'holDelayProbe'
 names['DuplicateFilter'] = 'DuplicateFilter'
 names['arq'] = 'ARQ'
 names['ra'] = 'RateAdaptation'
@@ -73,6 +74,12 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
                       managerName = names['manager'] + str(transceiverAddress),
                       protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                       parentLogger = logger))
+
+    FUs.append(openwns.ldk.Probe.PacketProbeBus(name = names['holDelayProbe'] + str(transceiverAddress),
+                                                prefix = 'wifimac.hol',
+                                                commandName = names['holDelayProbe'] + 'Command',
+                                                parentLogger = logger,
+                                                moduleName = 'WiFiMAC'))
 
     FUs.append(DuplicateFilter(functionalUnitName = names['DuplicateFilter'] + str(transceiverAddress),
                                commandName =  names['DuplicateFilter'] + 'Command',

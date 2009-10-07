@@ -453,7 +453,17 @@ BlockACK::onRxEnd()
 void
 BlockACK::onRxError()
 {
-    // we do nothing and let the timeout pass
+    if(this->baState == receiving)
+    {
+        MESSAGE_SINGLE(NORMAL, logger, "onRxError and waiting for ACK -> failure");
+
+        if(hasTimeoutSet())
+
+        {
+            cancelTimeout();
+        }
+        this->onTimeout();
+    }
 }
 
 void

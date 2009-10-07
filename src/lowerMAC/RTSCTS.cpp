@@ -351,7 +351,7 @@ RTSCTS::onRxEnd()
 void
 RTSCTS::onRxError()
 {
-    if(state == waitForCTS or state == receiveCTS)
+    if(state == receiveCTS)
     {
         assure(this->pendingMPDU, "state waitForCTS/receiveCTS but no pendingMPDU?");
         MESSAGE_SINGLE(NORMAL, logger,

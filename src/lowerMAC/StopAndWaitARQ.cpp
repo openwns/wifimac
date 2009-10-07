@@ -129,7 +129,7 @@ void StopAndWaitARQ::onRxEnd()
 
 void StopAndWaitARQ::onRxError()
 {
-    if(ackState == waitForACK or ackState == receiving)
+    if(ackState == receiving)
     {
         assure(this->activeCompound, "state is waitForACK/receiving but no active compound");
         MESSAGE_SINGLE(NORMAL, logger, "onRxError and waiting for ACK -> failure");
