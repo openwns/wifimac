@@ -59,7 +59,8 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
     txrxTurnaroundDelay(config.get<wns::simulator::Time>("myConfig.txrxTurnaroundDelay")),
     mimoCorrelation(config.get<double>("myConfig.mimoCorrelation")),
     phyUserStatus(receiving),
-    currentTxCompound()
+    currentTxCompound(),
+    lastTxRxTurnaround(0.0)
 {
     tune.frequency = config.get<double>("myConfig.initFrequency");
     tune.bandwidth = config.get<double>("myConfig.initBandwidthMHz");
@@ -147,9 +148,17 @@ void PhyUser::onData(wns::osi::PDUPtr pdu, wns::service::phy::power::PowerMeasur
         // During transmission, the receiver is off
         return;
     }
-
     // FIRST: create a copy instead of working on the real compound
     wns::ldk::CompoundPtr compound = wns::staticCast<wns::ldk::Compound>(pdu)->copy();
+
+    wns::simulator::Time frameRxDuration = getFUN()->getCommandReader(txDurationProviderCommandName)->
+        readCommand<wifimac::convergence::TxDurationProviderCommand>(compound->getCommandPool())->getDuration();
+
+    if(lastTxRxTurnaround > (wns::simulator::getEventScheduler()->getTime() - frameRxDuration))
+    {
+	// The received frame started BEFORE the last txrxTurnaround -> not readable!
+	return;
+    }
 
     if(!getFUN()->getProxy()->commandIsActivated(
         compound->getCommandPool(), this))     
@@ -251,6 +260,7 @@ void PhyUser::onTimeout()
     {
         // finished turnaround, ready to receive
         phyUserStatus = receiving;
+	lastTxRxTurnaround = wns::simulator::getEventScheduler()->getTime();
         return;
     }
 
