@@ -128,6 +128,7 @@ namespace wifimac { namespace lowerMAC {
             none,
             waitForACK,
             receiving,
+            receptionFinished,
             sendingACK
         } ackState;
 

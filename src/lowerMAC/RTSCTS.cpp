@@ -88,7 +88,7 @@ RTSCTS::~RTSCTS()
 void RTSCTS::onFUNCreated()
 {
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
- 
+
     friends.phyUser = getFUN()->findFriend<wifimac::convergence::PhyUser*>(phyUserName);
     assure(friends.phyUser, "Could not get phyUser from my FUN");
 
@@ -167,13 +167,11 @@ RTSCTS::processIncoming(const wns::ldk::CompoundPtr& compound)
                     m << "state is receiveCTS\n";
                 MESSAGE_END();
             }
-            assure(state != idle,
+            assure(state == receptionFinished,
                    "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout);
 
-            if((state == idle)
-                or
-               (friends.manager->getTransmitterAddress(compound->getCommandPool())
-                != friends.manager->getReceiverAddress(this->pendingMPDU->getCommandPool())))
+            if(friends.manager->getTransmitterAddress(compound->getCommandPool())
+               != friends.manager->getReceiverAddress(this->pendingMPDU->getCommandPool()))
             {
                 MESSAGE_SINGLE(NORMAL, this->logger,
                                "Incoming CTS does not match the receiver's address on the pending MPDU -> do nothing");
@@ -327,7 +325,7 @@ RTSCTS::onRxStart(wns::simulator::Time /*expRxTime*/)
     {
         assure(this->hasTimeoutSet(), "state waitForCTS but no timeout set?");
         assure(this->pendingMPDU, "state waitForCTS but no pendingMPDU?");
-        cancelTimeout();
+        //cancelTimeout();
         MESSAGE_SINGLE(NORMAL, logger,
                        "got rxStartIndication, cancel timeout");
         state = receiveCTS;
@@ -342,6 +340,7 @@ RTSCTS::onRxEnd()
         assure(this->pendingMPDU, "state receiveCTS but no pendingMPDU?");
         MESSAGE_SINGLE(NORMAL, logger,
                        "onRxEnd and waiting for CTS -> set short timeout");
+        state = receptionFinished;
 
         // wait some time for the delivery
         setNewTimeout(10e-9);
@@ -356,11 +355,13 @@ RTSCTS::onRxError()
         assure(this->pendingMPDU, "state waitForCTS/receiveCTS but no pendingMPDU?");
         MESSAGE_SINGLE(NORMAL, logger,
                        "onRxError and waiting for CTS -> failure!");
-        if(hasTimeoutSet())
+        state = waitForCTS;
+
+        if(not hasTimeoutSet())
         {
-            cancelTimeout();
+            // waiting period is over
+            this->onTimeout();
         }
-        this->onTimeout();
     }
 }
 
@@ -380,6 +381,11 @@ void RTSCTS::onNAVIdle()
 void
 RTSCTS::onTimeout()
 {
+    if(state == receiveCTS)
+    {
+        MESSAGE_SINGLE(NORMAL, this->logger, "Started reception during wait for CTS -> wait for delivery");
+        return;
+    }
     assure(state != idle, "onTimeout although state is idle");
 
     // reception of cts has failed --> frame has failed

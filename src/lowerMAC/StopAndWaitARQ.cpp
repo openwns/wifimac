@@ -111,8 +111,8 @@ void StopAndWaitARQ::onRxStart(wns::simulator::Time /*expRxTime*/)
     {
         assure(this->activeCompound, "state is waitForACK but no active compound");
         assure(hasTimeoutSet(), "ackState is waiting but no timeout set?");
-        MESSAGE_SINGLE(NORMAL, logger, "got rxStartIndication, cancel timeout");
-        cancelTimeout();
+        MESSAGE_SINGLE(NORMAL, logger, "got rxStartIndication, wait for ACK delivery");
+        //cancelTimeout();
         ackState = receiving;
     }
 }
@@ -122,8 +122,10 @@ void StopAndWaitARQ::onRxEnd()
     if (ackState == receiving)
     {
         assure(this->activeCompound, "state is receiving but no active compound");
-        MESSAGE_SINGLE(NORMAL, logger, "onRxEnd and waiting for ACK -> set short timeout");
+        ackState = receptionFinished;
         setTimeout(10e-9);
+        MESSAGE_SINGLE(NORMAL, logger, "onRxEnd and waiting for ACK -> set short timeout");
+
     }
 }
 
@@ -134,12 +136,14 @@ void StopAndWaitARQ::onRxError()
         assure(this->activeCompound, "state is waitForACK/receiving but no active compound");
         MESSAGE_SINGLE(NORMAL, logger, "onRxError and waiting for ACK -> failure");
 
-        if(hasTimeoutSet())
+        // return to waitForACK
+        ackState = waitForACK;
 
+        if(not hasTimeoutSet())
         {
-            cancelTimeout();
+            // waiting period is over
+            this->onTimeout();
         }
-        this->onTimeout();
     }
 }
 
@@ -212,7 +216,7 @@ void StopAndWaitARQ::processIncoming(const wns::ldk::CompoundPtr& compound)
     {
         MESSAGE_SINGLE(NORMAL, this->logger, "Received ACK frame, consider current frame as done");
 
-        assure(this->ackState == waitForACK or this->ackState == receiving, "Received ACK but not waiting for ack");
+        assure(this->ackState == receptionFinished, "Received ACK but not waiting for ack");
         assure(this->activeCompound, "Received ACK but no active compound");
 
         this->statusCollector->onSuccessfullTransmission(this->activeCompound);
@@ -300,6 +304,12 @@ StopAndWaitARQ::onTransmissionHasFailed(const wns::ldk::CompoundPtr& compound)
 
 void StopAndWaitARQ::onTimeout()
 {
+    if(ackState == receiving)
+    {
+        MESSAGE_SINGLE(NORMAL, this->logger, "Started reception during wait for ACK -> wait for delivery");
+        return;
+    }
+
     // ACK was not received before timeout
     assure(this->activeCompound, "no active compound, no failed transmission");
 

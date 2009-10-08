@@ -183,7 +183,8 @@ namespace wifimac { namespace lowerMAC {
             idle,
             transmitRTS,
             waitForCTS,
-            receiveCTS
+            receiveCTS,
+            receptionFinished
         } state;
 
         wns::simulator::Time ctsPrepared;
