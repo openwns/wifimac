@@ -151,18 +151,21 @@ void PhyUser::onData(wns::osi::PDUPtr pdu, wns::service::phy::power::PowerMeasur
     // FIRST: create a copy instead of working on the real compound
     wns::ldk::CompoundPtr compound = wns::staticCast<wns::ldk::Compound>(pdu)->copy();
 
+    if(not getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this))
+    {
+        // if the phyUserCommand is not activated, the compound was not send
+        // from a WIFIMAC node!
+        return;
+    }
+
     wns::simulator::Time frameRxDuration = getFUN()->getCommandReader(txDurationProviderCommandName)->
         readCommand<wifimac::convergence::TxDurationProviderCommand>(compound->getCommandPool())->getDuration();
 
     if(lastTxRxTurnaround > (wns::simulator::getEventScheduler()->getTime() - frameRxDuration))
     {
-	// The received frame started BEFORE the last txrxTurnaround -> not readable!
-	return;
+        // The received frame started BEFORE the last txrxTurnaround -> not readable!
+        return;
     }
-
-    if(!getFUN()->getProxy()->commandIsActivated(
-        compound->getCommandPool(), this))     
-            return;
 
     // check if we have enough antennas to receive all streams
     unsigned int nss = friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams();
