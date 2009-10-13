@@ -213,6 +213,10 @@ DeAggregation::processOutgoing(const wns::ldk::CompoundPtr& compound)
     Bit completeSize = 0;
 
     // iterate over the compounds to get the complete and single sizes
+    // note that those sizes do NOT include any padding done by the Aggregation/Concatanation FU thus sizes differ from
+    // those of the Aggregation FU. HOWEVER since the frameTxDuration is correct and sizes are only used to calculate
+    // fractions of this duration, the mechanism still works (-:
+
     wns::ldk::concatenation::ConcatenationCommand* aggCommand = getFUN()->getCommandReader(aggregationCommandName)->
         readCommand<wns::ldk::concatenation::ConcatenationCommand>(compound->getCommandPool());
     for (std::vector<wns::ldk::CompoundPtr>::iterator it = aggCommand->peer.compounds.begin();
@@ -228,6 +232,7 @@ DeAggregation::processOutgoing(const wns::ldk::CompoundPtr& compound)
     // iterate over the compounds and queue transmissions
     wns::simulator::Time nextStart = 0.0;
     std::vector<Bit>::iterator itS = sduSizes.begin();
+
     for (std::vector<wns::ldk::CompoundPtr>::iterator itC = aggCommand->peer.compounds.begin();
          itC != aggCommand->peer.compounds.end();
          ++itC, ++itS)
