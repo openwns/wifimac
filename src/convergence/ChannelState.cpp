@@ -156,6 +156,7 @@ void
 ChannelState::onTxStart(const wns::ldk::CompoundPtr& /*compound*/)
 {
     this->indicators.ownTx = true;
+    MESSAGE_SINGLE(NORMAL, logger, "Start of own transmission --> busy");
     checkNewCS();
 }
 
@@ -166,6 +167,7 @@ ChannelState::onTxEnd(const wns::ldk::CompoundPtr& compound)
 
     if(friends.manager->getFrameExchangeDuration(compound->getCommandPool()) > this->sifsDuration)
     {
+        MESSAGE_SINGLE(NORMAL, logger, "End of own transmission, awaiting reply --> set NAV");
         // something expected after the frame (either own tx or reply) --> set
         // short NAV
         wns::simulator::Time duration = this->sifsDuration + this->preambleProcessingDelay;
@@ -175,7 +177,10 @@ ChannelState::onTxEnd(const wns::ldk::CompoundPtr& compound)
             this->setNewTimeout(duration);
         }
     }
-
+    else
+    {
+        MESSAGE_SINGLE(NORMAL, logger, "End of own transmission --> idle");
+    }
     checkNewCS();
 }
 
@@ -200,9 +205,13 @@ ChannelState::onRxError()
 }
 
 void
-ChannelState::processOutgoing(const  wns::ldk::CompoundPtr& /*compound*/)
+ChannelState::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
-
+    // The onTxStart/onTxEnd is not issued for preambles!
+    if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
+    {
+        this->onTxStart(compound);
+    }
 }
 
 void

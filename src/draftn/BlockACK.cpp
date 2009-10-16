@@ -241,11 +241,10 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
 
     if(getCommand(compound->getCommandPool())->isACK())
     {
-        assure(currentReceiver != wns::service::dll::UnicastAddress(),"got ACK though nothing has been transmitted");
-        assure(txQueue != NULL,"got ACK though no transmission queue");
-        assure(transmitter == currentReceiver,"got ACK from wrong Station");
-        assure(this->baState == waitForACK or this->baState == receiving,
-               "Received ACK but not waiting for one");
+        assure(currentReceiver != wns::service::dll::UnicastAddress(), "got ACK though nothing has been transmitted");
+        assure(txQueue != NULL, "got ACK though no transmission queue");
+        assure(transmitter == currentReceiver, "got ACK from wrong Station");
+        assure(this->baState == receptionFinished, "Received ACK but not waiting for one");
 
         this->processIncomingACKSNs(getCommand(compound->getCommandPool())->peer.ackSNs);
         return;
@@ -289,6 +288,8 @@ BlockACK::processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs
     {
         cancelTimeout();
     }
+
+    // Reset the baState: Noting is send, not waiting for anything -> idle!
     this->baState = idle;
 
     // forward SNs to txQueue
@@ -385,6 +386,8 @@ BlockACK::onTxEnd(const wns::ldk::CompoundPtr& compound)
         assure(txQueue != NULL, "TxEnd from BA-REQ, but no transmission queue");
         assure(txQueue->waitsForACK(),
                "TxEnd from BA-REQ for current receiver " << currentReceiver << ", but queue is not waiting for ACK");
+
+        // we give sifs+preambleProcessing until the baState must be "receiving"
         setNewTimeout(sifsDuration + preambleProcessingDelay);
         baState = waitForACK;
         MESSAGE_SINGLE(NORMAL, this->logger, "onTxEnd() of BAreq, wait on BA for " << sifsDuration + preambleProcessingDelay);
@@ -394,6 +397,12 @@ BlockACK::onTxEnd(const wns::ldk::CompoundPtr& compound)
 void
 BlockACK::onTimeout()
 {
+    if(this->baState == receiving)
+    {
+        MESSAGE_SINGLE(NORMAL, this->logger, "Started reception during wait for BA -> wait for delivery");
+        return;
+    }
+
     // we did not receive anything after the blockACKreq transmission
     assure(txQueue != NULL, "Timeout, but no transmission queue");
     assure(txQueue->waitsForACK(), "Timeout, but txQueue is not waiting for ACK");
@@ -434,9 +443,9 @@ BlockACK::onRxStart(wns::simulator::Time /*expRxTime*/)
     if(this->baState == waitForACK)
     {
         assure(hasTimeoutSet(), "ackState is waiting but no timeout set?");
-        cancelTimeout();
+        //cancelTimeout();
         this->baState = receiving;
-        MESSAGE_SINGLE(NORMAL, this->logger, "onRxStart() during wait for BA -> stop timeout");
+        MESSAGE_SINGLE(NORMAL, this->logger, "onRxStart() during wait for BA");
     }
 }
 
@@ -445,6 +454,7 @@ BlockACK::onRxEnd()
 {
     if(this->baState == receiving)
     {
+        this->baState = receptionFinished;
         setTimeout(10e-9);
         MESSAGE_SINGLE(NORMAL, this->logger, "onRxEnd() during wait for BA -> short wait for delivery of BA");
     }
@@ -453,7 +463,23 @@ BlockACK::onRxEnd()
 void
 BlockACK::onRxError()
 {
-    // we do nothing and let the timeout pass
+    if(this->baState == receiving)
+    {
+        MESSAGE_SINGLE(NORMAL, logger, "onRxError and waiting for ACK -> failure");
+        this->baState = waitForACK;
+
+        if(not hasTimeoutSet())
+        {
+            // waiting period is over
+            this->onTimeout();
+        }
+
+//        if(hasTimeoutSet())
+//         {
+//             cancelTimeout();
+//         }
+//         this->onTimeout();
+    }
 }
 
 void

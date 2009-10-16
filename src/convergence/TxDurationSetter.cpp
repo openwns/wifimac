@@ -29,6 +29,8 @@
 #include <WIFIMAC/convergence/TxDurationSetter.hpp>
 #include <DLL/Layer2.hpp>
 
+#include <iomanip>
+
 using namespace wifimac::convergence;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
@@ -90,7 +92,7 @@ TxDurationSetter::processOutgoing(const wns::ldk::CompoundPtr& compound)
     else
     {
         command->local.txDuration = protocolCalculator->getDuration()->MPDU_PPDU(compound->getLengthInBits(), phyMode) - preambleDuration;
-        MESSAGE_BEGIN(VERBOSE, this->logger, m, "Outgoing Compound with size ");
+        MESSAGE_BEGIN(NORMAL, this->logger, m, "Outgoing Compound with size ");
         m << compound->getLengthInBits();
         m << " at " << phyMode;
         m << " --> dur " << protocolCalculator->getDuration()->MPDU_PPDU(compound->getLengthInBits(), phyMode);
@@ -100,8 +102,8 @@ TxDurationSetter::processOutgoing(const wns::ldk::CompoundPtr& compound)
         MESSAGE_END();
 
         MESSAGE_BEGIN(NORMAL, this->logger, m, "Command");
-        m << " start " << wns::simulator::getEventScheduler()->getTime();
-        m << " stop " << wns::simulator::getEventScheduler()->getTime() + command->local.txDuration;
+        m << " start " << std::fixed << std::setprecision(8) << wns::simulator::getEventScheduler()->getTime();
+        m << " stop " << std::fixed << std::setprecision(8) << wns::simulator::getEventScheduler()->getTime() + command->local.txDuration;
         MESSAGE_END();
 
     }

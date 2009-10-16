@@ -577,11 +577,14 @@ namespace wifimac {
              *        reception of ACK
              *   * receiving: Reception has started, not sure if it is the
              *        (Block)ACK
+             *   * receptionFinished: Got RxEndIndication and waiting for PHY to
+             *        deliver the frame
              */
             enum BAState {
                 idle,
                 waitForACK,
-                receiving
+                receiving,
+                receptionFinished
             } baState;
 
             /// Logger

@@ -70,6 +70,12 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                        protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
                                        parentLogger = logger))
 
+    FUs.append(openwns.ldk.Probe.PacketProbeBus(name = names['holDelayProbe'] + str(transceiverAddress),
+                                                prefix = 'wifimac.hol',
+                                                commandName = names['holDelayProbe'] + 'Command',
+                                                parentLogger = logger,
+                                                moduleName = 'WiFiMAC'))
+
     FUs.append(BlockACK(functionalUnitName = names['arq'] + str(transceiverAddress),
                         commandName = names['arq'] + 'Command',
                         managerName = names['manager'] + str(transceiverAddress),

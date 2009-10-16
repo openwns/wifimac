@@ -27,6 +27,7 @@
  ******************************************************************************/
 
 #include <WIFIMAC/convergence/PhyUser.hpp>
+#include <WIFIMAC/convergence/GuiWriter.hpp>
 #include <WIFIMAC/convergence/TxDurationSetter.hpp>
 #include <WIFIMAC/helper/CholeskyDecomposition.hpp>
 
@@ -65,17 +66,23 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
     tune.frequency = config.get<double>("myConfig.initFrequency");
     tune.bandwidth = config.get<double>("myConfig.initBandwidthMHz");
     tune.numberOfSubCarrier = 1;
+    
+    GuiWriter_ = new GuiWriter();
+
 }
 // PhyUser
 
 
 PhyUser::~PhyUser()
-{ }
+{ 
+    delete GuiWriter_;
+}
 
 void PhyUser::onFUNCreated()
 {
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
 
+    GuiWriter_->setManagerAndFun(friends.manager, getFUN());
 } // onFUNCreated
 
 bool PhyUser::doIsAccepting(const wns::ldk::CompoundPtr& /* compound */) const
@@ -107,6 +114,9 @@ void PhyUser::doSendData(const wns::ldk::CompoundPtr& compound)
     func->transmissionStart = wns::simulator::getEventScheduler()->getTime();
     func->transmissionStop = wns::simulator::getEventScheduler()->getTime() + frameTxDuration;
     func->subBand = 1;
+
+    GuiWriter_->writeToProbe(compound, frameTxDuration);
+
 
     command->local.pAFunc.reset(func);
     (*command->local.pAFunc.get())(this, compound);
@@ -151,18 +161,21 @@ void PhyUser::onData(wns::osi::PDUPtr pdu, wns::service::phy::power::PowerMeasur
     // FIRST: create a copy instead of working on the real compound
     wns::ldk::CompoundPtr compound = wns::staticCast<wns::ldk::Compound>(pdu)->copy();
 
+    if(not getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this))
+    {
+        // if the phyUserCommand is not activated, the compound was not send
+        // from a WIFIMAC node!
+        return;
+    }
+
     wns::simulator::Time frameRxDuration = getFUN()->getCommandReader(txDurationProviderCommandName)->
         readCommand<wifimac::convergence::TxDurationProviderCommand>(compound->getCommandPool())->getDuration();
 
     if(lastTxRxTurnaround > (wns::simulator::getEventScheduler()->getTime() - frameRxDuration))
     {
-	// The received frame started BEFORE the last txrxTurnaround -> not readable!
-	return;
+        // The received frame started BEFORE the last txrxTurnaround -> not readable!
+        return;
     }
-
-    if(!getFUN()->getProxy()->commandIsActivated(
-        compound->getCommandPool(), this))     
-            return;
 
     // check if we have enough antennas to receive all streams
     unsigned int nss = friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams();
