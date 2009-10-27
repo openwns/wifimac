@@ -57,8 +57,7 @@ MCS::MCS(const wns::pyconfig::View& config) :
     nominator(1),
     denominator(1)
 {
-    this->setModulation(modulation);
-    this->setCodingRate(codingRate);
+    this->setMCS(modulation, codingRate);
 }
 
 MCS::MCS(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& config):
@@ -72,49 +71,67 @@ MCS::MCS(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& con
     std::istringstream os(config.get<char*>("minSINR", "s"));
     os >> minSINR;
 
-    this->setModulation(modulation);
-    this->setCodingRate(codingRate);
+    this->setMCS(modulation, codingRate);
 }
 
-void MCS::setModulation(const std::string& modulation)
+std::string MCS::getModulation() const
 {
-    assure(modulation == "BPSK" or modulation == "QPSK" or modulation == "QAM16" or modulation == "QAM64",
-           "Unknown modulation" << modulation);
+    return this->modulation;
+}
 
-    if(modulation == "QPSK")
+std::string MCS::getRate() const
+{
+    return this->codingRate;
+}
+
+void MCS::setMCS(const std::string& newModulation, const std::string& newCodingRate)
+{
+    assure(newModulation == "BPSK" or
+           newModulation == "QPSK" or
+           newModulation == "QAM16" or
+           newModulation == "QAM64",
+           "Unknown new modulation" << newModulation);
+    assure(newCodingRate == "1/2" or
+           newCodingRate == "2/3" or
+           newCodingRate == "3/4" or
+           newCodingRate == "5/6",
+           "Unknown new coding rate" << newCodingRate);
+
+    codingRate = newCodingRate;
+    modulation = newModulation;
+
+    if(modulation == "BSPK")
+    {
+        nominator = 1;
+    }
+    else if(modulation == "QPSK")
     {
         nominator = 2;
     }
-    if(modulation == "QAM16")
+    else if(modulation == "QAM16")
     {
         nominator = 4;
     }
-    if(modulation == "QAM64")
+    else if(modulation == "QAM64")
     {
         nominator = 6;
     }
-}
-
-void MCS::setCodingRate(const std::string codingRate)
-{
-    assure(codingRate == "1/2" or codingRate == "2/3" or codingRate == "3/4" or codingRate == "5/6",
-           "Unknown coding rate" << codingRate);
 
     if(codingRate == "1/2")
     {
         denominator = 2;
     }
-    if(codingRate == "2/3")
+    else if(codingRate == "2/3")
     {
         nominator *= 2;
         denominator = 3;
     }
-    if(codingRate == "3/4")
+    else if(codingRate == "3/4")
     {
         nominator *= 3;
         denominator = 4;
     }
-    if(codingRate == "5/6")
+    else if(codingRate == "5/6")
     {
         nominator *= 5;
         denominator = 6;
@@ -142,21 +159,19 @@ bool MCS::operator !=(const MCS& rhs) const
 }
 
 PhyMode::PhyMode():
-    mcs(),
-    numberOfSpatialStreams(0),
+    spatialStreams(),
     numberOfDataSubcarriers(0),
     plcpMode("ERROR"),
     guardIntervalDuration(0)
 {}
 
 PhyMode::PhyMode(const wns::pyconfig::View& config) :
-    mcs(config),
-    numberOfSpatialStreams(config.get<unsigned int>("numberOfSpatialStreams")),
+    spatialStreams(),
     numberOfDataSubcarriers(config.get<unsigned int>("numberOfDataSubcarriers")),
     plcpMode(config.get<std::string>("plcpMode")),
     guardIntervalDuration(config.get<wns::simulator::Time>("guardIntervalDuration"))
 {
-    assure(numberOfSpatialStreams >= 1,
+    assure(config.get<int>("len(spatialStreams)") > 0,
            "cannot have less than 1 spatial stream");
     assure(plcpMode == "Basic" or plcpMode == "HT-Mix" or plcpMode == "HT-GF",
            "Unknown plcpMode");
@@ -164,16 +179,21 @@ PhyMode::PhyMode(const wns::pyconfig::View& config) :
            "Unknown guard interval");
     assure(numberOfDataSubcarriers > 0,
            "cannot have less than 1 data subcarriers");
+
+    for (int i = 0; i < config.get<int>("len(spatialStreams)"); ++i)
+    {
+        std::string s = "spatialStreams[" + wns::Ttos(i) + "]";
+        spatialStreams.push_back(MCS(config.get(s)));
+    }
 }
 
 PhyMode::PhyMode(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& config) :
-    mcs(config),
-    numberOfSpatialStreams(config.get<unsigned int>("numberOfSpatialStreams", "I")),
+    spatialStreams(),
     numberOfDataSubcarriers(config.get<unsigned int>("numberOfDataSubcarriers", "I")),
     plcpMode(config.get<std::string>("plcpMode", "s")),
     guardIntervalDuration(config.get<wns::simulator::Time>("guardIntervalDuration", "d"))
 {
-    assure(numberOfSpatialStreams >= 1,
+    assure(config.get<int>("len(spatialStreams)", "I") > 0,
            "cannot have less than 1 spatial stream");
     assure(plcpMode == "Basic" or plcpMode == "HT-Mix" or plcpMode == "HT-GF",
            "Unknown plcpMode");
@@ -181,20 +201,47 @@ PhyMode::PhyMode(const wifimac::management::protocolCalculatorPlugins::ConfigGet
            "Unknown guard interval");
     assure(numberOfDataSubcarriers > 0,
            "cannot have less than 1 data subcarriers");
+
+    for (int i = 0; i < config.get<int>("len(spatialStreams)", "I"); ++i)
+    {
+        std::string s = "spatialStreams[" + wns::Ttos(i) + "]";
+        spatialStreams.push_back(MCS(config.get(s.c_str())));
+    }
 }
 
 Bit PhyMode::getDataBitsPerSymbol() const
 {
-    assure(mcs.modulation != "ERROR",
-           "modulation not set");
-    assure(mcs.codingRate != "ERROR",
-           "codingRate not set");
-    assure(numberOfSpatialStreams > 0,
-           "number of spatial streams not set");
+    unsigned int dbps = 0;
+    assure(spatialStreams.size() > 0,
+           "ERROR: No spatial streams");
     assure(numberOfDataSubcarriers > 0,
            "cannot have less than 1 data subcarriers");
 
-    return(numberOfDataSubcarriers * numberOfSpatialStreams * mcs.nominator / mcs.denominator);
+    for (std::vector<MCS>::const_iterator it = spatialStreams.begin();
+         it != spatialStreams.end();
+         ++it)
+    {
+        dbps += (numberOfDataSubcarriers * it->nominator / it->denominator);
+    }
+    return(dbps);
+}
+
+void PhyMode::setUniformMCS(const MCS& mcs, unsigned int numSS)
+{
+    this->spatialStreams.assign(numSS, mcs);
+}
+
+void PhyMode::setSpatialStreams(const std::vector<MCS>& ss)
+{
+    assure(ss.size() > 0, "ERROR: No spatial streams");
+
+    this->spatialStreams.clear();
+    for(std::vector<MCS>::const_iterator it = ss.begin();
+        it != ss.end();
+        ++it)
+    {
+        this->spatialStreams.push_back(*it);
+    }
 }
 
 bool PhyMode::operator <(const PhyMode& rhs) const
@@ -204,22 +251,31 @@ bool PhyMode::operator <(const PhyMode& rhs) const
 
 bool PhyMode::operator ==(const PhyMode& rhs) const
 {
-    assure(mcs.modulation != "ERROR", "modulation not set in lhs");
-    assure(mcs.codingRate != "ERROR", "codingRate not set in lhs");
-    assure(numberOfSpatialStreams > 0, "number of spatial streams not set in lhs");
+    assure(spatialStreams.size() > 0, "number of spatial streams not set in lhs");
     assure(numberOfDataSubcarriers > 0, "number of DataSubcarriers not set in lhs");
     assure(plcpMode != "ERROR", "plcpMode not set in lhs");
 
-    assure(rhs.mcs.modulation != "ERROR", "modulation not set in rhs");
-    assure(rhs.mcs.codingRate != "ERROR", "codingRate not set in rhs");
-    assure(rhs.numberOfSpatialStreams > 0, "number of spatial streams not set in rhs");
+    assure(rhs.spatialStreams.size() > 0, "number of spatial streams not set in rhs");
     assure(rhs.numberOfDataSubcarriers > 0, "number of DataSubcarriers not set in rhs");
     assure(rhs.plcpMode != "ERROR", "plcpMode not set in rhs");
 
+    if(spatialStreams.size() != rhs.spatialStreams.size())
+    {
+        return false;
+    }
 
-    return((mcs == rhs.mcs) and
-           (numberOfSpatialStreams == rhs.numberOfSpatialStreams) and
-           (numberOfDataSubcarriers == rhs.numberOfDataSubcarriers) and
+    std::vector<MCS>::const_iterator it = spatialStreams.begin();
+    std::vector<MCS>::const_iterator itRHS = rhs.spatialStreams.begin();
+    for(;
+        (it != spatialStreams.end()) and (itRHS != rhs.spatialStreams.end());
+        ++it, ++itRHS)
+    {
+        if((*it) != (*itRHS))
+        {
+            return false;
+        }
+    }
+    return((numberOfDataSubcarriers == rhs.numberOfDataSubcarriers) and
            (plcpMode == rhs.plcpMode));
 }
 

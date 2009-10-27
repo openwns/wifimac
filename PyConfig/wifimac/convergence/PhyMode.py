@@ -38,21 +38,20 @@ class MCS(object):
         self.codingRate = codingRate
         self.minSINR = minSINR
 
-class PhyMode(MCS):
-    numberOfSpatialStreams = None
+class PhyMode(object):
+    spatialStreams = None
     numberOfDataSubcarriers = None
     plcpMode = None
     guardIntervalDuration = None
 
-    def __init__(self, modulation, codingRate, numberOfSpatialStreams, numberOfDataSubcarriers, plcpMode, guardIntervalDuration, minSINR):
-        super(PhyMode, self).__init__(modulation=modulation, codingRate=codingRate, minSINR=minSINR)
-        self.numberOfSpatialStreams = numberOfSpatialStreams
+    def __init__(self, mcs, numberOfDataSubcarriers, plcpMode, guardIntervalDuration):
+        self.spatialStreams = [mcs]
         self.numberOfDataSubcarriers = numberOfDataSubcarriers
         self.plcpMode = plcpMode
         self.guardIntervalDuration = guardIntervalDuration
 
     def __str__(self):
-        return "(%s-%s)*%d*%d" % (self.modulation, self.codingRate, self.numberOfDataSubcarriers, self.numberOfSpatialStreams)
+        return "(%s-%s)*%d*%d" % (self.spatialStreams[0].modulation, self.spatialStreams[0].codingRate, self.numberOfDataSubcarriers)
 
 class PhyModesDeliverer(object):
     """ Super class for all phy modes """
@@ -83,11 +82,8 @@ class IEEE80211a(PhyModesDeliverer):
 
 
 def makeBasicPhyMode(modulation, codingRate, minSINR):
-    return PhyMode(modulation = modulation,
-                   codingRate = codingRate,
-                   numberOfSpatialStreams = 1,
+    return PhyMode(mcs = MCS(modulation, codingRate, minSINR),
                    numberOfDataSubcarriers = 48,
                    plcpMode = "Basic",
-                   guardIntervalDuration = 0.8e-6,
-                   minSINR = minSINR)
+                   guardIntervalDuration = 0.8e-6)
 

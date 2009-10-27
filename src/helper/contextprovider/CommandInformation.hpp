@@ -328,16 +328,16 @@ namespace wifimac { namespace helper { namespace contextprovider {
 	 *
 	 * The information is read from the phyUserCommand
 	 */
-    class ModulationCodingScheme :
+    class DataBitsPerSymbol:
         virtual public CommandInformationContext
     {
     public:
-        ModulationCodingScheme(wns::ldk::fun::FUN* fun, std::string managerCommandName):
-            CommandInformationContext(fun, managerCommandName, "MAC.CompoundMCS")
+        DataBitsPerSymbol(wns::ldk::fun::FUN* fun, std::string managerCommandName):
+            CommandInformationContext(fun, managerCommandName, "MAC.CompoundDBPS")
             {}
 
         virtual
-        ~ModulationCodingScheme() {}
+        ~DataBitsPerSymbol() {}
 
     private:
         virtual void
@@ -349,7 +349,7 @@ namespace wifimac { namespace helper { namespace contextprovider {
             {
                 wifimac::convergence::PhyMode phymode = commandReader->readCommand<wifimac::lowerMAC::ManagerCommand>
                     (compound->getCommandPool())->getPhyMode();
-                c.insertInt(this->key, phymode.getMCS().getIndex());
+                c.insertInt(this->key, phymode.getDataBitsPerSymbol());
             }
         }
     };

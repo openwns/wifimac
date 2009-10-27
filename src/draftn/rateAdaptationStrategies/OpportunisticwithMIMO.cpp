@@ -128,7 +128,7 @@ OpportunisticwithMIMO::reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned
     {
         if(pm.getNumberOfSpatialStreams() > 1)
         {
-            pm.setNumberOfSpatialStreams(pm.getNumberOfSpatialStreams() - 1);
+            pm.setUniformMCS(pm.getSpatialStreams()[0], pm.getNumberOfSpatialStreams() - 1);
             for(int i = 0; i < phyModeIncreaseOnAntennaDecrease; ++i)
             {
                 friends.phyUser->getPhyModeProvider()->mcsUp(pm);
@@ -149,7 +149,7 @@ OpportunisticwithMIMO::increasePhyMode(wifimac::convergence::PhyMode& pm, unsign
     {
         if(pm.getNumberOfSpatialStreams() < maxNumSS)
         {
-            pm.setNumberOfSpatialStreams(pm.getNumberOfSpatialStreams() + 1);
+            pm.setUniformMCS(pm.getSpatialStreams()[0], pm.getNumberOfSpatialStreams() + 1);
             for(int i = 0; i < phyModeDecreaseOnAntennaIncrease; ++i)
             {
                 friends.phyUser->getPhyModeProvider()->mcsDown(pm);

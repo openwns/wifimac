@@ -61,6 +61,17 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
                 return t;
             };
 
+        ConfigGetter
+        get(const char* varName) const
+            {
+                PyObject* o;
+                if(not PyArg_Parse(PyObject_GetAttrString(this->config, varName), "O", o))
+                {
+                    return 0;
+                }
+                return(ConfigGetter(o));
+            }
+
     private:
         PyObject* config;
     };

@@ -50,11 +50,8 @@ class PhyModes(wifimac.convergence.PhyMode.PhyModesDeliverer):
 
 
 def makeBasicPhyMode(modulation, codingRate, minSINR):
-	return wifimac.convergence.PhyMode.PhyMode(modulation = modulation,
-						   codingRate = codingRate,
-						   numberOfSpatialStreams = 1,
+	return wifimac.convergence.PhyMode.PhyMode(mcs = wifimac.convergence.PhyMode.MCS(modulation, codingRate, minSINR),
 						   numberOfDataSubcarriers = 52, #increased n_DS in comparison to basic
 						   plcpMode = "HT-GF", # can also be HT-Mix
-						   guardIntervalDuration = 0.8e-6, # set to 0.4e-6 for short GI
-						   minSINR = minSINR)
+						   guardIntervalDuration = 0.8e-6) # set to 0.4e-6 for short GI
 

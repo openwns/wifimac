@@ -54,11 +54,8 @@ namespace wifimac { namespace convergence {
         MCS(const MCS& other);
         MCS(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& config);
 
-        std::string getModulation() const
-            { return this->modulation;};
-
-        std::string getRate() const
-            { return this->codingRate;};
+        std::string getModulation() const;
+        std::string getRate() const;
 
         void
         setIndex(unsigned int index)
@@ -77,8 +74,7 @@ namespace wifimac { namespace convergence {
         bool operator !=(const MCS& rhs) const;
 
     private:
-        void setModulation(const std::string& modulation);
-        void setCodingRate(const std::string codingRate);
+        void setMCS(const std::string& newModulation, const std::string& newCodingRate);
 
         std::string modulation;
         std::string codingRate;
@@ -120,17 +116,19 @@ namespace wifimac { namespace convergence {
          * @brief Get the number of spatial streams
          */
         unsigned int getNumberOfSpatialStreams() const
-            { return this->numberOfSpatialStreams; };
-        void setNumberOfSpatialStreams(unsigned int ss)
-            { this->numberOfSpatialStreams = ss; };
+            { return this->spatialStreams.size(); };
 
-        MCS getMCS() const
-            { return this->mcs; };
-        void setMCS(const MCS& other)
-            { this->mcs = other; };
+        void setMCS(const MCS& mcs)
+            { this->setUniformMCS(mcs, 1); };
 
-        wns::Ratio getMinSINR() const
-            { return this->mcs.getMinSINR();};
+        void setUniformMCS(const MCS& mcs, unsigned int numSS);
+
+        std::vector<MCS> getSpatialStreams() const
+            { return this->spatialStreams; };
+        void setSpatialStreams(const std::vector<MCS>& ss);
+
+        wns::Ratio getMinSINR() const;
+        //{ return this->mcs.getMinSINR();};
 
         unsigned int getNumberOfDataSubcarriers() const
             { return this->numberOfDataSubcarriers;};
@@ -158,9 +156,9 @@ namespace wifimac { namespace convergence {
         bool operator !=(const PhyMode& rhs) const;
 
     private:
-        MCS mcs;
-        std::string codingRate;
-        unsigned int numberOfSpatialStreams;
+        std::vector<MCS> spatialStreams;
+        //std::string codingRate;
+        //unsigned int numberOfSpatialStreams;
         unsigned int numberOfDataSubcarriers;
         std::string plcpMode;
         wns::simulator::Time guardIntervalDuration;
@@ -168,10 +166,16 @@ namespace wifimac { namespace convergence {
 
     inline std::ostream& operator<< (std::ostream& s, const PhyMode& p)
     {
-        return s << "(" << p.getMCS() << ")*"
-                 << wns::Ttos(p.getNumberOfDataSubcarriers())
-                 << "*" << wns::Ttos(p.getNumberOfSpatialStreams())
-                 << " (-> " << wns::Ttos(p.getDataBitsPerSymbol()) << " dbps)";
+        s << "|";
+        std::vector<MCS> ss = p.getSpatialStreams();
+        for (std::vector<MCS>::iterator it = ss.begin();
+             it != ss.end();
+             ++it)
+        {
+            s << (*it) << "|";
+        }
+        s << "*" << wns::Ttos(p.getNumberOfDataSubcarriers())
+                  << " (-> " << wns::Ttos(p.getDataBitsPerSymbol()) << " dbps)";
     };
 }}
 

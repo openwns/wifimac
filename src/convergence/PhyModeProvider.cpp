@@ -68,36 +68,36 @@ PhyModeProvider::PhyModeProvider(const wns::pyconfig::View& config) :
 void
 PhyModeProvider::mcsUp(PhyMode& pm) const
 {
-    std::map<wns::Ratio, MCS>::const_iterator it = sinr2mcs.find(pm.getMCS().getMinSINR());
+    std::map<wns::Ratio, MCS>::const_iterator it = sinr2mcs.find(pm.getSpatialStreams()[0].getMinSINR());
     ++it;
     if(it != sinr2mcs.end())
     {
-        pm.setMCS(it->second);
+        pm.setUniformMCS(it->second, pm.getNumberOfSpatialStreams());
     }
 }
 
 void
 PhyModeProvider::mcsDown(PhyMode& pm) const
 {
-    std::map<wns::Ratio, MCS>::const_iterator it = sinr2mcs.find(pm.getMinSINR());
+    std::map<wns::Ratio, MCS>::const_iterator it = sinr2mcs.find(pm.getSpatialStreams()[0].getMinSINR());
     if(it != sinr2mcs.begin())
     {
         --it;
-        pm.setMCS(it->second);
+        pm.setUniformMCS(it->second, pm.getNumberOfSpatialStreams());
     }
 }
 
 bool
 PhyModeProvider::hasLowestMCS(const PhyMode& pm) const
 {
-    return(pm.getMCS() == sinr2mcs.begin()->second);
+    return(pm.getSpatialStreams()[0] == sinr2mcs.begin()->second);
 }
 
 
 bool
 PhyModeProvider::hasHighestMCS(const PhyMode& pm) const
 {
-    return(pm.getMCS() == (--sinr2mcs.end())->second);
+    return(pm.getSpatialStreams()[0] == (--sinr2mcs.end())->second);
 }
 
 PhyMode
@@ -105,7 +105,7 @@ PhyModeProvider::getPreamblePhyMode(PhyMode pmFrame) const
 {
     PhyMode pm = preamblePhyMode;
     pm.setGuardIntervalDuration(pmFrame.getGuardIntervalDuration());
-    pm.setNumberOfSpatialStreams(pmFrame.getNumberOfSpatialStreams());
+    pm.setUniformMCS(preamblePhyMode.getSpatialStreams()[0], pmFrame.getNumberOfSpatialStreams());
     pm.setPreambleMode(pmFrame.getPreambleMode());
 
     return(pm);

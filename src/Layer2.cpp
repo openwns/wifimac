@@ -80,7 +80,7 @@ void Layer2::onNodeCreated()
     getNode()->getContextProviderCollection().addProvider(
         wifimac::helper::contextprovider::IsUnicast(fun, "upperConvergence"));
     getNode()->getContextProviderCollection().addProvider(
-        wifimac::helper::contextprovider::ModulationCodingScheme(fun, "ManagerCommand"));
+        wifimac::helper::contextprovider::DataBitsPerSymbol(fun, "ManagerCommand"));
     getNode()->getContextProviderCollection().addProvider(
         wifimac::helper::contextprovider::SpatialStreams(fun, "ManagerCommand"));
     getNode()->getContextProviderCollection().addProvider(

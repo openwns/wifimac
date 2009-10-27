@@ -36,34 +36,6 @@
 
 namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
 
-    struct ErrorStatistic
-    {
-        /// Final packet error rate
-        double per;
-        /// Raw bit error rate
-        double ber;
-        /// First error event probability during decoding
-        double u;
-        /// Symbol error rate
-        double ser;
-
-        ErrorStatistic()
-            {
-                per = -1.0;
-                ber = -1.0;
-                u = -1.0;
-                ser = -1.0;
-            };
-
-        bool valid() const
-            {
-                return((per >= 0.0 and per <= 1.0) and
-                       (ber >= 0.0 and ber <= 1.0) and
-                       (u >= 0.0 and u <= 1.0) and
-                       (ser >= 0.0 and ser <= 1.0));
-            }
-    };
-
     /**
      * @brief This class calculates the packet|bit|symbol error probability for
      * a given SNR, packet length and wifimac::convergence::PhyMode.
@@ -72,9 +44,6 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
     {
     public:
         ErrorProbability();
-
-        ErrorStatistic
-        getError(wns::Ratio postSNR, Bit packetLength, wifimac::convergence::PhyMode phyMode) const;
 
         double
         getPER(wns::Ratio postSNR, Bit packetLength, wifimac::convergence::PhyMode phyMode) const;

@@ -41,10 +41,10 @@ ErrorProbability::ErrorProbability()
 
 }
 
-ErrorStatistic
-ErrorProbability::getError(wns::Ratio postSNR,
-                           Bit packetLength,
-                           wifimac::convergence::PhyMode phyMode) const
+double
+ErrorProbability::getPER(wns::Ratio postSNR,
+                         Bit packetLength,
+                         wifimac::convergence::PhyMode phyMode) const
 {
     double cyclicPrefixReduction = 0.0;
     if(phyMode.getGuardIntervalDuration() == 0.8e-6)
@@ -57,65 +57,80 @@ ErrorProbability::getError(wns::Ratio postSNR,
     }
     assure(cyclicPrefixReduction > 0, "Unknown guard interval");
 
-    ErrorStatistic e;
-
     postSNR.set_factor(postSNR.get_factor() * cyclicPrefixReduction);
 
-    if(phyMode.getMCS().getModulation() == "BPSK")
+    double bitSuccessRate = 1.0;
+
+    std::vector<wifimac::convergence::MCS> v = phyMode.getSpatialStreams();
+    assure(v.size() > 0, "Must have at least one spatial stream");
+
+    for(std::vector<wifimac::convergence::MCS>::const_iterator it = v.begin();
+        it != v.end();
+        ++it)
     {
-        e.ser = Q(sqrt(2*postSNR.get_factor()));
-        e.ber = e.ser;
-    }
-    if(phyMode.getMCS().getModulation() == "QPSK")
-    {
-        e.ser = 2.0 * Q(sqrt(postSNR.get_factor())) * (1.0 - 0.5 * Q(sqrt(postSNR.get_factor())));
-        e.ber = 0.5 * e.ser;
-    }
-    if(phyMode.getMCS().getModulation() == "QAM16")
-    {
-        double P_sqrt16 = 3.0/2.0 * Q(sqrt((3.0/15.0) * postSNR.get_factor()));
-        e.ser = 1 - pow((1 - P_sqrt16), 2);
-        e.ber = e.ser / 4.0;
-    }
-    if(phyMode.getMCS().getModulation() == "QAM64")
-    {
-        double P_sqrt64 = 7.0/4.0 * Q(sqrt((3.0/63.0) * postSNR.get_factor()));
-        e.ser = 1 - pow((1 - P_sqrt64), 2);
-        e.ber = e.ser / 6.0;
+        double ser = 0.0;
+        double ber = 0.0;
+
+        if(it->getModulation() == "BPSK")
+        {
+            ser = Q(sqrt(2*postSNR.get_factor()));
+            ber = ser;
+        }
+        else if(it->getModulation() == "QPSK")
+        {
+            ser = 2.0 * Q(sqrt(postSNR.get_factor())) * (1.0 - 0.5 * Q(sqrt(postSNR.get_factor())));
+            ber = 0.5 * ser;
+        }
+        else if(it->getModulation() == "QAM16")
+        {
+            double P_sqrt16 = 3.0/2.0 * Q(sqrt((3.0/15.0) * postSNR.get_factor()));
+            ser = 1 - pow((1 - P_sqrt16), 2);
+            ber = ser / 4.0;
+        }
+        else if(it->getModulation() == "QAM64")
+        {
+            double P_sqrt64 = 7.0/4.0 * Q(sqrt((3.0/63.0) * postSNR.get_factor()));
+            ser = 1 - pow((1 - P_sqrt64), 2);
+            ber = ser / 6.0;
+        }
+
+        bitSuccessRate *= (1.0 - ber);
+
+        assure((bitSuccessRate >= 0.0 and bitSuccessRate <= 1.0) and
+               (ber >= 0.0 and ber <= 1.0) and
+               (ser >= 0.0 and ser <= 1.0),
+               "Calculated error probabilities are not valid");
     }
 
-    if(phyMode.getMCS().getRate() ==  "1/2")
+    double ber = (1.0 - bitSuccessRate);
+    double u = 0.0;
+
+    // only the first coding rate is taken
+    if(phyMode.getSpatialStreams()[0].getRate() ==  "1/2")
     {
-        e.u = std::min(1.0, Pu12(e.ber));
+        u = std::min(1.0, Pu12(ber));
     }
-    if(phyMode.getMCS().getRate() == "2/3")
+    else if(phyMode.getSpatialStreams()[0].getRate() == "2/3")
     {
-        e.u = std::min(1.0, Pu23(e.ber));
+        u = std::min(1.0, Pu23(ber));
     }
-    if(phyMode.getMCS().getRate() == "3/4")
+    else if(phyMode.getSpatialStreams()[0].getRate() == "3/4")
     {
-        e.u = std::min(1.0, Pu34(e.ber));
+        u = std::min(1.0, Pu34(ber));
     }
-    if(phyMode.getMCS().getRate() == "5/6")
+    else if(phyMode.getSpatialStreams()[0].getRate() == "5/6")
     {
-        e.u = std::min(1.0, Pu56(e.ber));
+        u = std::min(1.0, Pu56(ber));
     }
 
-    // Packet error probability
-    e.per = 1.0 - pow(1.0 - e.u, static_cast<double>(packetLength));
+    double per = 1.0 - pow(1.0 - u, static_cast<double>(packetLength));
 
-    assure(e.valid(), "Calculated error probabilities are not valid");
+    assure((per >= 0.0 and per <= 1.0) and
+           (u >= 0.0 and u <= 1.0),
+           "Calculated error probabilities are not valid");
 
-    return e;
+    return per;
 }
-
-double
-ErrorProbability::getPER(wns::Ratio postSNR, Bit packetLength, wifimac::convergence::PhyMode phyMode) const
-{
-    ErrorStatistic e = getError(postSNR, packetLength, phyMode);
-    return(e.per);
-}
-
 
 double
 ErrorProbability::Pd(double p, double d) const
