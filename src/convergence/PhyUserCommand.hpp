@@ -82,10 +82,17 @@ namespace wifimac { namespace convergence {
 			if (other.local.pAFunc.get())
 				local.pAFunc.reset(dynamic_cast<wifimac::convergence::OFDMAAccessFunc*>(other.local.pAFunc->clone()));
 		}
-		wns::Ratio getCIR() const
-		{
-			return wns::Ratio::from_dB( local.rxPower.get_dBm() - local.interference.get_dBm() + local.postSINRFactor.get_dB() );
-		}
+
+        wns::Ratio getCIR() const
+        {
+            return wns::Ratio::from_dB( local.rxPower.get_dBm() - local.interference.get_dBm() + local.postSINRFactor.get_dB() );
+        }
+
+        wns::Ratio getCIRwithoutMIMO() const
+        {
+            return wns::Ratio::from_dB( local.rxPower.get_dBm() - local.interference.get_dBm());
+        }
+
 		wns::Power getRSS() const
 		{
 			return (local.rxPower);

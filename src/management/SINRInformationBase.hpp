@@ -35,6 +35,9 @@
 #include <WNS/SlidingWindow.hpp>
 
 #include <WNS/service/dll/Address.hpp>
+#include <WNS/simulator/Time.hpp>
+
+#include <utility>
 
 
 namespace wifimac { namespace management {
@@ -73,10 +76,17 @@ namespace wifimac { namespace management {
         virtual ~SINRInformationBase() {};
 
 
-        /** @brief Store SINR value measured here (link tx -> me) */
+        /** @brief Store SINR value measured here (link tx -> me)
+         *
+         *  The estimatedValidity parameter gives the duration for which this
+         *  specific value is accurate. If during this time a getSINR is issued,
+         *  exactly this value will be taken; otherwise, the averaged value is
+         *  returned.
+         */
         void
         putMeasurement(const wns::service::dll::UnicastAddress tx,
-                       const wns::Ratio sinr);
+                       const wns::Ratio sinr,
+                       const wns::simulator::Time estimatedValidity = 0.0);
 
         /** @brief Ask if SINR value of link tx -> me is known */
         bool
@@ -84,7 +94,7 @@ namespace wifimac { namespace management {
 
         /** @brief Returns the averaged SINR of the link tx -> me */
         wns::Ratio
-        getAverageMeasuredSINR(const wns::service::dll::UnicastAddress tx);
+        getMeasuredSINR(const wns::service::dll::UnicastAddress tx);
 
 
         /**
@@ -95,7 +105,8 @@ namespace wifimac { namespace management {
          */
         void
         putPeerSINR(const wns::service::dll::UnicastAddress peer,
-                    const wns::Ratio sinr);
+                    const wns::Ratio sinr,
+                    const wns::simulator::Time estimatedValidity = 0.0);
 
         /** @brief Query if SINR of link me -> peer is known */
         bool
@@ -103,7 +114,7 @@ namespace wifimac { namespace management {
 
         /** @brief Get the averaged SINR of link me -> peer */
         wns::Ratio
-        getAveragePeerSINR(const wns::service::dll::UnicastAddress peer);
+        getPeerSINR(const wns::service::dll::UnicastAddress peer);
 
 
     private:
@@ -124,13 +135,22 @@ namespace wifimac { namespace management {
         /** @brief Holds SINR values received by peers */
         ratioMap peerSINRHolder;
 
+        typedef std::pair<wns::Ratio, wns::simulator::Time> ratioTimePair;
+        typedef wns::container::Registry<wns::service::dll::UnicastAddress, ratioTimePair*> ratioWithTimeMap;
+
+        /** @brief Holds the last SINR measurement */
+        ratioWithTimeMap lastMeasurement;
+
+        /** @brief Holds the last received peer SINR measurement */
+        ratioWithTimeMap lastPeerMeasurement;
+
         /** @brief The logger */
-		wns::logger::Logger logger;
+        wns::logger::Logger logger;
 
         /** @brief Duration of the sliding window for averaging the SINR values */
         const simTimeType windowSize;
 
-	};
+    };
 } // management
 } // wifimac
 

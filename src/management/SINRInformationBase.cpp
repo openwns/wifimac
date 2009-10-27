@@ -31,14 +31,14 @@
 using namespace wifimac::management;
 
 STATIC_FACTORY_REGISTER_WITH_CREATOR(
-	wifimac::management::SINRInformationBase,
-	wns::ldk::ManagementServiceInterface,
-	"wifimac.management.SINRInformationBase",
-	wns::ldk::MSRConfigCreator);
+    wifimac::management::SINRInformationBase,
+    wns::ldk::ManagementServiceInterface,
+    "wifimac.management.SINRInformationBase",
+    wns::ldk::MSRConfigCreator);
 
 SINRInformationBase::SINRInformationBase( wns::ldk::ManagementServiceRegistry* msr, const wns::pyconfig::View& config):
-	wns::ldk::ManagementService(msr),
-	logger(config.get("logger")),
+    wns::ldk::ManagementService(msr),
+    logger(config.get("logger")),
     windowSize(config.get<simTimeType>("windowSize"))
 {
 
@@ -52,7 +52,8 @@ SINRInformationBase::onMSRCreated()
 
 void
 SINRInformationBase::putMeasurement(const wns::service::dll::UnicastAddress tx,
-                                    const wns::Ratio sinr)
+                                    const wns::Ratio sinr,
+                                    const wns::simulator::Time estimatedValidity)
 {
     assure(tx.isValid(), "Address is not valid");
 
@@ -61,12 +62,28 @@ SINRInformationBase::putMeasurement(const wns::service::dll::UnicastAddress tx,
         measuredSINRHolder.insert(tx, new wns::SlidingWindow(windowSize));
     }
     measuredSINRHolder.find(tx)->put(sinr.get_dB());
+
+    if(estimatedValidity > 0.0)
+    {
+        if(not lastMeasurement.knows(tx))
+        {
+            lastMeasurement.insert(tx, new ratioTimePair);
+        }
+        lastMeasurement.find(tx)->first = sinr;
+        lastMeasurement.find(tx)->second = wns::simulator::getEventScheduler()->getTime() + estimatedValidity;
+    }
 }
 
 bool
 SINRInformationBase::knowsMeasuredSINR(const wns::service::dll::UnicastAddress tx)
 {
     assure(tx.isValid(), "Address is not valid");
+
+    if(lastMeasurement.knows(tx) and
+       (lastMeasurement.find(tx)->second > wns::simulator::getEventScheduler()->getTime()))
+    {
+        return true;
+    }
 
     if(measuredSINRHolder.knows(tx))
     {
@@ -79,15 +96,22 @@ SINRInformationBase::knowsMeasuredSINR(const wns::service::dll::UnicastAddress t
 }
 
 wns::Ratio
-SINRInformationBase::getAverageMeasuredSINR(const wns::service::dll::UnicastAddress tx)
+SINRInformationBase::getMeasuredSINR(const wns::service::dll::UnicastAddress tx)
 {
     assure(this->knowsMeasuredSINR(tx), "SINR for transmitter " << tx << " not known");
+
+    if(lastMeasurement.knows(tx) and
+       (lastMeasurement.find(tx)->second > wns::simulator::getEventScheduler()->getTime()))
+    {
+        return lastMeasurement.find(tx)->first;
+    }
     return(wns::Ratio::from_dB(measuredSINRHolder.find(tx)->getAbsolute() / measuredSINRHolder.find(tx)->getNumSamples()));
 }
 
 void
 SINRInformationBase::putPeerSINR(const wns::service::dll::UnicastAddress peer,
-                                 const wns::Ratio sinr)
+                                 const wns::Ratio sinr,
+                                 const wns::simulator::Time estimatedValidity)
 {
     assure(peer.isValid(), "Address is not valid");
 
@@ -99,6 +123,16 @@ SINRInformationBase::putPeerSINR(const wns::service::dll::UnicastAddress peer,
     {
         *(peerSINRHolder.find(peer)) = sinr;
     }
+
+    if(estimatedValidity > 0.0)
+    {
+        if(not lastPeerMeasurement.knows(peer))
+        {
+            lastPeerMeasurement.insert(peer, new ratioTimePair);
+        }
+        lastPeerMeasurement.find(peer)->first = sinr;
+        lastPeerMeasurement.find(peer)->second = wns::simulator::getEventScheduler()->getTime() + estimatedValidity;
+    }
 }
 
 bool
@@ -106,13 +140,26 @@ SINRInformationBase::knowsPeerSINR(const wns::service::dll::UnicastAddress peer)
 {
     assure(peer.isValid(), "Address is not valid");
 
+    if(lastPeerMeasurement.knows(peer) and
+       (lastPeerMeasurement.find(peer)->second > wns::simulator::getEventScheduler()->getTime()))
+    {
+        return true;
+    }
+
     return(peerSINRHolder.knows(peer));
 }
 
 wns::Ratio
-SINRInformationBase::getAveragePeerSINR(const wns::service::dll::UnicastAddress peer)
+SINRInformationBase::getPeerSINR(const wns::service::dll::UnicastAddress peer)
 {
     assure(this->knowsPeerSINR(peer), "peerSINR for " << peer << " is not known");
+
+    if(lastPeerMeasurement.knows(peer) and
+       (lastPeerMeasurement.find(peer)->second > wns::simulator::getEventScheduler()->getTime()))
+    {
+        return lastPeerMeasurement.find(peer)->first;
+    }
+
     return(*(peerSINRHolder.find(peer)));
 }
 

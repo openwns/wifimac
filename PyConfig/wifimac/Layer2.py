@@ -58,25 +58,25 @@ class dllSTA(dll.Layer2.Layer2):
         ################
         # Upper MAC part
         throughputProbe =  wifimac.helper.Probes.WindowProbeBus(name = "wifimac.e2eWindowProbe",
-                                    prefix = "wifimac.e2e",
-                                    commandName = 'e2eWindowProbeCommand',
-                                    forwardingCommandName = "ForwardingCommand",
-                                    parentLogger = self.logger,
-                                    moduleName = 'WiFiMAC')
+                                                                prefix = "wifimac.e2e",
+                                                                commandName = 'e2eWindowProbeCommand',
+                                                                forwardingCommandName = "ForwardingCommand",
+                                                                parentLogger = self.logger,
+                                                                moduleName = 'WiFiMAC')
 
         packetProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
-                               prefix = "wifimac.e2e",
-                               commandName = "e2eDelayProbeCommand",
-                               parentLogger = self.logger,
-                               moduleName = 'WiFiMAC')
+                                                       prefix = "wifimac.e2e",
+                                                       commandName = "e2eDelayProbeCommand",
+                                                       parentLogger = self.logger,
+                                                       moduleName = 'WiFiMAC')
 
         forwarding = wifimac.pathselection.StationForwarding(functionalUnitName = "STAForwarding",
-                                     commandName = "ForwardingCommand",
-                                     upperConvergenceName = self.upperConvergenceName,
-                                     parentLogger = self.logger)
+                                                             commandName = "ForwardingCommand",
+                                                             upperConvergenceName = self.upperConvergenceName,
+                                                             parentLogger = self.logger)
 
         upperConvergence = dll.UpperConvergence.UT(parent = self.logger,
-                               commandName = self.upperConvergenceName)
+                                                   commandName = self.upperConvergenceName)
         upperConvergence.logger.moduleName = 'WiFiMAC'
 
         self.fun = openwns.FUN.FUN()
@@ -238,6 +238,7 @@ class Config(Sealed):
     txop = None
     aggregation = None
     blockACK = None
+    fastLinkFeedback = None
     frameSynchronization = None
     beaconLQM = None
     # end example
@@ -249,6 +250,8 @@ class Config(Sealed):
     crcBits = 4*8
 
     maxFrameSize = 65538*8
+
+    useFastLinkFeedback = False
 
     funTemplate = None
     # end example
@@ -306,6 +309,7 @@ class Config(Sealed):
         self.aggregation = wifimac.draftn.AggregationConfig()
         #self.multiBuffer = wifimac.draftn.MultiBufferConfig()
         self.blockACK = wifimac.draftn.BlockACKConfig()
+        self.fastLinkFeedback = wifimac.draftn.FastLinkFeedbackConfig()
         self.blockUntilReply = wifimac.draftn.BlockUntilReplyConfig()
         self.frameSynchronization = wifimac.convergence.FrameSynchronizationConfig()
         self.beaconLQM = wifimac.pathselection.BeaconLinkQualityMeasurementConfig()

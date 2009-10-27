@@ -125,7 +125,7 @@ RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver, size_t nu
 
     if(sinrMIB->knowsPeerSINR(receiver))
     {
-        pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions, sinrMIB->getAveragePeerSINR(receiver));
+        pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions, sinrMIB->getPeerSINR(receiver));
     }
     else
     {

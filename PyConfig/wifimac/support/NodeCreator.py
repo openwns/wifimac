@@ -139,18 +139,18 @@ class NodeCreator(object):
 
         # The first frequency is the bss frequency (important for the manager)
         self.createTransceiver(node = newAP,
-                       name = 'AP',
-                       MACAddress = id,
-                       managerName = managerPool.getBSSManager().name,
-                       config = config.transceivers[0])
+                               name = 'AP',
+                               MACAddress = id,
+                               managerName = managerPool.getBSSManager().name,
+                               config = config.transceivers[0])
 
         # Create the mesh transceivers
         for i in xrange(len(config.transceivers)-1):
             self.createTransceiver(node = newAP,
-                           name = 'AP',
-                           MACAddress = idGen.next(),
-                           managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
-                           config = config.transceivers[i+1])
+                                   name = 'AP',
+                                   MACAddress = idGen.next(),
+                                   managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
+                                   config = config.transceivers[i+1])
         # create Mobility component
         newAP.mobility = rise.Mobility.Component(node = newAP,
                                                      name = "Mobility AP"+str(id),
@@ -175,20 +175,20 @@ class NodeCreator(object):
 
         # The first frequency is the bss frequency (important for the manager)
         self.createTransceiver(node = newMP,
-                       name = 'MP',
-                       MACAddress = id,
-                       managerName = managerPool.getBSSManager().name,
-                       config = config.transceivers[0])
+                               name = 'MP',
+                               MACAddress = id,
+                               managerName = managerPool.getBSSManager().name,
+                               config = config.transceivers[0])
 
         # Create the mesh transceivers
         for i in xrange(len(config.transceivers)-1):
             self.createTransceiver(node = newMP,
-                           name = 'MP',
-                           MACAddress = idGen.next(),
-                           managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
-                           config = config.transceivers[i+1])
+                                   name = 'MP',
+                                   MACAddress = idGen.next(),
+                                   managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
+                                   config = config.transceivers[i+1])
 
-        newMP.nl = ip.Component.IPv4Component ( newMP, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow=1.0 )
+        newMP.nl = ip.Component.IPv4Component ( newMP, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow = config.transceivers[0].probeWindow )
         newMP.nl.addDLL ( "wifi",
                 # Where to get IP Adresses
                 _addressResolver = FixedAddressResolver ( "192.168.1."+str ( id ), "255.255.255.0" ),
@@ -216,12 +216,12 @@ class NodeCreator(object):
 
         # create Physical Layer
         newSTA.phy = ofdmaphy.Station.OFDMAComponent(newSTA, "PHY STA"+str(id),
-                                 self.createPhyLayer(managerName = managerPool.getBSSManager().name,
-                                         propagationName="STA",
-                                         txPower = config.txPower,
-                                         frequency = config.frequency,
-                                         parentLogger = newSTA.logger),
-                                 parentLogger = newSTA.logger)
+                                                     self.createPhyLayer(managerName = managerPool.getBSSManager().name,
+                                                                         propagationName="STA",
+                                                                         txPower = config.txPower,
+                                                                         frequency = config.frequency,
+                                                                         parentLogger = newSTA.logger),
+                                                     parentLogger = newSTA.logger)
 
         # create data link layer
         newSTA.dll = wifimac.Layer2.dllSTA ( newSTA, "MAC STA"+str ( id ), config.layer2, parentLogger = newSTA.logger )
@@ -232,7 +232,7 @@ class NodeCreator(object):
         newSTA.dll.manager.setPhyCarrierSense(newSTA.phy.notification)
 
         # create network layer
-        newSTA.nl = ip.Component.IPv4Component ( newSTA, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow=1.0 )
+        newSTA.nl = ip.Component.IPv4Component ( newSTA, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow = config.probeWindow )
         newSTA.nl.addDLL ( "wifi",
                 # Where to get IP Adresses
                 _addressResolver = FixedAddressResolver ( "192.168.1."+str ( id ), "255.255.255.0" ),
@@ -271,7 +271,7 @@ class NodeCreator(object):
         return newSTA
 
     def createRANG(self, listener, loggerLevel,
-               listenerWindowSize = 1.0, listenerSampleInterval = 0.5):
+                   listenerWindowSize = 1.0, listenerSampleInterval = 0.5):
         rang = Station('RANG', (256*255)-1)
 
         # create dll
@@ -279,7 +279,7 @@ class NodeCreator(object):
         rang.dll.setStationID((256*255)-1)
 
         # create network layer
-        rang.nl = ip.Component.IPv4Component(rang, "192.168.255.254", "192.168.255.254", probeWindow=1.0)
+        rang.nl = ip.Component.IPv4Component(rang, "192.168.255.254", "192.168.255.254", probeWindow=listenerWindowSize)
         rang.nl.addDLL("wifi",
             # Where to get IP Adresses
             _addressResolver = FixedAddressResolver("192.168.255.254", "255.255.0.0"),
@@ -299,7 +299,7 @@ class NodeCreator(object):
 
         if(listener):
             ipListenerBinding = constanze.node.IPListenerBinding(rang.nl.domainName, parentLogger=rang.logger)
-            listener = constanze.node.Listener(rang.nl.domainName + ".listener", probeWindow = 0.1, parentLogger=rang.logger)
+            listener = constanze.node.Listener(rang.nl.domainName + ".listener", probeWindow = listenerWindowSize, parentLogger=rang.logger)
             rang.load.addListener(ipListenerBinding, listener)
             rang.nl.windowedEndToEndProbe.config.windowSize = listenerWindowSize
             rang.nl.windowedEndToEndProbe.config.sampleInterval = listenerSampleInterval

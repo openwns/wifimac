@@ -246,6 +246,8 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
         assure(transmitter == currentReceiver, "got ACK from wrong Station");
         assure(this->baState == receptionFinished, "Received ACK but not waiting for one");
 
+
+        perMIB->onSuccessfullTransmission(currentReceiver);
         this->processIncomingACKSNs(getCommand(compound->getCommandPool())->peer.ackSNs);
         return;
 
@@ -407,7 +409,8 @@ BlockACK::onTimeout()
     assure(txQueue != NULL, "Timeout, but no transmission queue");
     assure(txQueue->waitsForACK(), "Timeout, but txQueue is not waiting for ACK");
 
-    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout -> failed transmission to " << currentReceiver)
+    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout -> failed transmission to " << currentReceiver);
+    perMIB->onFailedTransmission(currentReceiver);
 
     // no ACK'ed SNs have arrived, use pseudo-vector
     std::set<BlockACKCommand::SequenceNumber> none;
@@ -426,7 +429,8 @@ BlockACK::onTransmissionHasFailed(const wns::ldk::CompoundPtr& compound)
     assure(txQueue->waitsForACK(), "transmissionHasFailed, but txQueue is not waiting for ACK");
 
     MESSAGE_SINGLE(NORMAL, this->logger, "Indication of failed transmission to " << friends.manager->getReceiverAddress(compound->getCommandPool()));
-    this->printTxQueueStatus();
+    // RTS/CTS -> no signalling to perMIB
+    //this->printTxQueueStatus();
 
 
     // no ACK'ed SNs have arrived, use pseudo-vector
@@ -733,8 +737,8 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
         {
              // retransmission
             int txCounter = ++(parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
-            perMIB->onFailedTransmission(adr);
-	    blockACKsuccess = false;
+            //perMIB->onFailedTransmission(adr);
+            blockACKsuccess = false;
             if(parent->getManager()->lifetimeExpired((onAirIt->first)->getCommandPool()))
             {
                 MESSAGE_BEGIN(NORMAL, parent->logger, m, "TxQ" << adr << ":   Compound " << onAirSN);
@@ -773,7 +777,7 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
             MESSAGE_END();
             snIt++;
 
-            perMIB->onSuccessfullTransmission(adr);
+            //perMIB->onSuccessfullTransmission(adr);
             parent->numTxAttemptsProbe->put(onAirIt->first, parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
         } // SN matches
     } // for-loop over onAirQueue

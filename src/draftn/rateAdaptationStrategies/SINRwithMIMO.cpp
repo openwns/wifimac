@@ -75,7 +75,6 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_
     while(numSS > 0)
     {
         wns::Ratio postSINR = lqm
-            - friends.phyUser->getExpectedPostSINRFactor(1, numRx)
             + friends.phyUser->getExpectedPostSINRFactor(numSS, numRx);
         if(friends.phyUser->getPhyModeProvider()->getMinSINR() < postSINR)
         {
@@ -117,7 +116,6 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_
     m << " numRx: " << numRx;
     m << " -> numSS: " << bestNumSS;
     m << " postSINR: " << lqm
-        - friends.phyUser->getExpectedPostSINRFactor(1, numRx)
         + friends.phyUser->getExpectedPostSINRFactor(bestNumSS, numRx);
     m << " -> " << bestPM;
     MESSAGE_END();

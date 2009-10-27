@@ -305,7 +305,7 @@ void FrameSynchronization::processPSDU(const wns::ldk::CompoundPtr& compound)
     MESSAGE_END();
 
     wns::Ratio sinr = getFUN()->getCommandReader(phyUserCommandName)->
-        readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool())->getCIR();
+        readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool())->getCIRwithoutMIMO();
     sinrProbe->put(compound, sinr.get_dB());
 
     double per = getFUN()->getCommandReader(errorModellingCommandName)->

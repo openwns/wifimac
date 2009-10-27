@@ -30,6 +30,8 @@ from BlockACK import *
 from Aggregation import *
 from DeAggregation import *
 from PhyMode import *
+from FastLinkFeedback import *
+
 import wifimac.lowerMAC
 import wifimac.convergence
 import wifimac.FUNModes
@@ -43,6 +45,7 @@ names = dict()
 names['aggregation'] = 'Aggregation'
 names['blockUntilReply'] = 'BlockUntilReply'
 names['deAggregation'] = 'DeAggregation'
+names['fastLinkFeedback'] = 'FastLinkFeedback'
 
 class FUNTemplate(wifimac.FUNModes.Basic):
 
@@ -146,11 +149,19 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                             parentLogger = logger)
 
     ackMux = openwns.Multiplexer.Dispatcher(commandName = 'ackMuxCommand',
-                                        functionalUnitName = 'ackMux' + str(transceiverAddress),
-                                        opcodeSize = 0,
-                                        parentLogger = logger,
-                                        logName = 'ackMux',
-                                        moduleName = 'WiFiMAC')
+                                            functionalUnitName = 'ackMux' + str(transceiverAddress),
+                                            opcodeSize = 0,
+                                            parentLogger = logger,
+                                            logName = 'ackMux',
+                                            moduleName = 'WiFiMAC')
+
+    fastLinkFeedback = FastLinkFeedback(fuName = names['fastLinkFeedback'] + str(transceiverAddress),
+                                        commandName = names['fastLinkFeedback'] + 'Command',
+                                        managerName = names['manager'] +  str(transceiverAddress),
+                                        phyUserCommandName = names['phyUser'] + 'Command',
+                                        sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
+                                        config = config.fastLinkFeedback,
+                                        parentLogger = logger)
 
     block = BlockUntilReply(fuName = names['blockUntilReply'] + str(transceiverAddress),
                             commandName = names['blockUntilReply'] + 'Command',
@@ -167,7 +178,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
     for num in xrange(0, len(FUs)-1):
         FUs[num].connect(FUs[num+1])
     # DraftN requires special structure to send (Block)ACKs via a different way
-    for fu in [ackSwitch, agg, ra, raACK, txop, rtscts, ackMux, block]:
+    for fu in [ackSwitch, agg, ra, raACK, txop, rtscts, ackMux, fastLinkFeedback, block]:
         myFUN.add(fu)
     # DraftN requires special handling so that the acks are not send through the aggregation path
     ackSwitch.connectOnDataFU(FUs[-1], dll.CompoundSwitch.FilterAll('All'))
@@ -178,7 +189,11 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
     txop.connect(rtscts)
     rtscts.connect(ackMux)
     raACK.connect(ackMux)
-    ackMux.connect(block)
+    if(config.useFastLinkFeedback):
+        ackMux.connect(fastLinkFeedback)
+        fastLinkFeedback.connect(block)
+    else:
+        ackMux.connect(block)
 
     bottomFU = None
     bottomFU = __appendDraftNTimingBlock__(myFUN, block, config, names, transceiverAddress, logger, probeLocalIDs)

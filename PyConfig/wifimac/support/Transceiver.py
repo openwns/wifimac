@@ -27,7 +27,7 @@
 
 import openwns.pyconfig
 from openwns import dBm, dB
-from wifimac.lowerMAC.RateAdaptation import OpportunisticwithMIMO
+from wifimac.lowerMAC.RateAdaptation import SINRwithMIMO
 
 import wifimac.Layer2
 import wifimac.draftn
@@ -37,12 +37,14 @@ class Basic(object):
     frequency = None
     txPower = dBm(30)
     position = None
+    probeWindow = None
 
     layer2 = None
 
     def __init__(self, frequency):
         self.layer2 = wifimac.Layer2.Config(frequency)
         self.frequency = frequency
+        self.probeWindow = 1.0
 # end example
 
 # begin example "wifimac.pyconfig.support.transceiver.Mesh"
@@ -67,7 +69,8 @@ class DraftN(Basic):
         self.layer2.phyUser.phyModesDeliverer = wifimac.draftn.PhyModes()
         self.layer2.phyUser.mimoCorrelation = mimoCorrelation
         self.layer2.maximumACKDuration = 68E-6
-        self.layer2.ra.raStrategy = OpportunisticwithMIMO()
+        self.layer2.ra.raStrategy = SINRwithMIMO()
+        self.layer2.useFastLinkFeedback = True
         self.layer2.manager.numAntennas = numAntennas
 
         # resource usage strategy: Buffer, blockACK, aggregation, TxOP
@@ -79,6 +82,7 @@ class DraftN(Basic):
         self.layer2.aggregation.maxDelay = 1.0
         self.layer2.aggregation.impatient = False
         self.layer2.txop.txopLimit = 0.0
+        self.layer2.manager.msduLifetimeLimit = 0.1
 
 class DraftNStation(DraftN):
     def __init__(self, frequency, position, scanFrequencies, scanDuration, numAntennas, maxAggregation, mimoCorrelation = 0.0):

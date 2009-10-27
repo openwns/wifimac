@@ -65,6 +65,7 @@ srcFiles = [
     'src/draftn/BlockUntilReply.cpp',
     'src/draftn/Aggregation.cpp',
     'src/draftn/BlockACK.cpp',
+    'src/draftn/FastLinkFeedback.cpp',
     'src/draftn/rateAdaptationStrategies/SINRwithMIMO.cpp',
     'src/draftn/rateAdaptationStrategies/OpportunisticwithMIMO.cpp',
 
@@ -131,6 +132,7 @@ hppFiles = [
     'src/draftn/BlockACK.hpp',
     'src/draftn/IBlockACKObserver.hpp',
     'src/draftn/BlockUntilReply.hpp',
+    'src/draftn/FastLinkFeedback.hpp',
     'src/lowerMAC/DuplicateFilter.hpp',
     'src/lowerMAC/ITransmissionCounter.hpp',
     'src/lowerMAC/Manager.hpp',
@@ -189,6 +191,7 @@ pyconfigs = [
     'wifimac/draftn/BlockACK.py',
     'wifimac/draftn/BlockUntilReply.py',
     'wifimac/draftn/PhyMode.py',
+    'wifimac/draftn/FastLinkFeedback.py',
     'wifimac/draftn/__init__.py',
     'wifimac/evaluation/__init__.py',
     'wifimac/evaluation/default.py',

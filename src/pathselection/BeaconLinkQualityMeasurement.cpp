@@ -97,7 +97,7 @@ BroadcastLinkQuality::getAverageSINR()
 {
     if(sinrMIB->knowsMeasuredSINR(peerAddress))
     {
-        return(sinrMIB->getAverageMeasuredSINR(peerAddress));
+        return(sinrMIB->getMeasuredSINR(peerAddress));
     }
     else
     {
