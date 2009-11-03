@@ -46,6 +46,9 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
         ErrorProbability();
 
         double
+        getPER(std::vector<wns::Ratio> snr, Bit packetLength, wifimac::convergence::PhyMode phyMode) const;
+
+        double
         getPER(wns::Ratio postSNR, Bit packetLength, wifimac::convergence::PhyMode phyMode) const;
 
     private:

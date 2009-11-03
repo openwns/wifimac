@@ -32,6 +32,7 @@
 // must be the first include!
 #include <WNS/Python.hpp>
 #include <WNS/simulator/Bit.hpp>
+#include <WNS/Assure.hpp>
 
 namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
 
@@ -54,22 +55,52 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
         get(const char* varName, const char* format) const
             {
                 T t;
-                if(not PyArg_Parse(PyObject_GetAttrString(this->config, varName), format, &t))
+                assure(PyObject_HasAttrString(this->config, varName),
+                       "Attribute " << varName << " not found");
+                PyObject* obj = PyObject_GetAttrString(this->config, varName);
+                if(not PyArg_Parse(obj, format, &t))
                 {
+                    Py_DECREF(obj);
                     return 0;
                 }
+                Py_DECREF(obj);
                 return t;
             };
 
         ConfigGetter
         get(const char* varName) const
             {
-                PyObject* o;
-                if(not PyArg_Parse(PyObject_GetAttrString(this->config, varName), "O", o))
-                {
-                    return 0;
-                }
-                return(ConfigGetter(o));
+                assure(PyObject_HasAttrString(this->config, varName),
+                       "Attribute " << varName << " not found");
+                PyObject* obj = PyObject_GetAttrString(this->config, varName);
+                ConfigGetter c(obj);
+                Py_DECREF(obj);
+                return c;
+            };
+
+        ConfigGetter
+        get(const char* varName, int i) const
+            {
+                assure(PyObject_HasAttrString(this->config, varName),
+                       "Attribute " << varName << " not found");
+                PyObject* obj = PyObject_GetAttrString(this->config, varName);
+                int n = PyList_Size(obj);
+                assure(i < n, "List has size " << n << ", cannot get element " << i);
+                PyObject* item = PyList_GetItem(obj, i);
+                ConfigGetter c(item);
+                Py_DECREF(obj);
+                return c;
+            };
+
+        int
+        length(const char* varName) const
+            {
+                assure(PyObject_HasAttrString(this->config, varName),
+                       "Attribute " << varName << " not found");
+                PyObject* obj = PyObject_GetAttrString(this->config, varName);
+                int n = PyList_Size(obj);
+                Py_DECREF(obj);
+                return n;
             }
 
     private:

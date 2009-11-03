@@ -176,6 +176,7 @@ namespace wifimac { namespace convergence {
         }
         s << "*" << wns::Ttos(p.getNumberOfDataSubcarriers())
                   << " (-> " << wns::Ttos(p.getDataBitsPerSymbol()) << " dbps)";
+        return s;
     };
 }}
 

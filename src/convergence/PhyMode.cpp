@@ -37,7 +37,9 @@ MCS::MCS():
     modulation("ERROR"),
     codingRate("ERROR"),
     minSINR(),
-    index(0)
+    index(0),
+    nominator(0),
+    denominator(1)
 {}
 
 MCS::MCS(const MCS& other):
@@ -193,7 +195,7 @@ PhyMode::PhyMode(const wifimac::management::protocolCalculatorPlugins::ConfigGet
     plcpMode(config.get<std::string>("plcpMode", "s")),
     guardIntervalDuration(config.get<wns::simulator::Time>("guardIntervalDuration", "d"))
 {
-    assure(config.get<int>("len(spatialStreams)", "I") > 0,
+    assure(config.length("spatialStreams") > 0,
            "cannot have less than 1 spatial stream");
     assure(plcpMode == "Basic" or plcpMode == "HT-Mix" or plcpMode == "HT-GF",
            "Unknown plcpMode");
@@ -202,20 +204,21 @@ PhyMode::PhyMode(const wifimac::management::protocolCalculatorPlugins::ConfigGet
     assure(numberOfDataSubcarriers > 0,
            "cannot have less than 1 data subcarriers");
 
-    for (int i = 0; i < config.get<int>("len(spatialStreams)", "I"); ++i)
+    int len = config.length("spatialStreams");
+    for (int i = 0; i < len; ++i)
     {
-        std::string s = "spatialStreams[" + wns::Ttos(i) + "]";
-        spatialStreams.push_back(MCS(config.get(s.c_str())));
+        MCS m(config.get("spatialStreams", i));
+        spatialStreams.push_back(m);
     }
 }
 
 Bit PhyMode::getDataBitsPerSymbol() const
 {
     unsigned int dbps = 0;
-    assure(spatialStreams.size() > 0,
-           "ERROR: No spatial streams");
-    assure(numberOfDataSubcarriers > 0,
-           "cannot have less than 1 data subcarriers");
+    if((spatialStreams.size() == 0) or (numberOfDataSubcarriers == 0))
+    {
+        return 0;
+    }
 
     for (std::vector<MCS>::const_iterator it = spatialStreams.begin();
          it != spatialStreams.end();

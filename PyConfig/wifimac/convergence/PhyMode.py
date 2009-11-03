@@ -50,8 +50,13 @@ class PhyMode(object):
         self.plcpMode = plcpMode
         self.guardIntervalDuration = guardIntervalDuration
 
+        assert(len(self.spatialStreams) > 0)
+
     def __str__(self):
-        return "(%s-%s)*%d*%d" % (self.spatialStreams[0].modulation, self.spatialStreams[0].codingRate, self.numberOfDataSubcarriers)
+        s = '|'
+        for ss in self.spatialStreams:
+            s += "%s%s|" % (ss.modulation, ss.codingRate)
+        return "%s*%d" % (s, self.numberOfDataSubcarriers)
 
 class PhyModesDeliverer(object):
     """ Super class for all phy modes """

@@ -142,7 +142,7 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
 
     if(networkProbes):
         #  * Unicast & received by me
-        #  * Table with source | target | MCS
+        #  * Table with source | target | 
         for sourceName in ['wifimac.linkQuality.msduSuccessRate', 'wifimac.linkQuality.sinr']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))
@@ -157,7 +157,7 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
             node.getLeafs().appendChildren(Table(axis1 = 'MAC.CompoundSourceAddress', minValue1 = minAdr, maxValue1 = maxAdr+1, resolution1 = maxAdr+1-minAdr,
                                                  axis2 = 'MAC.CompoundTargetAddress', minValue2 = minAdr, maxValue2 = maxAdr+1, resolution2 = maxAdr+1-minAdr,
                                                  axis3 = 'MAC.CompoundSpatialStreams', minValue3 = 1, maxValue3 = 4, resolution3 = 3,
-                                                 axis4 = 'MAC.CompoundMCS', minValue4 = 1, maxValue4 = 9, resolution4 = 8,
+                                                 axis4 = 'MAC.CompoundDBPS', minValue4 = 1, maxValue4 = 9, resolution4 = 8,
                                                  values = ['mean', 'trials', 'variance'],
                                                  formats = ['MatlabReadableSparse']))
 
