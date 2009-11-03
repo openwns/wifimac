@@ -78,7 +78,6 @@ srcFiles = [
     'src/management/protocolCalculatorPlugins/ErrorProbability.cpp',
     'src/management/protocolCalculatorPlugins/FrameLength.cpp',
     'src/management/protocolCalculatorPlugins/Duration.cpp',
-#    'src/management/protocolCalculatorPlugins/ConfigGetter.cpp',
 
     # Pathselection
     'src/pathselection/VirtualPathSelection.cpp',
