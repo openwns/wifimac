@@ -30,6 +30,7 @@
 #define WIFIMAC_LOWERMAC_TIMING_BACKOFF_HPP
 
 #include <WIFIMAC/convergence/IChannelState.hpp>
+#include <WIFIMAC/convergence/IRxStartEnd.hpp>
 
 #include <WNS/Observer.hpp>
 
@@ -57,75 +58,87 @@ namespace wifimac { namespace lowerMAC { namespace timing {
 	 * Essentially, the backoff in IEEE is very simple: Assure that between every channel busy->idle transition
 	 * and the node's transmission a backoff is counted to zero.
 	 */
-	class Backoff :
-		public wns::events::CanTimeout,
-        public wns::Observer<wifimac::convergence::IChannelState>
-	{
-	public:
-		explicit
-		Backoff(
-			BackoffObserver* backoffObserver,
-			const wns::pyconfig::View& config);
+    class Backoff :
+        public wns::events::CanTimeout,
+        public wns::Observer<wifimac::convergence::IChannelState>,
+        public wns::Observer<wifimac::convergence::IRxStartEnd>
+    {
+    public:
 
-		virtual ~Backoff();
+        Backoff(BackoffObserver* backoffObserver,
+                const wns::pyconfig::View& config);
 
-		/** @brief Transmission request by the scheduler */
-		virtual bool
-        	transmissionRequest(int transmissionCounter);
+        ~Backoff();
 
-		/** @brief Indicates a channel state transition idle->busy */
-		virtual void
-        	onChannelBusy();
+        /** @brief Transmission request by the scheduler */
+        bool
+        transmissionRequest(int transmissionCounter);
 
-		/** @brief Indicates a channel state transition busy->idle */
-		virtual void
-        	onChannelIdle();
+        // observer RxStartEnd
+        void
+        onRxStart(wns::simulator::Time expRxTime);
+        void
+        onRxEnd();
+        void
+        onRxError();
 
-		int getCurrentCW() const
-		{
-			return(cw);
-		}
+        /** @brief Indicates a channel state transition idle->busy */
+        void
+        onChannelBusy();
 
-		/// time the backoff will be finished at (when called during AIFS the maximum waiting time will be used)
-		/// wns::simulator::Time() if backoff hasn't started, current time when finished and idle
-		wns::simulator::Time 
-		finishedAt() const;
+        /** @brief Indicates a channel state transition busy->idle */
+        void
+        onChannelIdle();
 
-		/// notifying observers every time the backoff has finished, wether or not a transmission is waiting	
-		void
-		registerEOBObserver(BackoffObserver * observer);
-	private:
+        int getCurrentCW() const
+            {
+                return(cw);
+            }
 
-		void startNewBackoffCountdown(wns::simulator::Time ifsDuration);
+        /// time the backoff will be finished at (when called during AIFS the maximum waiting time will be used)
+        /// wns::simulator::Time() if backoff hasn't started, current time when finished and idle
+        wns::simulator::Time
+        finishedAt() const;
 
-		/** @brief implementation of CanTimeout interface */
-		virtual void onTimeout();
+        /// notifying observers every time the backoff has finished, wether or not a transmission is waiting
+        void
+        registerEOBObserver(BackoffObserver * observer);
+    private:
 
-		void waitForTimer(const wns::simulator::Time& waitDuration);
+        void startNewBackoffCountdown(wns::simulator::Time ifsDuration);
 
-		BackoffObserver* backoffObserver;
-		std::vector<BackoffObserver*> eobObserver;
+        /** @brief implementation of CanTimeout interface */
+        void onTimeout();
 
-		const wns::simulator::Time slotDuration;
-		const wns::simulator::Time aifsDuration;
+        void waitForTimer(const wns::simulator::Time& waitDuration);
 
-		bool backoffFinished;
-		bool transmissionWaiting;
-		bool duringAIFS;
+        void channelBusyDelay();
 
-		const int cwMin;
-		const int cwMax;
-		int cw;
-		wns::distribution::Uniform uniform;
-		wns::logger::Logger logger;
-		wns::simulator::Time aifsStart;
+        BackoffObserver* backoffObserver;
+        std::vector<BackoffObserver*> eobObserver;
+
+        const wns::simulator::Time slotDuration;
+        const wns::simulator::Time aifsDuration;
+        const wns::simulator::Time eifsDuration;
+
+        bool backoffFinished;
+        bool transmissionWaiting;
+        bool duringAIFS;
+        bool rxError;
+
+        const int cwMin;
+        const int cwMax;
+        int cw;
+        wns::distribution::Uniform uniform;
+        wns::logger::Logger logger;
+        wns::simulator::Time aifsStart;
         bool channelIsBusy;
 
-	protected:
-		// For testing purpose this methods and variable is protected and may be
-		// set by a special version of the backoff
-		int counter;
-	};
+    protected:
+        // For testing purpose this methods and variable is protected and may be
+        // set by a special version of the backoff
+        int counter;
+    };
 } // timing
 } // lowerMAC
 } // wifimac

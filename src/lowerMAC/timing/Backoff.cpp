@@ -29,6 +29,7 @@
 #include <WIFIMAC/lowerMAC/timing/Backoff.hpp>
 
 #include <WNS/Assure.hpp>
+#include <boost/bind.hpp>
 
 using namespace wifimac::lowerMAC::timing;
 
@@ -36,9 +37,11 @@ Backoff::Backoff(BackoffObserver* _backoffObserver, const wns::pyconfig::View& _
     backoffObserver(_backoffObserver),
     slotDuration(_config.get<wns::simulator::Time>("myConfig.slotDuration")),
     aifsDuration(_config.get<wns::simulator::Time>("myConfig.aifsDuration")),
+    eifsDuration(_config.get<wns::simulator::Time>("myConfig.eifsDuration")),
     backoffFinished(false),
     transmissionWaiting(false),
     duringAIFS(false),
+    rxError(false),
     cwMin(_config.get<int>("myConfig.cwMin")),
     cwMax(_config.get<int>("myConfig.cwMax")),
     cw(cwMin),
@@ -65,9 +68,16 @@ wns::simulator::Time Backoff::finishedAt() const
     wns::simulator::Time now = wns::simulator::getEventScheduler()->getTime();
     if (not channelIsBusy)
     {
-        if (duringAIFS == true)
+        if (duringAIFS)
         {
-            return now + cw*slotDuration + (aifsDuration - (now - aifsStart));
+            if(not rxError)
+            {
+                return now + cw*slotDuration + (aifsDuration - (now - aifsStart));
+            }
+            else
+            {
+                return now + cw*slotDuration + (eifsDuration - (now - aifsStart));
+            }
         }
         else
         {
@@ -187,7 +197,7 @@ Backoff::transmissionRequest(const int transmissionCounter)
 
     MESSAGE_SINGLE(NORMAL, logger, "Data, transmission number " << transmissionCounter << " --> contention window = " << cw << " slots");
 
-    if (backoffFinished && (not channelIsBusy))
+    if (backoffFinished and (not channelIsBusy))
     {
         // Postbackoff has expired, the medium is idle... go!
         MESSAGE_SINGLE(NORMAL, logger, "Post-Backoff has expired -> direct go for one frame");
@@ -205,12 +215,28 @@ Backoff::onChannelIdle()
 
     // start post-backoff
     aifsStart = wns::simulator::getEventScheduler()->getTime();
-    startNewBackoffCountdown(aifsDuration);
+    if(rxError)
+    {
+        rxError = false;
+        startNewBackoffCountdown(eifsDuration);
+    }
+    else
+    {
+        startNewBackoffCountdown(aifsDuration);
+    }
 }
 
 void Backoff::onChannelBusy()
 {
     channelIsBusy = true;
+
+    wns::simulator::getEventScheduler()->scheduleDelay(
+        boost::bind(&wifimac::lowerMAC::timing::Backoff::channelBusyDelay, this),
+        1e-6);
+}
+
+void Backoff::channelBusyDelay()
+{
     aifsStart = wns::simulator::Time();
     if(hasTimeoutSet())
     {
@@ -220,6 +246,30 @@ void Backoff::onChannelBusy()
     }
 }
 
+void
+Backoff::onRxStart(wns::simulator::Time /*expRxTime*/)
+{
+
+}
+
+void
+Backoff::onRxEnd()
+{
+
+}
+
+void
+Backoff::onRxError()
+{
+    MESSAGE_SINGLE(NORMAL, logger, "onRxError -> start next bo with eifs=" << eifsDuration);
+    rxError = true;
+    if(not  backoffFinished and duringAIFS and aifsStart == wns::simulator::getEventScheduler()->getTime())
+    {
+        // got onChannelIdle signal before onRxError signal
+        cancelTimeout();
+        startNewBackoffCountdown(eifsDuration);
+    }
+}
 
 void Backoff::registerEOBObserver(BackoffObserver * observer) 
 {

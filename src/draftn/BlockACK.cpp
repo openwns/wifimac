@@ -56,7 +56,7 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
     perMIBServiceName(config_.get<std::string>("perMIBServiceName")),
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
     maximumACKDuration(config_.get<wns::simulator::Time>("myConfig.maximumACKDuration")),
-    preambleProcessingDelay(config_.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
+    ackTimeout(config_.get<wns::simulator::Time>("myConfig.ackTimeout")),
     blockACKPhyMode(config_.getView("myConfig.blockACKPhyMode")),
     capacity(config_.get<Bit>("myConfig.capacity")),
     maxOnAir(config_.get<size_t>("myConfig.maxOnAir")),
@@ -113,7 +113,7 @@ BlockACK::BlockACK(const BlockACK& other) :
     sendBuffer(other.sendBuffer),
     sifsDuration(other.sifsDuration),
     maximumACKDuration(other.maximumACKDuration),
-    preambleProcessingDelay(other.preambleProcessingDelay),
+    ackTimeout(other.ackTimeout),
     capacity(other.capacity),
     maxOnAir(other.maxOnAir),
     baBits(other.baBits),
@@ -389,10 +389,10 @@ BlockACK::onTxEnd(const wns::ldk::CompoundPtr& compound)
         assure(txQueue->waitsForACK(),
                "TxEnd from BA-REQ for current receiver " << currentReceiver << ", but queue is not waiting for ACK");
 
-        // we give sifs+preambleProcessing until the baState must be "receiving"
-        setNewTimeout(sifsDuration + preambleProcessingDelay);
+        // we give ackTimeout until the baState must be "receiving"
+        setNewTimeout(ackTimeout);
         baState = waitForACK;
-        MESSAGE_SINGLE(NORMAL, this->logger, "onTxEnd() of BAreq, wait on BA for " << sifsDuration + preambleProcessingDelay);
+        MESSAGE_SINGLE(NORMAL, this->logger, "onTxEnd() of BAreq, wait on BA for " << ackTimeout);
     }
 }
 
@@ -447,7 +447,6 @@ BlockACK::onRxStart(wns::simulator::Time /*expRxTime*/)
     if(this->baState == waitForACK)
     {
         assure(hasTimeoutSet(), "ackState is waiting but no timeout set?");
-        //cancelTimeout();
         this->baState = receiving;
         MESSAGE_SINGLE(NORMAL, this->logger, "onRxStart() during wait for BA");
     }
@@ -459,8 +458,11 @@ BlockACK::onRxEnd()
     if(this->baState == receiving)
     {
         this->baState = receptionFinished;
-        setTimeout(10e-9);
-        MESSAGE_SINGLE(NORMAL, this->logger, "onRxEnd() during wait for BA -> short wait for delivery of BA");
+        if(not hasTimeoutSet())
+        {
+            setTimeout(10e-9);
+            MESSAGE_SINGLE(NORMAL, this->logger, "onRxEnd() during wait for BA -> short wait for delivery of BA");
+        }
     }
 }
 
@@ -474,15 +476,8 @@ BlockACK::onRxError()
 
         if(not hasTimeoutSet())
         {
-            // waiting period is over
             this->onTimeout();
         }
-
-//        if(hasTimeoutSet())
-//         {
-//             cancelTimeout();
-//         }
-//         this->onTimeout();
     }
 }
 
@@ -949,7 +944,7 @@ void ReceptionQueue::processIncomingACKreq(const wns::ldk::CompoundPtr& compound
    wns::simulator::Time fxDur = parent->friends.manager->getFrameExchangeDuration(compound->getCommandPool()) - parent->sifsDuration - parent->maximumACKDuration;
    if (fxDur < parent->sifsDuration)
    {
-	fxDur = 0;
+       fxDur = 0;
     }
 
 MESSAGE_SINGLE(NORMAL,parent->logger,"create BA with exchange duration : " << fxDur);

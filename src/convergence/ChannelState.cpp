@@ -60,6 +60,7 @@ ChannelState::ChannelState(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& c
     // rememberinf lastCS
     lastCS(idle),
     latestNAV(0),
+    waitForReply(false),
 
     // FU and command names, durations
     managerName(config.get<std::string>("managerName")),
@@ -69,9 +70,6 @@ ChannelState::ChannelState(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& c
     rxStartEndName(config.get<std::string>("rxStartEndName")),
 
     sifsDuration(config_.get<wns::simulator::Time>("myConfig.sifsDuration")),
-    preambleProcessingDelay(config_.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
-    maximumCTSDuration(config_.get<wns::simulator::Time>("myConfig.maximumCTSDuration")),
-    slotDuration(config_.get<wns::simulator::Time>("myConfig.slotDuration")),
 
     // probing the channel busy fraction
     channelBusyFractionProbe(),
@@ -146,10 +144,9 @@ void ChannelState::setCarrierSensingService(wns::service::Service* cs)
 {
     assure(cs, "must be non-NULL");
     assureType(cs, wns::service::phy::ofdma::Notification*);
-    dynamic_cast<wns::service::phy::ofdma::Notification*>(cs)->registerRSSHandler(this);
+    this->myCS = dynamic_cast<wns::service::phy::ofdma::Notification*>(cs);
+    this->myCS->registerRSSHandler(this);
 
-    //this->wns::Observer<wns::service::phy::ofdma::CarrierSensing>::startObserving
-    //(dynamic_cast<wns::service::phy::ofdma::Notification*>(cs));
 } // setNotificationService
 
 void
@@ -165,16 +162,19 @@ ChannelState::onTxEnd(const wns::ldk::CompoundPtr& compound)
 {
     this->indicators.ownTx = false;
 
-    if(friends.manager->getFrameExchangeDuration(compound->getCommandPool()) > this->sifsDuration)
+    if((friends.manager->getFrameExchangeDuration(compound->getCommandPool()) > this->sifsDuration) or
+       (friends.manager->getReplyTimeout(compound->getCommandPool()) > 0.0))
     {
         MESSAGE_SINGLE(NORMAL, logger, "End of own transmission, awaiting reply --> set NAV");
         // something expected after the frame (either own tx or reply) --> set
         // short NAV
-        wns::simulator::Time duration = this->sifsDuration + this->preambleProcessingDelay;
+
+        wns::simulator::Time duration = friends.manager->getReplyTimeout(compound->getCommandPool());
         if(wns::simulator::getEventScheduler()->getTime() + duration > this->latestNAV)
         {
             latestNAV = wns::simulator::getEventScheduler()->getTime() + duration;
             this->setNewTimeout(duration);
+            this->waitForReply = true;
         }
     }
     else
@@ -224,6 +224,14 @@ ChannelState::processIncoming(const wns::ldk::CompoundPtr& compound)
     {
         if(friends.manager->isForMe(compound->getCommandPool()))
         {
+            if(this->waitForReply)
+            {
+                // abort own NAV
+                this->latestNAV = wns::simulator::getEventScheduler()->getTime();
+                cancelTimeout();
+                this->waitForReply = false;
+                checkNewCS();
+            }
             // NAV is only set for frames NOT for me
             return;
         }
@@ -236,10 +244,7 @@ ChannelState::processIncoming(const wns::ldk::CompoundPtr& compound)
 
             // special handling of RTS frames: set duration only until expected
             // reception start of the data frame:
-            //   SIFS + CTS + SIFS + Preamble + 2 slots
-            duration = this->sifsDuration +
-                this->maximumCTSDuration +
-                this->preambleProcessingDelay + 2*this->slotDuration;
+            duration = friends.manager->getReplyTimeout(compound->getCommandPool());
         }
         else
         {
@@ -291,9 +296,15 @@ void ChannelState::onTimeout()
     // NAV has ended
     assure(latestNAV == wns::simulator::getEventScheduler()->getTime(), "indicators.nav has different time than now!");
     MESSAGE_SINGLE(NORMAL, logger, "NAV has finished");
-
+    if(this->waitForReply)
+    {
+        // was own NAV
+        this->waitForReply = false;
+    }
     this->wns::Subject<INetworkAllocationVector>::forEachObserver
         (OnChangedNAV(false, wns::service::dll::UnicastAddress()));
+
+    myCS->updateRequest();
 
     this->checkNewCS();
 }
@@ -327,7 +338,7 @@ void ChannelState::onRSSChange(wns::Power newRSS)
 
     for(int i=0; i < rssObservers.size(); i++)
     {
-	rssObservers[i]->onRSSChange(newRSS);
+        rssObservers[i]->onRSSChange(newRSS);
     }
 }
 

@@ -38,7 +38,7 @@ class BlockACKConfig(object):
 
     sifsDuration = None
     """ set globally in Layer2.py """
-    preambleProcessingDelay = None
+    ackTimeout = None
     """ set globally in Layer2.py """
 
     maximumACKDuration = None

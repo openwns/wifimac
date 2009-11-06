@@ -57,6 +57,7 @@ def getFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs.append(DCF(fuName = names['broadcastDCF'] + str(transceiverAddress),
                    commandName = names['broadcastDCF'] + 'Command',
                    csName = names['channelState'] + str(transceiverAddress),
+                   rxStartEndName = names['frameSynchronization'] + str(transceiverAddress),
                    arqCommandName = names['arq'] + 'Command',
                    config = config.broadcastDCF,
                    parentLogger = logger))

@@ -145,12 +145,12 @@ void BlockUntilReply::onTxEnd(const wns::ldk::CompoundPtr& compound)
 
     assure(this->txStatus == transmitting, "onTxEnd, but status is not transmitting");
     this->txStatus = finished;
-
-    if(friends.manager->getRequiresDirectReply(compound->getCommandPool()))
+    wns::simulator::Time timeout = friends.manager->getReplyTimeout(compound->getCommandPool());
+    if(timeout > 0.0)
     {
         // Timeout for reception
-        setTimeout(sifsDuration + preambleProcessingDelay);
-        MESSAGE_SINGLE(NORMAL, logger, "End frame transmission, requires reply -> wait for " << sifsDuration + preambleProcessingDelay);
+        setTimeout(timeout);
+        MESSAGE_SINGLE(NORMAL, logger, "End frame transmission, requires reply -> wait for " << timeout);
     }
     else
     {

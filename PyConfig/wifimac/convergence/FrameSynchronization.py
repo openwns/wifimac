@@ -41,6 +41,9 @@ class FrameSynchronizationConfig(object):
     # Below this threshold, no preamble will even be detected
     detectionThreshold = dB(-5)
 
+    # optionally, the frameSync can signal all rxErrors, even if we were not synchronized to the frame!
+    signalRxErrorAlthoughNotSynchronized = False
+
 class FrameSynchronization(openwns.Probe.Probe):
     """ This FU is responsible for passing only correctly received preambles and frames, i.e.
         * With no CRC error as set by the crc, and

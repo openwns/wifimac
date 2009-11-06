@@ -41,6 +41,9 @@
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Delayed.hpp>
 
+#include <WNS/ldk/probe/Probe.hpp>
+#include <WNS/probe/bus/ContextCollector.hpp>
+
 #include <WNS/simulator/Time.hpp>
 #include <WNS/events/CanTimeout.hpp>
 
@@ -86,7 +89,8 @@ namespace wifimac { namespace lowerMAC {
         public wns::events::CanTimeout,
         public wns::Observer<wifimac::convergence::INetworkAllocationVector>,
         public wns::Observer<wifimac::convergence::IRxStartEnd>,
-        public wns::Observer<wifimac::convergence::ITxStartEnd>
+        public wns::Observer<wifimac::convergence::ITxStartEnd>,
+        public wns::ldk::probe::Probe
     {
     public:
 
@@ -153,6 +157,7 @@ namespace wifimac { namespace lowerMAC {
         const wns::simulator::Time maximumACKDuration;
         const wns::simulator::Time maximumCTSDuration;
         const wns::simulator::Time preambleProcessingDelay;
+        const wns::simulator::Time ctsTimeout;
 
         const wifimac::convergence::PhyMode rtsctsPhyMode;
 
@@ -189,6 +194,8 @@ namespace wifimac { namespace lowerMAC {
 
         wns::simulator::Time ctsPrepared;
         wns::simulator::Time lastTimeout;
+
+        wns::probe::bus::ContextCollectorPtr rtsSuccessProbe;
     };
 
 

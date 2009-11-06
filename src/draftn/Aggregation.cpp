@@ -91,7 +91,7 @@ void Aggregation::processOutgoing(const wns::ldk::CompoundPtr& compound)
 
         if(friends.manager->getReceiverAddress(compound->getCommandPool()) == this->currentReceiver)
         {
-            if(friends.manager->getRequiresDirectReply(compound->getCommandPool()))
+            if(friends.manager->getReplyTimeout(compound->getCommandPool()) > 0)
             {
                 // requires reply, close the aggregation
                 this->currentEntries = this->maxEntries-1;
@@ -100,7 +100,8 @@ void Aggregation::processOutgoing(const wns::ldk::CompoundPtr& compound)
                 m << " requires direct reply -> Close aggregation, fake entries to " << this->currentEntries;
                 MESSAGE_END();
                 // mark current compound in the same way
-                friends.manager->setRequiresDirectReply(this->currentCompound->getCommandPool(), true);
+                friends.manager->setReplyTimeout(this->currentCompound->getCommandPool(),
+                                                 friends.manager->getReplyTimeout(compound->getCommandPool()));
                 sendNow = true;
             }
             // accepted compound is for the same receiver as the other ones -->

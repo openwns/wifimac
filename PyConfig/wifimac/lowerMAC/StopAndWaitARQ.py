@@ -49,7 +49,7 @@ class StopAndWaitARQConfig(object):
     """ Variables are set globally """
     sifsDuration = None
     maximumACKDuration = None
-    preambleProcessingDelay = None
+    ackTimeout = None
 
     statusCollector = openwns.ARQ.StatusCollectorTwoSizesWindowed
     windowSize = 1.0
@@ -81,7 +81,7 @@ class StopAndWaitARQ(openwns.Probe.Probe):
     rtsctsThreshold = None
     sifsDuration = None
     maximumACKDuration = None
-    preambleProcessingDelay = None
+    ackTimeout = None
     ackPhyMode = None
 
     arqStatusCollector = None
@@ -114,7 +114,7 @@ class StopAndWaitARQ(openwns.Probe.Probe):
         self.rtsctsThreshold = config.rtsctsThreshold
         self.sifsDuration = config.sifsDuration
         self.maximumACKDuration = config.maximumACKDuration
-        self.preambleProcessingDelay = config.preambleProcessingDelay
+        self.ackTimeout = config.ackTimeout
         self.ackPhyMode = config.ackPhyMode
         self.bitsPerIFrame = config.bitsPerIFrame
         self.bitsPerRRFrame = config.bitsPerRRFrame

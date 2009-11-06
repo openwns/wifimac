@@ -120,7 +120,7 @@ namespace wifimac { namespace lowerMAC {
 
         const wns::simulator::Time sifsDuration;
         const wns::simulator::Time maximumACKDuration;
-        const wns::simulator::Time preambleProcessingDelay;
+        const wns::simulator::Time ackTimeout;
 
         const wifimac::convergence::PhyMode ackPhyMode;
 

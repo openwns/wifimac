@@ -86,7 +86,6 @@ namespace wifimac { namespace convergence {
         public wns::ldk::Processor<ChannelState>,
         public ChannelStateNotification,
         public NAVNotification,
-        //public wns::Observer<wns::service::phy::ofdma::CarrierSensing>,
         public wns::service::phy::ofdma::RSSHandler,
         public wns::Observer<wifimac::convergence::ITxStartEnd>,
         public wns::Observer<wifimac::convergence::IRxStartEnd>,
@@ -102,8 +101,8 @@ namespace wifimac { namespace convergence {
         void
         setCarrierSensingService(wns::service::Service* cs);
 
-	void
-	registerRSSObserver(wns::Observer<wns::service::phy::ofdma::CarrierSensing> *o) {rssObservers.push_back(o);}
+        void
+        registerRSSObserver(wns::Observer<wns::service::phy::ofdma::CarrierSensing> *o) {rssObservers.push_back(o);}
 
     private:
         /** @brief Processor Interface Implementation */
@@ -149,8 +148,8 @@ namespace wifimac { namespace convergence {
         wns::pyconfig::View config;
         wns::logger::Logger logger;
 
-	/** @brief units to be informed on RSS changes */
-	std::vector<wns::Observer<wns::service::phy::ofdma::CarrierSensing>*> rssObservers;
+        /** @brief units to be informed on RSS changes */
+        std::vector<wns::Observer<wns::service::phy::ofdma::CarrierSensing>*> rssObservers;
 
         /**
 		 * @brief identifies which indicators are switched on or off
@@ -207,6 +206,8 @@ namespace wifimac { namespace convergence {
 
         wns::simulator::Time latestNAV;
 
+        bool waitForReply;
+
         wifimac::FrameType lastCommandOut;
 
         const std::string managerName;
@@ -219,9 +220,6 @@ namespace wifimac { namespace convergence {
          * @brief Frame/IFS durations
          */
         const wns::simulator::Time sifsDuration;
-        const wns::simulator::Time preambleProcessingDelay;
-        const wns::simulator::Time maximumCTSDuration;
-        const wns::simulator::Time slotDuration;
 
         /**
          * @brief Probe the channel busy fraction
@@ -231,6 +229,8 @@ namespace wifimac { namespace convergence {
         wns::simulator::Time channelBusyTime;
         wns::simulator::Time channelBusySlotStart;
         wns::simulator::Time channelBusyLastChangeToBusy;
+
+        wns::service::phy::ofdma::Notification* myCS;
     };
 
 

@@ -56,7 +56,11 @@ namespace wifimac { namespace lowerMAC {
     {
     public:
         struct {
+            /** @brief Time when the packet can be thrown away */
             wns::simulator::Time expirationTime;
+
+            /** @brief Duration after which the reply is missing */
+            wns::simulator::Time replyTimeout;
         } local;
 
         struct {
@@ -69,9 +73,6 @@ namespace wifimac { namespace lowerMAC {
              * frame!
              */
             wns::simulator::Time frameExchangeDuration;
-
-            /** @brief Frame requires a direct reply from peer */
-            bool requiresDirectReply;
         } peer;
 
         struct { } magic;
@@ -79,8 +80,8 @@ namespace wifimac { namespace lowerMAC {
         ManagerCommand()
             {
                 peer.type = DATA;
-                peer.frameExchangeDuration = 0;
-                peer.requiresDirectReply = false;
+                peer.frameExchangeDuration = 0.0;
+                local.replyTimeout = 0.0;
             }
 
         FrameType getFrameType()
@@ -157,7 +158,7 @@ namespace wifimac { namespace lowerMAC {
                        const wns::service::dll::UnicastAddress receiverAddress,
                        const FrameType type,
                        const wns::simulator::Time frameExchangeDuration,
-                       const bool requiresDirectReply = false);
+                       const wns::simulator::Time replyTimeout = 0.0);
 
         /** @brief Getter for the transmitter address of the compound*/
         wns::service::dll::UnicastAddress
@@ -214,12 +215,12 @@ namespace wifimac { namespace lowerMAC {
          *  An examples is the RTS (requires a CTS after SIFS)
          *
          */
-        bool
-        getRequiresDirectReply(const wns::ldk::CommandPool* commandPool) const;
+        wns::simulator::Time
+        getReplyTimeout(const wns::ldk::CommandPool* commandPool) const;
 
         /** @brief Set the "requires direct reply" flag */
         void
-        setRequiresDirectReply(const wns::ldk::CommandPool* commandPool, bool requiresDirectReply);
+        setReplyTimeout(const wns::ldk::CommandPool* commandPool, wns::simulator::Time replyTimeout);
 
         /** @brief Return the number of antennas used for MIMO transmissions */
         unsigned int

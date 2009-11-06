@@ -29,6 +29,7 @@
 #include <WIFIMAC/lowerMAC/RTSCTS.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <DLL/Layer2.hpp>
+#include <WNS/probe/bus/utils.hpp>
 
 using namespace wifimac::lowerMAC;
 
@@ -37,6 +38,13 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
     wns::ldk::FunctionalUnit,
     "wifimac.lowerMAC.RTSCTS",
     wns::ldk::FUNConfigCreator);
+
+STATIC_FACTORY_REGISTER_WITH_CREATOR(
+    wifimac::lowerMAC::RTSCTS,
+    wns::ldk::probe::Probe,
+    "wifimac.lowerMAC.RTSCTS",
+    wns::ldk::FUNConfigCreator);
+
 
 RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     wns::ldk::fu::Plain<RTSCTS, RTSCTSCommand>(fun),
@@ -53,6 +61,7 @@ RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     maximumACKDuration(config_.get<wns::simulator::Time>("myConfig.maximumACKDuration")),
     maximumCTSDuration(config_.get<wns::simulator::Time>("myConfig.maximumCTSDuration")),
     preambleProcessingDelay(config_.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
+    ctsTimeout(config_.get<wns::simulator::Time>("myConfig.ctsTimeout")),
     rtsctsPhyMode(config_.getView("myConfig.rtsctsPhyMode")),
     rtsBits(config_.get<Bit>("myConfig.rtsBits")),
     ctsBits(config_.get<Bit>("myConfig.ctsBits")),
@@ -78,6 +87,17 @@ RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
 
     this->ctsPrepared = 0;
     this->lastTimeout = 0;
+
+    // read the local IDs from the config
+    wns::probe::bus::ContextProviderCollection localContext(&fun->getLayer()->getContextProviderCollection());
+    for (int ii = 0; ii<config_.len("localIDs.keys()"); ++ii)
+    {
+        std::string key = config_.get<std::string>("localIDs.keys()",ii);
+        uint32_t value  = config_.get<uint32_t>("localIDs.values()",ii);
+        localContext.addProvider(wns::probe::bus::contextprovider::Constant(key, value));
+        MESSAGE_SINGLE(VERBOSE, logger, "Using Local IDName '"<<key<<"' with value: "<<value);
+    }
+    rtsSuccessProbe = wns::probe::bus::collector(localContext, config_, "rtsSuccessProbeName");
 }
 
 
@@ -181,6 +201,7 @@ RTSCTS::processIncoming(const wns::ldk::CompoundPtr& compound)
                 assure(this->pendingMPDU, "Received CTS, but no pending MPDU");
                 MESSAGE_SINGLE(NORMAL, this->logger,
                                "Incoming awaited CTS -> send data");
+                rtsSuccessProbe->put(this->pendingMPDU, 1);
                 state = idle;
                 if(this->hasTimeoutSet())
                 {
@@ -309,11 +330,11 @@ RTSCTS::onTxEnd(const wns::ldk::CompoundPtr& compound)
        (state == transmitRTS))
     {
         state = waitForCTS;
-        setNewTimeout(sifsDuration + preambleProcessingDelay);
+        setNewTimeout(ctsTimeout);
         MESSAGE_BEGIN(NORMAL, logger, m, "RTS to ");
         m << friends.manager->getReceiverAddress(compound->getCommandPool());
         m << " is sent, waiting for CTS for ";
-        m << sifsDuration + preambleProcessingDelay;
+        m << ctsTimeout;
         MESSAGE_END();
     }
 }
@@ -391,6 +412,8 @@ RTSCTS::onTimeout()
     // reception of cts has failed --> frame has failed
     MESSAGE_SINGLE(NORMAL, this->logger, "No CTS received -> transmission has failed");
 
+    rtsSuccessProbe->put(this->pendingMPDU, 0);
+
     // re-convert MPDU type from DATA_TXOP to DATA
     friends.manager->setFrameType(this->pendingMPDU->getCommandPool(), DATA);
     friends.arq->onTransmissionHasFailed(this->pendingMPDU);
@@ -424,8 +447,8 @@ RTSCTS::prepareRTS(const wns::ldk::CompoundPtr& mpdu)
         friends.manager->createCompound(friends.manager->getTransmitterAddress(mpdu->getCommandPool()),   // tx address
                                         friends.manager->getReceiverAddress(mpdu->getCommandPool()),      // rx address
                                         friends.manager->getFrameType(mpdu->getCommandPool()),            // frame type
-                                        nav,                                                              // NAV
-                                        true);                                                            // requires direct reply
+                                        nav,               // NAV
+                                        ctsTimeout);  // requires direct reply after timeout
 
     wns::ldk::CommandPool* rtsCP = rts->getCommandPool();
     friends.manager->setPhyMode(rtsCP, rtsctsPhyMode);
@@ -454,7 +477,7 @@ RTSCTS::prepareCTS(const wns::ldk::CompoundPtr& rts)
                                                                 friends.manager->getTransmitterAddress(rtsCP),
                                                                 ACK,
                                                                 nav,
-                                                                true);
+                                                                sifsDuration + preambleProcessingDelay);
     friends.manager->setPhyMode(cts->getCommandPool(), rtsctsPhyMode);
     RTSCTSCommand* rtsctsC = this->activateCommand(cts->getCommandPool());
     rtsctsC->peer.isRTS = false;

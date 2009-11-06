@@ -66,18 +66,25 @@ class DraftN(Basic):
     def __init__(self, frequency, numAntennas, maxAggregation, mimoCorrelation = 0.0):
         super(DraftN, self).__init__(frequency)
         self.layer2.funTemplate = wifimac.draftn.FUNTemplate
+        self.layer2.arq = wifimac.draftn.BlockACKConfig()
         self.layer2.phyUser.phyModesDeliverer = wifimac.draftn.PhyModes()
         self.layer2.phyUser.mimoCorrelation = mimoCorrelation
+
+        # ACK becomes BlockACK -> longer duration
         self.layer2.maximumACKDuration = 68E-6
+        # EIFS = SIFS + DIFS + ACK
+        self.layer2.eifsDuration = self.layer2.sifsDuration + 34E-6 + self.layer2.maximumACKDuration
+        self.layer2.ackTimeout = self.layer2.sifsDuration + self.layer2.slotDuration + self.layer2.preambleProcessingDelay
+
         self.layer2.ra.raStrategy = SINRwithMIMO()
         self.layer2.useFastLinkFeedback = True
         self.layer2.manager.numAntennas = numAntennas
 
         # resource usage strategy: Buffer, blockACK, aggregation, TxOP
         self.layer2.bufferSize = 50
-        self.layer2.blockACK.capacity = 50
-        self.layer2.blockACK.maxOnAir = maxAggregation
-        self.layer2.blockACK.impatient = True
+        self.layer2.arq.capacity = 50
+        self.layer2.arq.maxOnAir = maxAggregation
+        self.layer2.arq.impatient = True
         self.layer2.aggregation.maxEntries = maxAggregation
         self.layer2.aggregation.maxDelay = 1.0
         self.layer2.aggregation.impatient = False

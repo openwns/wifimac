@@ -62,6 +62,7 @@ FrameSynchronization::FrameSynchronization(wns::ldk::fun::FUN* fun, const wns::p
     slgCapture(config.get<wns::Ratio>("myConfig.slgCapture")),
     idleCapture(config.get<wns::Ratio>("myConfig.idleCapture")),
     detectionThreshold(config.get<wns::Ratio>("myConfig.detectionThreshold")),
+    signalRxErrorAlthoughNotSynchronized(config.get<bool>("myConfig.signalRxErrorAlthoughNotSynchronized")),
     lastFrameEnd(0),
     managerName(config.get<std::string>("managerName")),
     crcCommandName(config.get<std::string>("crcCommandName")),
@@ -313,18 +314,34 @@ void FrameSynchronization::processPSDU(const wns::ldk::CompoundPtr& compound)
     perProbe->put(compound, per);
 
     if((curState == Synchronized or curState == waitForFinalDelivery) and
-       (friends.manager->getTransmitterAddress(compound->getCommandPool()) == this->synchronizedToAddress) and
-       (getFUN()->getCommandReader(crcCommandName)->readCommand<wns::ldk::crc::CRCCommand>(compound->getCommandPool())->local.checkOK))
+       (friends.manager->getTransmitterAddress(compound->getCommandPool()) == this->synchronizedToAddress))
     {
-        MESSAGE_SINGLE(NORMAL, logger, "Received matching psdu for current synchronization");
-        sinrMIB->putMeasurement(friends.manager->getTransmitterAddress(compound->getCommandPool()), sinr);
-        successRateProbe->put(compound, 1);
-        getDeliverer()->getAcceptor(compound)->onData(compound);
+        if(getFUN()->getCommandReader(crcCommandName)->readCommand<wns::ldk::crc::CRCCommand>(compound->getCommandPool())->local.checkOK)
+        {
+            MESSAGE_SINGLE(NORMAL, logger, "Received matching psdu for current synchronization");
+            sinrMIB->putMeasurement(friends.manager->getTransmitterAddress(compound->getCommandPool()), sinr);
+            successRateProbe->put(compound, 1);
+            getDeliverer()->getAcceptor(compound)->onData(compound);
+        }
+        else
+        {
+            MESSAGE_SINGLE(NORMAL, logger, "Received (synchronized) psdu, but CRC error -> DROP");
+            successRateProbe->put(compound, 0);
+            // Signal rxError event
+            this->wns::Subject<IRxStartEnd>::forEachObserver(OnRxStartEnd(0, false, true));
+        }
     }
     else
     {
-        MESSAGE_SINGLE(NORMAL, logger, "Received psdu, but not synchronized or CRC error -> DROP");
+        MESSAGE_SINGLE(NORMAL, logger, "Received psdu, but not synchronized -> DROP");
         successRateProbe->put(compound, 0);
+        // signal rxError only in case the user specifically asked for this kind
+        // of strange behavior (i.e. not synchronized --> CRC cannot be checked
+        // at all!
+        if(this->signalRxErrorAlthoughNotSynchronized)
+        {
+            this->wns::Subject<IRxStartEnd>::forEachObserver(OnRxStartEnd(0, false, true));
+        }
     }
 
     // delivery occured

@@ -117,6 +117,7 @@ namespace wifimac { namespace convergence {
         const wns::Ratio slgCapture;
         const wns::Ratio idleCapture;
         const wns::Ratio detectionThreshold;
+        const bool signalRxErrorAlthoughNotSynchronized;
         wns::simulator::Time lastFrameEnd;
 
         const std::string managerName;

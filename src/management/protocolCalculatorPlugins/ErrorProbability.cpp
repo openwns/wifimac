@@ -46,6 +46,12 @@ ErrorProbability::getPER(std::vector<wns::Ratio> snr,
                          Bit packetLength,
                          wifimac::convergence::PhyMode phyMode) const
 {
+    // if the packet length is unknown, one symbol is assumed
+    if(packetLength == 0)
+    {
+        packetLength = phyMode.getDataBitsPerSymbol();
+    }
+
     double cyclicPrefixReduction = 0.0;
     if(phyMode.getGuardIntervalDuration() == 0.8e-6)
     {

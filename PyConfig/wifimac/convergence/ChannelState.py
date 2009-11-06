@@ -48,9 +48,6 @@ class ChannelStateConfig(object):
 
     """ Variables are set globally and copied here"""
     sifsDuration = None
-    preambleProcessingDelay = None
-    slotDuration = None
-    maximumCTSDuration = None
 
 class ChannelState(openwns.Probe.Probe):
     __plugin__ = 'wifimac.convergence.ChannelState'

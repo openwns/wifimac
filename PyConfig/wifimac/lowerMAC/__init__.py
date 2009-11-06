@@ -180,11 +180,14 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
                     navName = names['channelState'] + str(transceiverAddress),
                     rxStartName = names['frameSynchronization'] + str(transceiverAddress),
                     txStartEndName = names['phyUser'] + str(transceiverAddress),
+                    probePrefix = 'wifimac.linkQuality',
                     config = config.rtscts,
-                    parentLogger = logger)
+                    parentLogger = logger,
+                    localIDs = probeLocalIDs)
     unicastScheduler = DCF(fuName = names['unicastDCF'] + str(transceiverAddress),
                            commandName = names['unicastDCF'] + 'Command',
                            csName = names['channelState'] + str(transceiverAddress),
+                           rxStartEndName = names['frameSynchronization'] + str(transceiverAddress),
                            arqCommandName = names['arq'] + 'Command',
                            config = config.unicastDCF,
                            parentLogger = logger)

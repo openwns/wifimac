@@ -87,7 +87,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                         perMIBServiceName = names['perMIB'] + str(transceiverAddress),
                         sendBufferName = names['buffer'] + str(transceiverAddress),
                         probePrefix = 'wifimac.linkQuality',
-                        config = config.blockACK,
+                        config = config.arq,
                         parentLogger = logger,
                         localIDs = probeLocalIDs))
     ackSwitch = dll.CompoundSwitch.CompoundSwitch(functionalUnitName = names['ackSwitch'] + str(transceiverAddress),

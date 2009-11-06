@@ -61,7 +61,7 @@ StopAndWaitARQ::StopAndWaitARQ(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::V
     rtsctsThreshold(config.get<Bit>("rtsctsThreshold")),
     sifsDuration(config.get<wns::simulator::Time>("sifsDuration")),
     maximumACKDuration(config.get<wns::simulator::Time>("maximumACKDuration")),
-    preambleProcessingDelay(config.get<wns::simulator::Time>("preambleProcessingDelay")),
+    ackTimeout(config.get<wns::simulator::Time>("ackTimeout")),
     ackPhyMode(config.getView("ackPhyMode")),
     ackState(none)
 {
@@ -111,8 +111,8 @@ void StopAndWaitARQ::onRxStart(wns::simulator::Time /*expRxTime*/)
     {
         assure(this->activeCompound, "state is waitForACK but no active compound");
         assure(hasTimeoutSet(), "ackState is waiting but no timeout set?");
+
         MESSAGE_SINGLE(NORMAL, logger, "got rxStartIndication, wait for ACK delivery");
-        //cancelTimeout();
         ackState = receiving;
     }
 }
@@ -123,8 +123,11 @@ void StopAndWaitARQ::onRxEnd()
     {
         assure(this->activeCompound, "state is receiving but no active compound");
         ackState = receptionFinished;
-        setTimeout(10e-9);
-        MESSAGE_SINGLE(NORMAL, logger, "onRxEnd and waiting for ACK -> set short timeout");
+        if(not hasTimeoutSet())
+        {
+            setTimeout(10e-9);
+            MESSAGE_SINGLE(NORMAL, logger, "onRxEnd and waiting for ACK -> set short timeout");
+        }
 
     }
 }
@@ -141,7 +144,6 @@ void StopAndWaitARQ::onRxError()
 
         if(not hasTimeoutSet())
         {
-            // waiting period is over
             this->onTimeout();
         }
     }
@@ -181,8 +183,8 @@ StopAndWaitARQ::onTxEnd(const wns::ldk::CompoundPtr& compound)
        (compound->getBirthmark() == this->activeCompound->getBirthmark()))
     {
         ackState = waitForACK;
-        setNewTimeout(sifsDuration + preambleProcessingDelay);
-        MESSAGE_SINGLE(NORMAL, logger, "Data is sent, waiting for ACK for " << sifsDuration + preambleProcessingDelay);
+        setNewTimeout(ackTimeout);
+        MESSAGE_SINGLE(NORMAL, logger, "Data is sent, waiting for ACK for " << ackTimeout);
     }
     else
     {
@@ -204,6 +206,7 @@ void StopAndWaitARQ::processOutgoing(const wns::ldk::CompoundPtr& compound)
     else
     {
         // TODO: Set the frame exchange duration here
+        friends.manager->setReplyTimeout(compound->getCommandPool(), ackTimeout);
         wns::ldk::arq::StopAndWait::processOutgoing(compound);
     }
 }

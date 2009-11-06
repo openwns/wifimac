@@ -470,7 +470,7 @@ namespace wifimac {
             /** @brief Signals end of own transmission -> set timeout for ACK*/
             void onTxEnd(const wns::ldk::CompoundPtr& compound);
 
-            /** 
+            /**
              * @brief Signal from RTS/CTS that the transmission has failed
              *
              * A failed CTS is handled in the same way as a missing ACK or a
@@ -536,7 +536,7 @@ namespace wifimac {
             /// Maximum expected duration of BlockACK
             const wns::simulator::Time maximumACKDuration;
             /// Duration between start of preamble and rx indication
-            const wns::simulator::Time preambleProcessingDelay;
+            const wns::simulator::Time ackTimeout;
             /// Maximum number of stored bits (rx+tx+air)
             const Bit capacity;
             /// Window size of a link

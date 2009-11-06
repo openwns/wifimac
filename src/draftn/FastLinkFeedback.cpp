@@ -113,7 +113,7 @@ void FastLinkFeedback::processOutgoing(const wns::ldk::CompoundPtr& compound)
         return;
     }
 
-    if(friends.manager->getRequiresDirectReply(compound->getCommandPool()))
+    if(friends.manager->getReplyTimeout(compound->getCommandPool()) > 0)
     {
         FastLinkFeedbackCommand* flfc = activateCommand(compound->getCommandPool());
         flfc->peer.isRequest = true;

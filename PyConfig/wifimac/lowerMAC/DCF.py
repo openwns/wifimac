@@ -33,13 +33,17 @@ import wifimac.Logger
 class DCFConfig(object):
     """ Constants for the medium access waiting times, see IEEE Std 802.11-2007"""
     slotDuration = None
-    """ PHY-dependant, see 9.2.10 - Variable set globally in Layer2.py"""
+    """ PHY-dependent, see 9.2.10"""
     aifsDuration = 34E-6
+    """ PHY-dependent, see 9.2.10"""
+    eifsDuration = None
     """ arbitration interframe space, see 9.2.3.4 """
     cwMin = None
     """ minimum size of the contention window """
     cwMax = None
     """ maximum size of the contention window """
+    backoffDisabled = False
+    """ disable BO, usefull e.g. for the broadcast-BO in STAs """
 
     def __init__(self, cwMin = 15, cwMax = 1023):
         self.cwMin = cwMin
@@ -53,6 +57,8 @@ class DCF(openwns.FUN.FunctionalUnit):
 
     csName = None
     """ Name of the channel state FU """
+    rxStartEndName = None
+    """ Name of the rxStartEnd indicator """
     arqCommandName = None
     """ Name of the arq command which contains the local transmission counter """
 
@@ -61,12 +67,13 @@ class DCF(openwns.FUN.FunctionalUnit):
     logger = None
     backoffLogger = None
 
-    def __init__(self, fuName, commandName, csName, arqCommandName, config, parentLogger=None, **kw):
+    def __init__(self, fuName, commandName, csName, rxStartEndName, arqCommandName, config, parentLogger=None, **kw):
         super(DCF, self).__init__(functionalUnitName = fuName, commandName = commandName)
         self.logger = wifimac.Logger.Logger(name = fuName, parent = parentLogger)
         self.backoffLogger = wifimac.Logger.Logger(name = "Backoff", parent = self.logger)
         assert(config.__class__ == DCFConfig)
         self.myConfig = config
         self.csName = csName
+        self.rxStartEndName = rxStartEndName
         self.arqCommandName = arqCommandName
         openwns.pyconfig.attrsetter(self, kw)

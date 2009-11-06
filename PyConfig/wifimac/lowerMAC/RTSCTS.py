@@ -38,6 +38,7 @@ class RTSCTSConfig(object):
     maximumACKDuration = None
     maximumCTSDuration = None
     preambleProcessingDelay = None
+    ctsTimeout = None
 
     rtsctsPhyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
     """ PhyMode with which the rts and cts are transmitted --> default the lowest for most robustness"""
@@ -51,7 +52,7 @@ class RTSCTSConfig(object):
 
     rtsctsOnTxopData = False
 
-class RTSCTS(openwns.FUN.FunctionalUnit):
+class RTSCTS(openwns.Probe.Probe):
 
     __plugin__ = 'wifimac.lowerMAC.RTSCTS'
     """ Name in FU Factory """
@@ -64,11 +65,12 @@ class RTSCTS(openwns.FUN.FunctionalUnit):
     navName = None
     rxStartName = None
     txStartEndName = None
+    rtsSuccessProbeName = None
 
     myConfig = None
 
-    def __init__(self, functionalUnitName, commandName, managerName, protocolCalculatorName, phyUserName, arqName, navName, rxStartName, txStartEndName, config, parentLogger = None, **kw):
-        super(RTSCTS, self).__init__(functionalUnitName = functionalUnitName, commandName = commandName)
+    def __init__(self, functionalUnitName, commandName, managerName, protocolCalculatorName, phyUserName, arqName, navName, rxStartName, txStartEndName, probePrefix, config, parentLogger = None, **kw):
+        super(RTSCTS, self).__init__(name=functionalUnitName, commandName=commandName)
         self.managerName = managerName
         self.phyUserName = phyUserName
         self.protocolCalculatorName = protocolCalculatorName
@@ -76,6 +78,7 @@ class RTSCTS(openwns.FUN.FunctionalUnit):
         self.navName = navName
         self.rxStartName = rxStartName
         self.txStartEndName = txStartEndName
+        self.rtsSuccessProbeName = probePrefix + '.rtsSuccess'
         assert(config.__class__ == RTSCTSConfig)
         self.myConfig = config
         self.logger = wifimac.Logger.Logger(name = "RTSCTS", parent = parentLogger)

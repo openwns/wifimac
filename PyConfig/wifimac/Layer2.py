@@ -237,7 +237,6 @@ class Config(Sealed):
     manager = None
     txop = None
     aggregation = None
-    blockACK = None
     fastLinkFeedback = None
     frameSynchronization = None
     beaconLQM = None
@@ -279,6 +278,12 @@ class Config(Sealed):
         RTS frame [seconds].
     """
 
+    eifsDuration = None
+
+    ackTimeout = None
+
+    ctsTimeout = None
+
     slotDuration = None
     """ The duration of a backoff slot [seconds]."""
 
@@ -308,7 +313,7 @@ class Config(Sealed):
         self.txop = wifimac.lowerMAC.TXOPConfig()
         self.aggregation = wifimac.draftn.AggregationConfig()
         #self.multiBuffer = wifimac.draftn.MultiBufferConfig()
-        self.blockACK = wifimac.draftn.BlockACKConfig()
+        #self.blockACK = wifimac.draftn.BlockACKConfig()
         self.fastLinkFeedback = wifimac.draftn.FastLinkFeedbackConfig()
         self.blockUntilReply = wifimac.draftn.BlockUntilReplyConfig()
         self.frameSynchronization = wifimac.convergence.FrameSynchronizationConfig()
@@ -319,11 +324,14 @@ class Config(Sealed):
 
         self.multipleUsedVariables = dict()
         self.multipleUsedVariables['rtsctsThreshold'] = ['self', 'self.arq', 'self.rtscts']
-        self.multipleUsedVariables['sifsDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockACK', 'self.blockUntilReply', 'self.channelState', 'self.beaconLQM']
-        self.multipleUsedVariables['maximumACKDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockACK', 'self.beaconLQM']
-        self.multipleUsedVariables['maximumCTSDuration'] = ['self', 'self.rtscts', 'self.channelState']
-        self.multipleUsedVariables['slotDuration'] =  ['self', 'self.unicastDCF', 'self.broadcastDCF', 'self.channelState', 'self.beaconLQM']
-        self.multipleUsedVariables['preambleProcessingDelay'] = ['self', 'self.rtscts', 'self.blockACK', 'self.arq', 'self.blockUntilReply', 'self.channelState']
+        self.multipleUsedVariables['sifsDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.blockUntilReply', 'self.channelState', 'self.beaconLQM']
+        self.multipleUsedVariables['maximumACKDuration'] = ['self', 'self.manager', 'self.rtscts', 'self.arq', 'self.txop', 'self.beaconLQM']
+        self.multipleUsedVariables['maximumCTSDuration'] = ['self', 'self.rtscts']
+        self.multipleUsedVariables['slotDuration'] =  ['self', 'self.unicastDCF', 'self.broadcastDCF', 'self.beaconLQM']
+        self.multipleUsedVariables['preambleProcessingDelay'] = ['self', 'self.rtscts']
+        self.multipleUsedVariables['ctsTimeout'] = ['self', 'self.rtscts']
+        self.multipleUsedVariables['ackTimeout'] = ['self', 'self.arq']
+        self.multipleUsedVariables['eifsDuration'] = ['self', 'self.unicastDCF', 'self.broadcastDCF']
 
         # this ensures consistency, no matter on what the variables are set by default
         self.rtsctsThreshold = 800*8
@@ -333,6 +341,10 @@ class Config(Sealed):
         self.slotDuration = 9E-6
         # value for normal ACK -- change e.g. for BlockACK to 68E-6
         self.maximumACKDuration = 44E-6
+        # EIFS = SIFS + DIFS + ACK
+        self.eifsDuration = self.sifsDuration + 34E-6 + self.maximumACKDuration
+        self.ackTimeout = self.sifsDuration + self.slotDuration + self.preambleProcessingDelay
+        self.ctsTimeout = self.sifsDuration + self.slotDuration + self.preambleProcessingDelay
 
     def __setattr__(self, name, val):
         # special setattr for multiple used variables: Enable propagation of single setting to required FUs

@@ -273,7 +273,7 @@ Manager::createCompound(const wns::service::dll::UnicastAddress transmitterAddre
                         const wns::service::dll::UnicastAddress receiverAddress,
                         const FrameType type,
                         const wns::simulator::Time frameExchangeDuration,
-                        const bool requiresDirectReply)
+                        const wns::simulator::Time replyTimeout)
 {
     wns::ldk::CompoundPtr compound(new wns::ldk::Compound(getFUN()->getProxy()->createCommandPool()));
     ManagerCommand* mc = activateCommand(compound->getCommandPool());
@@ -283,7 +283,7 @@ Manager::createCompound(const wns::service::dll::UnicastAddress transmitterAddre
     uc->peer.targetMACAddress = receiverAddress;
     mc->peer.type = type;
     mc->peer.frameExchangeDuration = frameExchangeDuration;
-    mc->peer.requiresDirectReply = requiresDirectReply;
+    mc->local.replyTimeout = replyTimeout;
 
     return(compound);
 }
@@ -318,16 +318,16 @@ Manager::setFrameExchangeDuration(const wns::ldk::CommandPool* commandPool, cons
     getCommand(commandPool)->peer.frameExchangeDuration = duration;
 }
 
-bool
-Manager::getRequiresDirectReply(const wns::ldk::CommandPool* commandPool) const
+wns::simulator::Time
+Manager::getReplyTimeout(const wns::ldk::CommandPool* commandPool) const
 {
-    return(getCommand(commandPool)->peer.requiresDirectReply);
+    return(getCommand(commandPool)->local.replyTimeout);
 }
 
 void
-Manager::setRequiresDirectReply(const wns::ldk::CommandPool* commandPool, bool requiresDirectReply)
+Manager::setReplyTimeout(const wns::ldk::CommandPool* commandPool, wns::simulator::Time replyTimeout)
 {
-    getCommand(commandPool)->peer.requiresDirectReply = requiresDirectReply;
+    getCommand(commandPool)->local.replyTimeout = replyTimeout;
 }
 
 unsigned int

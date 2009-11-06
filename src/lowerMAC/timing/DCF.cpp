@@ -46,7 +46,9 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
 DCF::DCF(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     wns::ldk::fu::Plain<DCF, wns::ldk::EmptyCommand>(fun),
     csName(config_.get<std::string>("csName")),
+    rxStartEndName(config_.get<std::string>("rxStartEndName")),
     arqCommandName(config_.get<std::string>("arqCommandName")),
+    backoffDisabled(config_.get<bool>("myConfig.backoffDisabled")),
     backoff(this, config_),
     sendNow(false),
     logger(config_.get("logger"))
@@ -61,9 +63,16 @@ DCF::~DCF()
 
 void DCF::onFUNCreated()
 {
-    // backoff observes the channel state
-    backoff.wns::Observer<wifimac::convergence::IChannelState>::startObserving
-        (getFUN()->findFriend<wifimac::convergence::ChannelStateNotification*>(csName));
+    if(not backoffDisabled)
+    {
+        // backoff observes the channel state
+        backoff.wns::Observer<wifimac::convergence::IChannelState>::startObserving
+            (getFUN()->findFriend<wifimac::convergence::ChannelStateNotification*>(csName));
+
+        // backoff gets notified of failed receptions
+        backoff.wns::Observer<wifimac::convergence::IRxStartEnd>::startObserving
+            (getFUN()->findFriend<wifimac::convergence::RxStartEndNotification*>(rxStartEndName));
+    }
 } // DCF::onFUNCreated
 
 void
@@ -90,6 +99,9 @@ DCF::doOnData(const wns::ldk::CompoundPtr& compound)
 bool
 DCF::doIsAccepting(const wns::ldk::CompoundPtr& compound) const
 {
+    assure(not backoffDisabled,
+           "Backoff was disabled, hence no frames can be accepted");
+
     if(sendNow and getConnector()->hasAcceptor(compound))
     {
         return true;
@@ -98,10 +110,12 @@ DCF::doIsAccepting(const wns::ldk::CompoundPtr& compound) const
     {
         int numTransmissions = getFUN()->getCommandReader(arqCommandName)->
             readCommand<wns::ldk::arq::ARQCommand>(compound->getCommandPool())->localTransmissionCounter;
+        MESSAGE_SINGLE(NORMAL, logger, "Compound w activated arq command, transmission number " << numTransmissions);
         sendNow = backoff.transmissionRequest(numTransmissions);
     }
     else
     {
+        MESSAGE_SINGLE(NORMAL, logger, "Compound w/o activated arq command -> assume first transmission");
         sendNow = backoff.transmissionRequest(1);
     }
 

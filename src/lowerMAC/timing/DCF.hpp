@@ -31,6 +31,7 @@
 
 #include <WIFIMAC/lowerMAC/timing/Backoff.hpp>
 #include <WIFIMAC/convergence/IChannelState.hpp>
+#include <WIFIMAC/convergence/IRxStartEnd.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Command.hpp>
@@ -69,14 +70,14 @@ namespace wifimac { namespace lowerMAC { namespace timing {
 
         virtual void onFUNCreated();
 
-	/// notifying observers every time the backoff has finished, wether or not a transmission is waiting
-	void
-	registerEOBObserver(BackoffObserver* observer) {backoff.registerEOBObserver(observer);}
+        /// notifying observers every time the backoff has finished, wether or not a transmission is waiting
+        void
+        registerEOBObserver(BackoffObserver* observer) {backoff.registerEOBObserver(observer);}
 
-	/// time the backoff will be finished at (when called during AIFS the maximum waiting time will be used)
-	/// wns::simulator::Time() if backoff hasn't started, current time when finished and idle
-	wns::simulator::Time
-	backoffFinishedAt() {return backoff.finishedAt();}
+        /// time the backoff will be finished at (when called during AIFS the maximum waiting time will be used)
+        /// wns::simulator::Time() if backoff hasn't started, current time when finished and idle
+        wns::simulator::Time
+        backoffFinishedAt() {return backoff.finishedAt();}
 
     private:
 
@@ -84,7 +85,9 @@ namespace wifimac { namespace lowerMAC { namespace timing {
         virtual void backoffExpired();
 
         const std::string csName;
+        const std::string rxStartEndName;
         const std::string arqCommandName;
+        const bool backoffDisabled;
 
         /** @brief The backoff instance */
         mutable Backoff backoff;
