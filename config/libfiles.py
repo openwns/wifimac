@@ -93,7 +93,7 @@ srcFiles = [
     'src/helper/FilterSize.cpp',
 
     # Tests
-    'src/lowerMAC/timing/tests/BackoffTest.cpp',
+    #####'src/lowerMAC/timing/tests/BackoffTest.cpp',
 ]
 
 hppFiles = [
