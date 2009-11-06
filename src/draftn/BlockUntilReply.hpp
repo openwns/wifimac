@@ -82,7 +82,6 @@ namespace wifimac { namespace draftn {
 
     private:
         const wns::simulator::Time sifsDuration;
-        const wns::simulator::Time preambleProcessingDelay;
         const std::string managerName;
         const std::string txStartEndName;
         const std::string rxStartEndName;

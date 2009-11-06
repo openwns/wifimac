@@ -91,6 +91,11 @@ class DraftN(Basic):
         self.layer2.txop.txopLimit = 0.0
         self.layer2.manager.msduLifetimeLimit = 0.1
 
+class DraftNMesh(DraftN):
+    def __init__(self, frequency, numAntennas, maxAggregation, mimoCorrelation = 0.0):
+        super(DraftNMesh, self).__init__( frequency, numAntennas, maxAggregation, mimoCorrelation)
+        self.layer2.beacon.enabled = True
+
 class DraftNStation(DraftN):
     def __init__(self, frequency, position, scanFrequencies, scanDuration, numAntennas, maxAggregation, mimoCorrelation = 0.0):
         super(DraftNStation, self).__init__(frequency, numAntennas, maxAggregation, mimoCorrelation)

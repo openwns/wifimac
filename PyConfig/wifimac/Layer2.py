@@ -353,6 +353,11 @@ class Config(Sealed):
                 exec(target + '.__dict__[\'' + name + '\']=' + str(val))
         else:
             self.__dict__[name] = val
+            # self.multipleUsedVariables must be set at the beginning
+            if(isinstance(self.multipleUsedVariables, dict)):
+                for muv in self.multipleUsedVariables.keys():
+                    for target in self.multipleUsedVariables[muv]:
+                        exec(target + '.__dict__[\'' + muv + '\']=self.__dict__[\''+muv+'\']')
 
 
 

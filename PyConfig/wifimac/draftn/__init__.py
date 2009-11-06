@@ -135,8 +135,10 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                      navName = names['channelState'] + str(transceiverAddress),
                                      rxStartName = names['frameSynchronization'] + str(transceiverAddress),
                                      txStartEndName = names['phyUser'] + str(transceiverAddress),
+                                     probePrefix = 'wifimac.linkQuality',
                                      config = config.rtscts,
-                                     parentLogger = logger)
+                                     parentLogger = logger,
+                                     localIDs = probeLocalIDs)
 
     raACK = wifimac.lowerMAC.RateAdaptation(functionalUnitName = names['ra'] + 'ACK'+ str(transceiverAddress),
                                             commandName = names['ra'] + 'ACK' +'Command',
@@ -213,6 +215,7 @@ def __appendDraftNTimingBlock__(myFUN, bottomFU, config, names, transceiverAddre
     unicastScheduler = wifimac.lowerMAC.DCF(fuName = names['unicastDCF'] + str(transceiverAddress),
                                             commandName = names['unicastDCF'] + 'Command',
                                             csName = names['channelState'] + str(transceiverAddress),
+                                            rxStartEndName = names['frameSynchronization'] + str(transceiverAddress),
                                             arqCommandName = names['arq'] + 'Command',
                                             config = config.unicastDCF,
                                             parentLogger = logger)

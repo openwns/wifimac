@@ -184,6 +184,7 @@ def __appendBasicTimingBlock__(myFUN, bottomFU, config, names, transceiverAddres
                     config = config.rtscts,
                     parentLogger = logger,
                     localIDs = probeLocalIDs)
+
     unicastScheduler = DCF(fuName = names['unicastDCF'] + str(transceiverAddress),
                            commandName = names['unicastDCF'] + 'Command',
                            csName = names['channelState'] + str(transceiverAddress),

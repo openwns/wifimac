@@ -40,7 +40,6 @@ BlockUntilReply::BlockUntilReply(wns::ldk::fun::FUN* fun, const wns::pyconfig::V
     wns::ldk::fu::Plain<BlockUntilReply, wns::ldk::EmptyCommand>(fun),
 
     sifsDuration(config.get<wns::simulator::Time>("myConfig.sifsDuration")),
-    preambleProcessingDelay(config.get<wns::simulator::Time>("myConfig.preambleProcessingDelay")),
     managerName(config.get<std::string>("managerName")),
     txStartEndName(config.get<std::string>("txStartEndName")),
     rxStartEndName(config.get<std::string>("rxStartEndName")),
