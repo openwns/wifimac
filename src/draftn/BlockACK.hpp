@@ -142,8 +142,12 @@ namespace wifimac {
             void
             onFUNCreated();
 
-	    /// observers get called after an (un)successful transmission
-	    void registerObserver(IBlockACKObserver *o) {observers.push_back(o);}
+            /// observers get called after an (un)successful transmission
+            void
+            registerObserver(IBlockACKObserver *o) 
+                {
+                    observers.push_back(o);
+                }
 
             /**
              * @brief Processing of incoming (received) compounds
@@ -262,78 +266,40 @@ namespace wifimac {
                     return friends.manager;
                 }
 
+            virtual bool
+            doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
+
+            const size_t
+            getMaxOnAir()
+                {
+                    return maxOnAir;
+                }
+
+            wifimac::management::PERInformationBase*
+            getPERMIB()
+                {
+                    return this->perMIB;
+                }
+
     protected:
-	    virtual bool
-	    doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
-
-    private:
-            /**
-             * @brief Manages an incoming ACK (or rather the set of SNs)
-             *
-             * After the forwarding of the set of SNs to the current txQueue
-             * with processIncomingACK(), the function checks if the txQueue has
-             * finished processing the current row of frames. If yes, it is
-             * deleted and the current receiver is reset, so that a new round of
-             * transmissions can start (possible with the one compound for a
-             * different receiver that has been stored temporarily)
-             */
-            void processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs);
-	    bool isAccepting(const wns::ldk::CompoundPtr& compound) const;
-
-            /** @brief Debug helper function */
-            void printTxQueueStatus() const;
-
-            /** @brief Compute storage size (txQueue + sum(rxQueues) */
-            unsigned int storageSize() const;
-
-            const std::string managerName;
-            const std::string rxStartEndName;
-            const std::string txStartEndName;
-            const std::string sendBufferName;
-            const std::string perMIBServiceName;
-
-            const wifimac::convergence::PhyMode blockACKPhyMode;
-
-            /// Pointer to the transmission buffer to check if frames are pending
-            wns::ldk::DelayedInterface *sendBuffer;
-            /// Duration of the Short InterFrame Space
-            const wns::simulator::Time sifsDuration;
-            /// Maximum expected duration of BlockACK
-            const wns::simulator::Time maximumACKDuration;
-            /// Duration between start of preamble and rx indication
-            const wns::simulator::Time ackTimeout;
-            /// Maximum number of stored bits (rx+tx+air)
-            const Bit capacity;
-            /// Window size of a link
-            const size_t maxOnAir;
-
-            /// size of BlockACK
-            const Bit baBits;
-            /// size of BlockACKReques
-            const Bit baReqBits;
-
-            /// maximum number of transmissions before drop
-            const size_t maximumTransmissions;
-
-            /// transmit as BAreq as early as possible without reaching maxOnAir
-            const bool impatientBAreqTransmission;
-
-            /// current transmission receiver
-            mutable wns::service::dll::UnicastAddress currentReceiver;
+            /// Logger
+            wns::logger::Logger logger;
 
             /// Storage of outgoing, non-ack'ed frames
-            TransmissionQueue *txQueue;
+            TransmissionQueue *currentTxQueue;
 
-            /// Storage of incoming, non-ordered frames
-            wns::container::Registry<wns::service::dll::UnicastAddress, ReceptionQueue*> rxQueues;
+            /** @brief Compute storage size (txQueue + sum(rxQueues) */
+            virtual unsigned int
+            storageSize() const;
 
-            /// indication that ACK must be transmitted
-            wns::service::dll::UnicastAddress hasACKfor;
+            /// Maximum number of stored bits (rx+tx+air)
+            const Bit capacity;
 
-            /// mapping from unicast addresses to compound transmission SNs for
-            /// each link (receiver), the first SN of the next transmission
-            /// round is stored
-            AddrSNMap nextTransmissionSN;
+           /// calculation of size (e.g. by bits or pdus)
+            std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
+
+            /// Window size of a link
+            const size_t maxOnAir;
 
             /**
              * @brief BlockACK state can be
@@ -352,11 +318,69 @@ namespace wifimac {
                 receptionFinished
             } baState;
 
-            /// Logger
-            wns::logger::Logger logger;
+            /**
+             * @brief Manages an incoming ACK (or rather the set of SNs)
+             *
+             * After the forwarding of the set of SNs to the current txQueue
+             * with processIncomingACK(), the function checks if the txQueue has
+             * finished processing the current row of frames. If yes, it is
+             * deleted and the current receiver is reset, so that a new round of
+             * transmissions can start (possible with the one compound for a
+             * different receiver that has been stored temporarily)
+             */
+            void
+            processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs);
+
+    private:
+
+            bool
+            isAccepting(const wns::ldk::CompoundPtr& compound) const;
+
+            /** @brief Debug helper function */
+            void printTxQueueStatus() const;
+
+            const std::string managerName;
+            const std::string rxStartEndName;
+            const std::string txStartEndName;
+            const std::string sendBufferName;
+            const std::string perMIBServiceName;
+
+            const wifimac::convergence::PhyMode blockACKPhyMode;
+
+            /// Duration of the Short InterFrame Space
+            const wns::simulator::Time sifsDuration;
+            /// Maximum expected duration of BlockACK
+            const wns::simulator::Time maximumACKDuration;
+            /// Duration between start of preamble and rx indication
+            const wns::simulator::Time ackTimeout;
+
+            /// size of BlockACK
+            const Bit baBits;
+            /// size of BlockACKReques
+            const Bit baReqBits;
+
+            /// maximum number of transmissions before drop
+            const size_t maximumTransmissions;
+
+            /// transmit as BAreq as early as possible without reaching maxOnAir
+            const bool impatientBAreqTransmission;
+
+            /// Storage of incoming, non-ordered frames
+            wns::container::Registry<wns::service::dll::UnicastAddress, ReceptionQueue*> rxQueues;
+
+            /// indication that ACK must be transmitted
+            wns::service::dll::UnicastAddress hasACKfor;
+
+            /// mapping from unicast addresses to compound transmission SNs for
+            /// each link (receiver), the first SN of the next transmission
+            /// round is stored
+            AddrSNMap nextTransmissionSN;
 
             struct Friends
             {
+                /// Pointer to the transmission buffer to check if frames are pending
+                wns::ldk::DelayedInterface* sendBuffer;
+
                 wifimac::lowerMAC::Manager* manager;
             } friends;
 
@@ -368,10 +392,7 @@ namespace wifimac {
             /// or retry abort
             wns::probe::bus::ContextCollectorPtr numTxAttemptsProbe;
 
-            /// calculation of size (e.g. by bits or pdus)
-            std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
-
-	    std::vector<IBlockACKObserver *> observers;
+            std::vector<IBlockACKObserver *> observers;
         };
 
 } // mac

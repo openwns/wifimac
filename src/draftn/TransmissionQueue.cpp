@@ -33,11 +33,14 @@ using namespace wifimac::draftn;
 
 TransmissionQueue::TransmissionQueue(BlockACK* parent_,
                                      size_t maxOnAir_,
+                                     wns::simulator::Time maxDelay_,
                                      wns::service::dll::UnicastAddress adr_,
                                      BlockACKCommand::SequenceNumber sn_,
-                                     wifimac::management::PERInformationBase* perMIB_) :
+                                     wifimac::management::PERInformationBase* perMIB_,
+                                     std::auto_ptr<wns::ldk::buffer::SizeCalculator> *sizeCalculator_) :
     parent(parent_),
     maxOnAir(maxOnAir_),
+    maxDelay(maxDelay_),
     adr(adr_),
     txQueue(),
     onAirQueue(),
@@ -45,7 +48,9 @@ TransmissionQueue::TransmissionQueue(BlockACK* parent_,
     baREQ(),
     waitForACK(false),
     baReqRequired(false),
-    perMIB(perMIB_)
+    perMIB(perMIB_),
+    sizeCalculator(sizeCalculator_),
+    oldestTimestamp()
 {
     MESSAGE_SINGLE(NORMAL, parent->logger, "TxQ" << adr << " created");
 
@@ -73,11 +78,11 @@ const unsigned int
 TransmissionQueue::onAirQueueSize() const
 {
     unsigned int size = 0;
-    for(std::deque<CompoundPtrWithSize>::const_iterator it = onAirQueue.begin();
+    for(std::deque<CompoundPtrWithTime>::const_iterator it = onAirQueue.begin();
         it != onAirQueue.end();
         it++)
     {
-        size += it->second;
+        size += (*(*sizeCalculator))(it->first);
     }
     return(size);
 }
@@ -86,11 +91,11 @@ const unsigned int
 TransmissionQueue::txQueueSize() const
 {
     unsigned int size = 0;
-    for(std::deque<CompoundPtrWithSize>::const_iterator it = txQueue.begin();
+    for(std::deque<CompoundPtrWithTime>::const_iterator it = txQueue.begin();
         it != txQueue.end();
         it++)
     {
-        size += it->second;
+       size += (*(*sizeCalculator))(it->first);
     }
     return(size);
 }
@@ -103,7 +108,7 @@ TransmissionQueue::storageSize() const
 }
 
 void
-TransmissionQueue::processOutgoing(const wns::ldk::CompoundPtr& compound, const unsigned int size)
+TransmissionQueue::processOutgoing(const wns::ldk::CompoundPtr& compound)
 {
     BlockACKCommand* baCommand = parent->activateCommand(compound->getCommandPool());
     baCommand->peer.type = I;
@@ -111,7 +116,14 @@ TransmissionQueue::processOutgoing(const wns::ldk::CompoundPtr& compound, const 
     baCommand->localTransmissionCounter = 1;
 
     MESSAGE_SINGLE(NORMAL, parent->logger, "TxQ" << adr << ": Queue outgoing compound with sn " << baCommand->peer.sn);
-    txQueue.push_back(CompoundPtrWithSize(compound, size));
+    MESSAGE_SINGLE(NORMAL, parent->logger, "TxQ" << adr << ": send time for compound is " << wns::simulator::getEventScheduler()->getTime()+this->maxDelay << " maxDelay is " << this->maxDelay << " oldest is " << oldestTimestamp);
+    txQueue.push_back(CompoundPtrWithTime(compound, wns::simulator::getEventScheduler()->getTime()));
+
+    if ((oldestTimestamp == wns::simulator::Time()) or
+        (wns::simulator::getEventScheduler()->getTime() < oldestTimestamp))
+    {
+        oldestTimestamp = wns::simulator::getEventScheduler()->getTime();
+    }
 } // TransmissionQueue::processOutgoing
 
 const
@@ -123,7 +135,7 @@ wns::ldk::CompoundPtr TransmissionQueue::hasData() const
         // no other transmissions during waiting for ACK
         return(wns::ldk::CompoundPtr());
     }
-    if((not txQueue.empty()) and (onAirQueueSize()+txQueue.front().second <= this->maxOnAir))
+    if((not txQueue.empty()) and (onAirQueueSize()+(*(*sizeCalculator))(txQueue.front().first) <= this->maxOnAir))
     {
         // regular frame pending
         MESSAGE_SINGLE(VERBOSE, parent->logger, "TxQ" << adr << ": hasData: Regular frame is pending");
@@ -141,7 +153,7 @@ wns::ldk::CompoundPtr TransmissionQueue::hasData() const
 
         // next compound would exceed on air limit -> send
         if((not txQueue.empty()) and
-           (onAirQueueSize()+txQueue.front().second > this->maxOnAir))
+           (onAirQueueSize()+(*(*sizeCalculator))(txQueue.front().first) > this->maxOnAir))
         {
             return(this->baREQ);
         }
@@ -165,7 +177,7 @@ TransmissionQueue::getData()
 
     // compound pending?
     if((not txQueue.empty()) and
-       (onAirQueue.size()+txQueue.front().second <= this->maxOnAir))
+       (onAirQueueSize()+(*(*sizeCalculator))(txQueue.front().first) <= this->maxOnAir))
     {
         // transmit another frame
         onAirQueue.push_back(txQueue.front());
@@ -184,10 +196,12 @@ TransmissionQueue::getData()
     if(txQueue.empty())
     {
         MESSAGE_SINGLE(NORMAL, parent->logger, "TxQ" << adr << ": No more frames to tx, send BAreq with start-sn " << parent->getCommand(onAirQueue.front().first)->peer.sn);
+        oldestTimestamp = wns::simulator::Time();
     }
     else
     {
         MESSAGE_SINGLE(NORMAL, parent->logger, "TxQ" << adr << ": Reached tx window, send BAreq with start-sn " << parent->getCommand(onAirQueue.front().first)->peer.sn);
+        oldestTimestamp = txQueue.front().second;
     }
 
     wns::ldk::CompoundPtr it = this->baREQ->copy();
@@ -212,7 +226,7 @@ TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNumber> 
 
     bool insertBack = false;
     bool blockACKsuccess = true;
-    std::deque<CompoundPtrWithSize>::iterator txQueueFirst;
+    std::deque<CompoundPtrWithTime>::iterator txQueueFirst;
     if(txQueue.empty())
     {
         insertBack = true;
@@ -222,15 +236,15 @@ TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNumber> 
         txQueueFirst = txQueue.begin();
     }
 
-    std::set<BlockACKCommand::SequenceNumber>::iterator snIt = ackSNs.begin();
+    std::set<wifimac::draftn::BlockACKCommand::SequenceNumber>::iterator snIt = ackSNs.begin();
     assure(isSortedBySN(onAirQueue),
            "onAirQueue is not sorted by SN!");
 
-    for(std::deque<CompoundPtrWithSize>::iterator onAirIt = onAirQueue.begin();
+    for(std::deque<CompoundPtrWithTime>::iterator onAirIt = onAirQueue.begin();
         onAirIt != onAirQueue.end();
         onAirIt++)
     {
-        BlockACKCommand::SequenceNumber onAirSN = parent->getCommand((onAirIt->first)->getCommandPool())->peer.sn;
+        wifimac::draftn::BlockACKCommand::SequenceNumber onAirSN = parent->getCommand((onAirIt->first)->getCommandPool())->peer.sn;
 
         if((snIt == ackSNs.end()) or (*snIt != onAirSN))
         {
@@ -264,7 +278,8 @@ TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNumber> 
                 }
                 else
                 {
-                    txQueue.insert(txQueueFirst, *onAirIt);
+                    txQueueFirst = txQueue.insert(txQueueFirst, *onAirIt);
+                    txQueueFirst++;
                 }
             } // lifetime not expired
         } // SN does not match
@@ -288,24 +303,39 @@ TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNumber> 
     }
     onAirQueue.clear();
 
+   // find oldest timestamp
+   oldestTimestamp = wns::simulator::Time();
+   if (txQueueSize() > 0)
+   {
+       oldestTimestamp = txQueue.begin()->second;
+       for (std::deque<CompoundPtrWithTime>::iterator itr = txQueue.begin(); itr != txQueue.end(); itr++)
+       {
+           if (itr->second < oldestTimestamp)
+           {
+               oldestTimestamp = itr->second;
+           }
+       }
+   }
 } // TransmissionQueue::processACK
 
 bool
-TransmissionQueue::isSortedBySN(const std::deque<CompoundPtrWithSize> q) const
+TransmissionQueue::isSortedBySN(const std::deque<CompoundPtrWithTime> q) const
 {
     if(q.empty())
     {
         return true;
     }
-    std::deque<CompoundPtrWithSize>::const_iterator it = q.begin();
-    BlockACKCommand::SequenceNumber lastSN = parent->getCommand((it->first)->getCommandPool())->peer.sn;
+    std::deque<CompoundPtrWithTime>::const_iterator it = q.begin();
+    wifimac::draftn::BlockACKCommand::SequenceNumber lastSN = parent->getCommand((it->first)->getCommandPool())->peer.sn;
     ++it;
+    MESSAGE_SINGLE(NORMAL,parent->logger,"SN: (+)" << lastSN);
 
     for(;
         it != q.end();
         it++)
     {
-        BlockACKCommand::SequenceNumber curSN = parent->getCommand((it->first)->getCommandPool())->peer.sn;
+        wifimac::draftn::BlockACKCommand::SequenceNumber curSN = parent->getCommand((it->first)->getCommandPool())->peer.sn;
+        MESSAGE_SINGLE(NORMAL,parent->logger,"SN: " << curSN);
         if(curSN < lastSN)
         {
             return false;
@@ -313,7 +343,6 @@ TransmissionQueue::isSortedBySN(const std::deque<CompoundPtrWithSize> q) const
         lastSN = curSN;
     }
     return true;
-
 }
 
 const bool
@@ -322,3 +351,30 @@ TransmissionQueue::waitsForACK() const
     return(this->waitForACK);
 }
 
+wns::ldk::CompoundPtr 
+TransmissionQueue::getTxFront()
+{
+	if (txQueue.empty())
+	{
+		return wns::ldk::CompoundPtr();
+	}
+	return txQueue.front().first;
+}
+
+
+std::list<wns::ldk::CompoundPtr> 
+TransmissionQueue::getAirableCompounds() 
+{
+    std::list<wns::ldk::CompoundPtr> ret;
+    size_t retSize = 0;
+    for (std::deque<CompoundPtrWithTime>::iterator itr = txQueue.begin(); itr != txQueue.end(); itr++)
+    {
+        if (retSize + (*(*sizeCalculator))(itr->first) > maxOnAir)
+        {
+            break;
+        }
+        ret.push_back(itr->first);
+        retSize += (*(*sizeCalculator))(itr->first);
+    }
+    return ret;
+}

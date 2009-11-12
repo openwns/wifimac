@@ -64,8 +64,7 @@ BlockACK::BlockACK(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) 
     baReqBits(config_.get<Bit>("myConfig.blockACKRequestBits")),
     maximumTransmissions(config_.get<size_t>("myConfig.maximumTransmissions")),
     impatientBAreqTransmission(config_.get<bool>("myConfig.impatient")),
-    currentReceiver(),
-    txQueue(NULL),
+    currentTxQueue(NULL),
     rxQueues(),
     hasACKfor(),
     nextTransmissionSN(),
@@ -110,7 +109,6 @@ BlockACK::BlockACK(const BlockACK& other) :
     txStartEndName(other.txStartEndName),
     sendBufferName(other.sendBufferName),
     perMIBServiceName(other.perMIBServiceName),
-    sendBuffer(other.sendBuffer),
     sifsDuration(other.sifsDuration),
     maximumACKDuration(other.maximumACKDuration),
     ackTimeout(other.ackTimeout),
@@ -128,10 +126,10 @@ BlockACK::~BlockACK()
 {
     // clear queues
     rxQueues.clear();
-    if (txQueue != NULL)
+    if (currentTxQueue != NULL)
     {
-       delete txQueue;
-       txQueue = NULL;
+       delete currentTxQueue;
+       currentTxQueue = NULL;
     }
 }
 
@@ -151,7 +149,7 @@ void BlockACK::onFUNCreated()
 
     // signal packet success/errors to MIB
     perMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
-    sendBuffer = getFUN()->findFriend<wns::ldk::DelayedInterface*>(sendBufferName);
+    friends.sendBuffer = getFUN()->findFriend<wns::ldk::DelayedInterface*>(sendBufferName);
 } // BlockACK::onFUNCreated
 
 unsigned int
@@ -159,9 +157,9 @@ BlockACK::storageSize() const
 {
     unsigned int size = 0;
 
-    if (txQueue != NULL)
+    if (currentTxQueue != NULL)
     {
-        size = txQueue->storageSize();
+        size = currentTxQueue->storageSize();
     }
 
     for(wns::container::Registry<wns::service::dll::UnicastAddress, ReceptionQueue*>::const_iterator it = rxQueues.begin();
@@ -178,9 +176,9 @@ BlockACK::storageSize() const
 bool
 BlockACK::doIsAccepting(const wns::ldk::CompoundPtr& compound) const
 {
-	return (((currentReceiver ==wns::service::dll::UnicastAddress()) 
-		  or (currentReceiver == friends.manager->getReceiverAddress(compound->getCommandPool()))) 
-		and hasCapacity());
+    return (((currentTxQueue == NULL) or
+             (currentTxQueue->getReceiver() == friends.manager->getReceiverAddress(compound->getCommandPool())))
+            and hasCapacity());
 }
 
 
@@ -188,10 +186,10 @@ bool
 BlockACK::hasCapacity() const
 {
     return((this->storageSize() < this->capacity) and 
-           ((txQueue == NULL) or
-            (not txQueue->waitsForACK())) and
-           ((txQueue == NULL) or
-            (txQueue->storageSize() < this->maxOnAir)));
+           ((currentTxQueue == NULL) or
+            (not currentTxQueue->waitsForACK())) and
+           ((currentTxQueue == NULL) or
+            (currentTxQueue->storageSize() < this->maxOnAir)));
 }
 
 void
@@ -206,30 +204,32 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
     }
 
     wns::service::dll::UnicastAddress receiver = friends.manager->getReceiverAddress(compound->getCommandPool());
-    if (receiver == currentReceiver)
+    if (currentTxQueue != NULL and receiver == currentTxQueue->getReceiver())
     {
         // processed compound has the current receiver as destination, added to
         // compound block for next round
-        MESSAGE_SINGLE(NORMAL, this->logger,"Next frame in a row  processed for receiver: " << currentReceiver << " with SN: " << txQueue->getNextSN());
-        txQueue->processOutgoing(compound, (*sizeCalculator)(compound));
+        MESSAGE_SINGLE(NORMAL, this->logger,"Next frame in a row  processed for receiver: " << currentTxQueue->getReceiver() << " with SN: " << currentTxQueue->getNextSN());
+        currentTxQueue->processOutgoing(compound);
     }
-    if (currentReceiver == wns::service::dll::UnicastAddress())
+    if (currentTxQueue == NULL)
     {
-        // treatment of the very first compound to be proccessed by this transceiver
-        if (txQueue == NULL)
+        if (not nextTransmissionSN.knows(receiver))
         {
-            if (not nextTransmissionSN.knows(receiver))
-            {
-                nextTransmissionSN.insert(receiver,0);
-            }
-            txQueue = new TransmissionQueue(this, this->maxOnAir, receiver, nextTransmissionSN.find(receiver), perMIB);
+            nextTransmissionSN.insert(receiver,0);
         }
-        currentReceiver = receiver;
+        currentTxQueue = new TransmissionQueue(this,
+                                               maxOnAir,
+                                               0.0,
+                                               receiver,
+                                               nextTransmissionSN.find(receiver),
+                                               perMIB,
+                                               &sizeCalculator);
+
         MESSAGE_BEGIN(NORMAL, this->logger, m, "First frame in a row");
-        m << " processed for receiver: " << currentReceiver;
+        m << " processed for receiver: " << currentTxQueue->getReceiver();
         m << " with SN: " << nextTransmissionSN.find(receiver);
         MESSAGE_END();
-        txQueue->processOutgoing(compound, (*sizeCalculator)(compound));
+        currentTxQueue->processOutgoing(compound);
     }
     MESSAGE_SINGLE(NORMAL, this->logger, "Stored outgoing frame, remaining capacity " << this->capacity - this->storageSize());
 }
@@ -241,13 +241,12 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
 
     if(getCommand(compound->getCommandPool())->isACK())
     {
-        assure(currentReceiver != wns::service::dll::UnicastAddress(), "got ACK though nothing has been transmitted");
-        assure(txQueue != NULL, "got ACK though no transmission queue");
-        assure(transmitter == currentReceiver, "got ACK from wrong Station");
+        assure(currentTxQueue != NULL, "got ACK though no transmission queue");
+        assure(transmitter == currentTxQueue->getReceiver(), "got ACK from wrong Station");
         assure(this->baState == receptionFinished, "Received ACK but not waiting for one");
 
 
-        perMIB->onSuccessfullTransmission(currentReceiver);
+        perMIB->onSuccessfullTransmission(currentTxQueue->getReceiver());
         this->processIncomingACKSNs(getCommand(compound->getCommandPool())->peer.ackSNs);
         return;
 
@@ -294,10 +293,10 @@ BlockACK::processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs
     // Reset the baState: Noting is send, not waiting for anything -> idle!
     this->baState = idle;
 
-    // forward SNs to txQueue
-    txQueue->processIncomingACK(ackSNs);
+    // forward SNs to currentTxQueue
+    currentTxQueue->processIncomingACK(ackSNs);
 
-    if ((txQueue->getNumWaitingPDUs()+txQueue->getNumOnAirPDUs()) != 0)
+    if ((currentTxQueue->getNumWaitingPDUs()+currentTxQueue->getNumOnAirPDUs()) != 0)
     {
         // either not all compounds of the current send block have been
         // transmitted successfully or compounds for the same receiver
@@ -306,12 +305,11 @@ BlockACK::processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs
         return;
     }
 
-    // txQueue is empty -> store SN and delete it
-    nextTransmissionSN.update(currentReceiver,txQueue->getNextSN());
-    MESSAGE_SINGLE(NORMAL, this->logger, "No more waiting frames -> deleted txQueue");
-    delete txQueue;
-    txQueue = NULL;
-    currentReceiver = wns::service::dll::UnicastAddress();
+    // currentTxQueue is empty -> store SN and delete it
+    nextTransmissionSN.update(currentTxQueue->getReceiver(),currentTxQueue->getNextSN());
+    MESSAGE_SINGLE(NORMAL, this->logger, "No more waiting frames -> deleted currentTxQueue");
+    delete currentTxQueue;
+    currentTxQueue = NULL;
     return;
 }
 
@@ -340,18 +338,19 @@ BlockACK::getACK()
 const wns::ldk::CompoundPtr
 BlockACK::hasData() const
 {
-    wns::ldk::CompoundPtr compound = sendBuffer->hasSomethingToSend();
-    if(hasCapacity() and
-       (compound != wns::ldk::CompoundPtr())
-	and (friends.manager->getReceiverAddress(compound->getCommandPool()) == currentReceiver))
+    wns::ldk::CompoundPtr compound = friends.sendBuffer->hasSomethingToSend();
+    if((hasCapacity()) and
+       (compound != wns::ldk::CompoundPtr()) and
+       (currentTxQueue != NULL) and
+       (friends.manager->getReceiverAddress(compound->getCommandPool()) == currentTxQueue->getReceiver()))
     {
         // There are more compounds in the buffer and we still have capacity -> delay transmission
         return wns::ldk::CompoundPtr();
     }
 
-    if (txQueue != NULL)
+    if (currentTxQueue != NULL)
     {
-        return(txQueue->hasData());
+        return(currentTxQueue->hasData());
     }
     else
     {
@@ -365,7 +364,7 @@ BlockACK::getData()
     assure(hasData(), "trying to get data though there aren't any waiting");
 
     // get the next waiting compound
-    wns::ldk::CompoundPtr it = txQueue->getData();
+    wns::ldk::CompoundPtr it = currentTxQueue->getData();
 
     return(it);
 } // getData
@@ -383,11 +382,11 @@ BlockACK::onTxEnd(const wns::ldk::CompoundPtr& compound)
     // we await the tx end of the blockACKreq
     if((getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this)) and
        (getCommand(compound->getCommandPool())->isACKreq()) and 
-       (currentReceiver == friends.manager->getReceiverAddress(compound->getCommandPool())))
+       (currentTxQueue->getReceiver() == friends.manager->getReceiverAddress(compound->getCommandPool())))
     {
-        assure(txQueue != NULL, "TxEnd from BA-REQ, but no transmission queue");
-        assure(txQueue->waitsForACK(),
-               "TxEnd from BA-REQ for current receiver " << currentReceiver << ", but queue is not waiting for ACK");
+        assure(currentTxQueue != NULL, "TxEnd from BA-REQ, but no transmission queue");
+        assure(currentTxQueue->waitsForACK(),
+               "TxEnd from BA-REQ for current receiver " << currentTxQueue->getReceiver() << ", but queue is not waiting for ACK");
 
         // we give ackTimeout until the baState must be "receiving"
         setNewTimeout(ackTimeout);
@@ -406,11 +405,11 @@ BlockACK::onTimeout()
     }
 
     // we did not receive anything after the blockACKreq transmission
-    assure(txQueue != NULL, "Timeout, but no transmission queue");
-    assure(txQueue->waitsForACK(), "Timeout, but txQueue is not waiting for ACK");
+    assure(currentTxQueue != NULL, "Timeout, but no transmission queue");
+    assure(currentTxQueue->waitsForACK(), "Timeout, but currentTxQueue is not waiting for ACK");
 
-    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout -> failed transmission to " << currentReceiver);
-    perMIB->onFailedTransmission(currentReceiver);
+    MESSAGE_SINGLE(NORMAL, this->logger, "Timeout -> failed transmission to " << currentTxQueue->getReceiver());
+    perMIB->onFailedTransmission(currentTxQueue->getReceiver());
 
     // no ACK'ed SNs have arrived, use pseudo-vector
     std::set<BlockACKCommand::SequenceNumber> none;
@@ -423,10 +422,10 @@ BlockACK::onTimeout()
 void
 BlockACK::onTransmissionHasFailed(const wns::ldk::CompoundPtr& compound)
 {
-    assure(friends.manager->getReceiverAddress(compound->getCommandPool()) == this->currentReceiver,
+    assure(currentTxQueue != NULL, "transsmissionHasFailed, but there is no transmission queue");
+    assure(currentTxQueue->waitsForACK(), "transmissionHasFailed, but currentTxQueue is not waiting for ACK");
+    assure(friends.manager->getReceiverAddress(compound->getCommandPool()) == currentTxQueue->getReceiver(),
            "transmissionHasFailed has different rx address than current receiver");
-    assure(txQueue != NULL, "transsmissionHasFailed, but there is no transmission queue");
-    assure(txQueue->waitsForACK(), "transmissionHasFailed, but txQueue is not waiting for ACK");
 
     MESSAGE_SINGLE(NORMAL, this->logger, "Indication of failed transmission to " << friends.manager->getReceiverAddress(compound->getCommandPool()));
     // RTS/CTS -> no signalling to perMIB
@@ -503,9 +502,9 @@ BlockACK::calculateSizes(const wns::ldk::CommandPool* commandPool, Bit& commandP
 
 void BlockACK::printTxQueueStatus() const
 {
-    if (txQueue != NULL)
+    if (currentTxQueue != NULL)
     {
-        MESSAGE_SINGLE(NORMAL, this->logger, "TxQueue to " << currentReceiver << " waits for ACK: " << txQueue->waitsForACK());
+        MESSAGE_SINGLE(NORMAL, this->logger, "TxQueue to " << currentTxQueue->getReceiver() << " waits for ACK: " << currentTxQueue->waitsForACK());
     }
     else
     {

@@ -82,6 +82,7 @@ class BlockACK(openwns.Probe.Probe):
     rxStartEndName = None
     txStartEndName = None
     perMIBServiceName = None
+    sendBufferName = None
 
     myConfig = None
     logger = None
@@ -89,14 +90,15 @@ class BlockACK(openwns.Probe.Probe):
     # probe name
     numTxAttemptsProbeName = None
 
-    def __init__(self, functionalUnitName, commandName, managerName, rxStartEndName, txStartEndName, perMIBServiceName, probePrefix, config, parentLogger = None, **kw):
+    def __init__(self, functionalUnitName, commandName, managerName, rxStartEndName, txStartEndName, perMIBServiceName, sendBufferName, probePrefix, config, parentLogger = None, **kw):
         super(BlockACK, self).__init__(name = functionalUnitName, commandName = commandName)
         self.managerName = managerName
         self.rxStartEndName = rxStartEndName
         self.txStartEndName = txStartEndName
         self.perMIBServiceName = perMIBServiceName
+        self.sendBufferName = sendBufferName
         self.logger = wifimac.Logger.Logger("BlockACK", parentLogger)
-        assert(config.__class__ == BlockACKConfig)
+        assert(isinstance(config, BlockACKConfig))
         self.myConfig = config
         self.numTxAttemptsProbeName = probePrefix + '.numTxAttempts'
         self.arqStatusCollector = openwns.ARQ.NoStatusCollection(self.logger)

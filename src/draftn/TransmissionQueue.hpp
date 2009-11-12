@@ -34,6 +34,7 @@
 
 #include <WNS/ldk/Compound.hpp>
 #include <WNS/service/dll/Address.hpp>
+#include <WNS/ldk/buffer/Buffer.hpp>
 
 namespace wifimac {
     namespace draftn {
@@ -57,22 +58,23 @@ namespace wifimac {
         {
 
             /**
-             * @brief Store each compound together with its computed size
+             * @brief Store each compound together with its expiration time
              */
-            typedef std::pair<wns::ldk::CompoundPtr, unsigned int> CompoundPtrWithSize;
+            typedef std::pair<wns::ldk::CompoundPtr, wns::simulator::Time> CompoundPtrWithTime;
 
         public:
             TransmissionQueue(BlockACK* parent_,
                               size_t maxOnAir_,
+                              wns::simulator::Time maxDelay,
                               wns::service::dll::UnicastAddress adr_,
                               BlockACKCommand::SequenceNumber sn_,
-                              wifimac::management::PERInformationBase* perMIB_);
+                              wifimac::management::PERInformationBase* perMIB_,
+                              std::auto_ptr<wns::ldk::buffer::SizeCalculator> *sizeCalculator);
             ~TransmissionQueue();
 
             /** @brief Append outgoing compound to the txQueue */
             void
-            processOutgoing(const wns::ldk::CompoundPtr& compound,
-                            const unsigned int size);
+            processOutgoing(const wns::ldk::CompoundPtr& compound);
 
             /**
              * @brief Gets next compound for transmission or NULL
@@ -127,22 +129,63 @@ namespace wifimac {
 
             const BlockACKCommand::SequenceNumber
             getNextSN() const
-                { return nextSN; }
+                {
+                    return nextSN;
+                }
+
+            const wns::service::dll::UnicastAddress
+            getReceiver()
+                {
+                    return adr;
+                }
+
+            void setMaxDelay(wns::simulator::Time delay)
+                {
+                    maxDelay = delay;
+                }
+
+            wns::simulator::Time getOldestTimestamp()
+                {
+                    if (oldestTimestamp > wns::simulator::Time())
+                        return oldestTimestamp + maxDelay;
+                    else
+                        return 0;
+                }
+
+            std::list<wns::ldk::CompoundPtr>
+            getAirableCompounds();
+
+            const size_t
+            maxAirSize()
+                {
+                    return maxOnAir;
+                }
+
+            void setMaxOnAir(size_t maxAir) 
+                {
+                    maxOnAir = maxAir;
+                }
+
+            wns::ldk::CompoundPtr
+            getTxFront();
 
         private:
             bool
-            isSortedBySN(const std::deque<CompoundPtrWithSize> q) const;
+            isSortedBySN(const std::deque<CompoundPtrWithTime> q) const;
 
-            wifimac::management::PERInformationBase* perMIB;
-            const BlockACK* parent;
-            const size_t maxOnAir;
-            const wns::service::dll::UnicastAddress adr;
-            std::deque<CompoundPtrWithSize> txQueue;
-            std::deque<CompoundPtrWithSize> onAirQueue;
-            BlockACKCommand::SequenceNumber nextSN;
             wns::ldk::CompoundPtr baREQ;
+            wifimac::management::PERInformationBase* perMIB;
+            wns::simulator::Time maxDelay;
+            wns::simulator::Time oldestTimestamp;
+            size_t maxOnAir;
+            const BlockACK* parent;
+            const wns::service::dll::UnicastAddress adr;
+            std::deque<CompoundPtrWithTime> txQueue;
+            std::deque<CompoundPtrWithTime> onAirQueue;
+            BlockACKCommand::SequenceNumber nextSN;
             bool waitForACK;
             bool baReqRequired;
+            std::auto_ptr<wns::ldk::buffer::SizeCalculator> *sizeCalculator;
         };
 
 } // mac
