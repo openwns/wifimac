@@ -63,6 +63,7 @@ StopAndWaitARQ::StopAndWaitARQ(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::V
     maximumACKDuration(config.get<wns::simulator::Time>("maximumACKDuration")),
     ackTimeout(config.get<wns::simulator::Time>("ackTimeout")),
     ackPhyMode(config.getView("ackPhyMode")),
+    bianchiRetryCounter(config.get<bool>("bianchiRetryCounter")),
     ackState(none)
 {
     friends.manager = NULL;
@@ -208,6 +209,14 @@ void StopAndWaitARQ::processOutgoing(const wns::ldk::CompoundPtr& compound)
         // TODO: Set the frame exchange duration here
         friends.manager->setReplyTimeout(compound->getCommandPool(), ackTimeout);
         wns::ldk::arq::StopAndWait::processOutgoing(compound);
+
+        if(not this->bianchiRetryCounter)
+        {
+            // According to the standard, the retransmission counter is set by
+            // the station (short|long) counters
+            getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter =
+                stationShortRetryCounter + stationLongRetryCounter + 1;
+        }
     }
 }
 
@@ -372,6 +381,7 @@ StopAndWaitARQ::transmissionHasFailed(const wns::ldk::CompoundPtr& compound)
         // reset retry counters, but NOT station retry counters!
         shortRetryCounter = 0;
         longRetryCounter = 0;
+
         this->sendNow = false;
         this->activeCompound = wns::ldk::CompoundPtr();
         this->tryToSend();
@@ -379,7 +389,41 @@ StopAndWaitARQ::transmissionHasFailed(const wns::ldk::CompoundPtr& compound)
     else
     {
         wns::ldk::arq::StopAndWait::onTimeout();
-        getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter = stationShortRetryCounter + stationLongRetryCounter + 1;
+        // The backoff will select the size of the contention window (cw)
+        // according to the number or retries. Hence, setting this correctly is
+        // important.
+
+        if(this->bianchiRetryCounter)
+        {
+            // This implements the retry counter as described in the Bianchi DCF
+            // model: Every new compound resets the number of retries,
+            // independently from the failure of the compound before. Hence, the
+            // number of transmissions is the src+lrc+1.
+
+            getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter =
+                shortRetryCounter + longRetryCounter + 1;
+        }
+        else
+        {
+            // This implements the standard (IEEE 802.11-2007): The cw size is
+            // set according to the station (short|long) retry counter, which
+            // are the same as the src/lrc as long as every compound is
+            // transmitted successful eventually, i.e. before the retry limit.
+            // If the retry limit is reached the first time, the cw is reset
+            // (and the compound discarded). If even the second compound cannot
+            // be transmitted and is discarded, the cw is NOT reset any more.
+
+            if(stationShortRetryCounter < shortRetryLimit and stationLongRetryCounter < longRetryLimit)
+            {
+                getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter =
+                    stationShortRetryCounter + stationLongRetryCounter + 1;
+            }
+            else
+            {
+                getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter =
+                    stationShortRetryCounter - shortRetryLimit + stationLongRetryCounter - longRetryLimit + 1;
+            }
+        }
         MESSAGE_SINGLE(NORMAL, this->logger,
                        "Failed transmission, retransmit");
     }
