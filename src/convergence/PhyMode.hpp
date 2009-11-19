@@ -157,8 +157,6 @@ namespace wifimac { namespace convergence {
 
     private:
         std::vector<MCS> spatialStreams;
-        //std::string codingRate;
-        //unsigned int numberOfSpatialStreams;
         unsigned int numberOfDataSubcarriers;
         std::string plcpMode;
         wns::simulator::Time guardIntervalDuration;

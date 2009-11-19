@@ -192,7 +192,7 @@ PhyMode::PhyMode(const wns::pyconfig::View& config) :
 PhyMode::PhyMode(const wifimac::management::protocolCalculatorPlugins::ConfigGetter& config) :
     spatialStreams(),
     numberOfDataSubcarriers(config.get<unsigned int>("numberOfDataSubcarriers", "I")),
-    plcpMode(config.get<std::string>("plcpMode", "s")),
+    plcpMode(config.get<char*>("plcpMode", "s")),
     guardIntervalDuration(config.get<wns::simulator::Time>("guardIntervalDuration", "d"))
 {
     assure(config.length("spatialStreams") > 0,

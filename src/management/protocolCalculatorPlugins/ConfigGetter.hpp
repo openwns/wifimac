@@ -42,12 +42,12 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
         ConfigGetter(PyObject* config_) :
             config(config_)
             {
-                Py_XINCREF(config);
+                //Py_XINCREF(config);
             };
 
         ~ConfigGetter()
             {
-                Py_DECREF(config);
+                //Py_XDECREF(config);
             }
 
         template <class T>
