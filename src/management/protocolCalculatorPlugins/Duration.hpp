@@ -67,6 +67,8 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
 
         wns::simulator::Time
         frame(Bit psduLength, const wifimac::convergence::PhyMode& pm) const;
+        wns::simulator::Time
+        frame(Bit psduLength, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
         ack(const wifimac::convergence::PhyMode& pm) const;
@@ -94,17 +96,25 @@ namespace wifimac { namespace management { namespace protocolCalculatorPlugins {
 
         wns::simulator::Time
         MSDU_PPDU(Bit msduFrameSize, const wifimac::convergence::PhyMode& pm) const;
+        wns::simulator::Time
+        MSDU_PPDU(Bit msduFrameSize, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
         MPDU_PPDU(Bit mpduSize, const wifimac::convergence::PhyMode& pm) const;
+        wns::simulator::Time
+        MPDU_PPDU(Bit mpduSize, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
         A_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, const wifimac::convergence::PhyMode& pm) const;
+        wns::simulator::Time
+        A_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const;
         wns::simulator::Time
         A_MPDU_PPDU(const std::vector<Bit>& mpduFrameSize, const wifimac::convergence::PhyMode& pm) const;
 
         wns::simulator::Time
         A_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, const wifimac::convergence::PhyMode& pm) const;
+        wns::simulator::Time
+        A_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const;
         wns::simulator::Time
         A_MSDU_PPDU(const std::vector<Bit>& msduFrameSize, const wifimac::convergence::PhyMode& pm) const;
 
