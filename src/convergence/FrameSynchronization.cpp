@@ -27,7 +27,7 @@
  ******************************************************************************/
 
 #include <WIFIMAC/convergence/FrameSynchronization.hpp>
-#include <WIFIMAC/convergence/PhyUserCommand.hpp>
+#include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PreambleGenerator.hpp>
 #include <WIFIMAC/convergence/ErrorModelling.hpp>
 
