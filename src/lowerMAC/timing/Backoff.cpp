@@ -105,7 +105,7 @@ Backoff::startNewBackoffCountdown(wns::simulator::Time ifsDuration)
 
     MESSAGE_SINGLE(NORMAL, logger, "Start new backoff, waiting for AIFS=" << ifsDuration);
     // First stage: Try to survive AIFS
-    setTimeout(ifsDuration);
+    setNewTimeout(ifsDuration);
 }
 
 void
@@ -211,6 +211,7 @@ Backoff::transmissionRequest(const int transmissionCounter)
 void
 Backoff::onChannelIdle()
 {
+    assure(channelIsBusy, "Incoming onChannelIdle although channel is already idle");
     channelIsBusy = false;
 
     // start post-backoff
@@ -238,7 +239,7 @@ void Backoff::onChannelBusy()
 void Backoff::channelBusyDelay()
 {
     aifsStart = wns::simulator::Time();
-    if(hasTimeoutSet())
+    if(channelIsBusy and hasTimeoutSet())
     {
         // abort countdown
         cancelTimeout();

@@ -204,7 +204,6 @@ BlockACK::processOutgoing(const wns::ldk::CompoundPtr& compound)
         MESSAGE_SINGLE(NORMAL, logger, "outgoing compound has expired lifetime -> drop");
         return;
     }
-    friends.manager->setReplyTimeout(compound->getCommandPool(), 0.0);
     wns::service::dll::UnicastAddress receiver = friends.manager->getReceiverAddress(compound->getCommandPool());
     if (receiver == currentReceiver)
     {
