@@ -199,6 +199,10 @@ void BlockUntilReply::onRxError()
     if(this->blocked and (this->txStatus == finished))
     {
         MESSAGE_SINGLE(NORMAL, logger, "onRxError during blocked, timeout");
+	if(hasTimeoutSet())
+	{
+		cancelTimeout();
+	}
         onTimeout();
     }
 }
