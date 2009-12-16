@@ -779,12 +779,12 @@ void TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNum
     // nothing is onAir now
     for (int i=0; i < parent->observers.size(); i++)
     {
-	parent->observers[i]->onBlockACKReception(blockACKsuccess);
+        parent->observers[i]->onBlockACKReception(blockACKsuccess);
     }
     onAirQueue.clear();
 
 } // TransmissionQueue::processACK
-  
+
 bool TransmissionQueue::isSortedBySN(const std::deque<CompoundPtrWithSize> q) const
 {
     if(q.empty())

@@ -119,7 +119,7 @@ Backoff::onTimeout()
         // the constant waiting time has expired
         if (counter == 0)
         {
-            if (!transmissionWaiting)
+            if (not transmissionWaiting)
             {
                 // obviously, no (re-)transmission is pending, so reset the cw
                 cw = cwMin;
@@ -130,7 +130,7 @@ Backoff::onTimeout()
             counter = int(uniform() * (cw+1));
             if(counter > cw)
             {
-                // corner case that uniform.get() gives exactly 1
+                // corner case that uniform() gives exactly 1
                 --counter;
             }
             assure(counter>=0, "counter too small");
@@ -184,7 +184,7 @@ Backoff::transmissionRequest(const int transmissionCounter)
 
     cw = cwMin;
     // retransmission, compute cw
-    for (int i = 1; i < transmissionCounter; i++)
+    for (int i = 1; i < transmissionCounter; ++i)
     {
         cw = cw * 2 + 1;
         if(cw > cwMax)

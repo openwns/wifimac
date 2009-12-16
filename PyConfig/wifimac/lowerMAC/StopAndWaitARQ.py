@@ -46,6 +46,10 @@ class StopAndWaitARQConfig(object):
         for most robustness
     """
 
+    bianchiRetryCounter = False
+    """ Retry counter is counted as in the Bianchi model, which is not
+        according to the standard """
+
     """ Variables are set globally """
     sifsDuration = None
     maximumACKDuration = None
@@ -83,6 +87,7 @@ class StopAndWaitARQ(openwns.Probe.Probe):
     maximumACKDuration = None
     ackTimeout = None
     ackPhyMode = None
+    bianchiRetryCounter = None
 
     arqStatusCollector = None
     functionalUnitName = None
@@ -118,6 +123,7 @@ class StopAndWaitARQ(openwns.Probe.Probe):
         self.ackPhyMode = config.ackPhyMode
         self.bitsPerIFrame = config.bitsPerIFrame
         self.bitsPerRRFrame = config.bitsPerRRFrame
+        self.bianchiRetryCounter = config.bianchiRetryCounter
         self.arqStatusCollector = config.statusCollector(self.logger)
         self.arqStatusCollector.setParams(windowSize = config.windowSize,
                                           minSamples = config.minSamples,

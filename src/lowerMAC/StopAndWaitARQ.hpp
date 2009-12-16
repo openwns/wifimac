@@ -124,6 +124,8 @@ namespace wifimac { namespace lowerMAC {
 
         const wifimac::convergence::PhyMode ackPhyMode;
 
+        const bool bianchiRetryCounter;
+
         enum AckState {
             none,
             waitForACK,
