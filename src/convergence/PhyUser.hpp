@@ -31,7 +31,6 @@
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/GuiWriter.hpp>
-#include <WIFIMAC/convergence/PhyUserCommand.hpp>
 #include <WIFIMAC/convergence/PhyModeProvider.hpp>
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 
@@ -46,6 +45,7 @@
 #include <WNS/events/CanTimeout.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
+#include <WNS/ldk/Command.hpp>
 
 namespace wifimac { namespace lowerMAC {
         class Manager;
@@ -53,7 +53,45 @@ namespace wifimac { namespace lowerMAC {
 
 namespace wifimac { namespace convergence {
 
-	/**
+    class CIRProviderCommand
+    {
+    public:
+        virtual wns::Ratio getCIR() const = 0;
+        virtual wns::Power getRSS() const = 0;
+        virtual ~CIRProviderCommand(){}
+    };
+
+    class PhyUserCommand :
+        public wns::ldk::Command,
+        public CIRProviderCommand
+    {
+    public:
+        struct {
+            wns::Power rxPower;
+            wns::Power interference;
+            wns::Ratio postSINRFactor;
+        } local;
+
+        struct {} peer;
+        struct {} magic;
+
+        wns::Ratio getCIR() const
+        {
+            return wns::Ratio::from_dB( local.rxPower.get_dBm() - local.interference.get_dBm() + local.postSINRFactor.get_dB() );
+        }
+
+        wns::Ratio getCIRwithoutMIMO() const
+        {
+            return wns::Ratio::from_dB( local.rxPower.get_dBm() - local.interference.get_dBm());
+        }
+
+        wns::Power getRSS() const
+            {
+                return (local.rxPower);
+            }
+    };
+
+    /**
 	 * @brief Convergence FU to the OFDM(A)-Module
      *
      * The PhyUser represents the lowest FU in the WiFiMAC FUN, it transates the
@@ -63,53 +101,53 @@ namespace wifimac { namespace convergence {
      * Furthermore, the PhyUser provides some Phy-dependent functions, e.g
      * access to the different PhyModes (MCSs) via the PhyModeProvider.
 	 */
-	class PhyUser:
-		public wns::ldk::fu::Plain<PhyUser, PhyUserCommand>,
-		public wns::service::phy::ofdma::Handler,
-		public wns::events::CanTimeout,
-		public TxStartEndNotification
-	{
+    class PhyUser:
+        public wns::ldk::fu::Plain<PhyUser, PhyUserCommand>,
+        public wns::service::phy::ofdma::Handler,
+        public wns::events::CanTimeout,
+        public TxStartEndNotification
+    {
 
-	public:
-		PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
-		virtual ~PhyUser();
+    public:
+        PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config);
+        virtual ~PhyUser();
 
-		/** @brief Interface to lower layer wns::service::phy::ofdma::Handler */
-		virtual void onData(wns::osi::PDUPtr, wns::service::phy::power::PowerMeasurementPtr);
+        /** @brief Interface to lower layer wns::service::phy::ofdma::Handler */
+        virtual void onData(wns::osi::PDUPtr, wns::service::phy::power::PowerMeasurementPtr);
 
-		/** @brief Handling of the services */
-		virtual void setNotificationService(wns::service::Service* phy);
-		virtual wns::service::phy::ofdma::Notification* getNotificationService() const;
-		virtual void setDataTransmissionService(wns::service::Service* phy);
-		virtual wns::service::phy::ofdma::DataTransmission* getDataTransmissionService() const;
+        /** @brief Handling of the services */
+        virtual void setNotificationService(wns::service::Service* phy);
+        virtual wns::service::phy::ofdma::Notification* getNotificationService() const;
+        virtual void setDataTransmissionService(wns::service::Service* phy);
+        virtual wns::service::phy::ofdma::DataTransmission* getDataTransmissionService() const;
 
-		/** @brief Handling of PhyModes */
-		PhyModeProvider* getPhyModeProvider();
+        /** @brief Handling of PhyModes */
+        PhyModeProvider* getPhyModeProvider();
 
-		/** @brief Frequency tuning */
-		void setFrequency(double frequency);
+        /** @brief Frequency tuning */
+        void setFrequency(double frequency);
 
-		wns::Ratio getExpectedPostSINRFactor(unsigned int nss, unsigned int numRx);
+        wns::Ratio getExpectedPostSINRFactor(unsigned int nss, unsigned int numRx);
 
-	private:
+    private:
 
-		// CompoundHandlerInterface
-		virtual void doSendData(const wns::ldk::CompoundPtr& sdu);
-		virtual void doOnData(const wns::ldk::CompoundPtr& compound);
-		virtual void onFUNCreated();
-		virtual bool doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
-		virtual void doWakeup();
+        // CompoundHandlerInterface
+        virtual void doSendData(const wns::ldk::CompoundPtr& sdu);
+        virtual void doOnData(const wns::ldk::CompoundPtr& compound);
+        virtual void onFUNCreated();
+        virtual bool doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
+        virtual void doWakeup();
 
-		// onTimeout realisation
-		virtual void onTimeout();
+        // onTimeout realisation
+        virtual void onTimeout();
 
-		wns::pyconfig::View config;
-		wns::logger::Logger logger;
+        wns::pyconfig::View config;
+        wns::logger::Logger logger;
 
-		wns::service::phy::ofdma::Tune tune;
-		wns::service::phy::ofdma::DataTransmission* dataTransmission;
-		wns::service::phy::ofdma::Notification* notificationService;
-		PhyModeProvider phyModes;
+        wns::service::phy::ofdma::Tune tune;
+        wns::service::phy::ofdma::DataTransmission* dataTransmission;
+        wns::service::phy::ofdma::Notification* notificationService;
+        PhyModeProvider phyModes;
 
         const std::string managerName;
         const std::string txDurationProviderCommandName;
@@ -129,12 +167,12 @@ namespace wifimac { namespace convergence {
             txrxTurnaround
         } phyUserStatus;
 
-		wns::ldk::CompoundPtr currentTxCompound;
+        wns::ldk::CompoundPtr currentTxCompound;
         wns::simulator::Time lastTxRxTurnaround;
 
         GuiWriter* GuiWriter_;
 
-	};
+    };
 
 } // namespace convergence
 } // namespace wifimac

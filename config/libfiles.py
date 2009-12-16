@@ -33,7 +33,6 @@ srcFiles = [
 
     # convergence layer
     'src/convergence/PhyUser.cpp',
-    'src/convergence/OFDMAAccessFunc.cpp',
     'src/convergence/ErrorModelling.cpp',
     'src/convergence/PhyMode.cpp',
     'src/convergence/PhyModeProvider.cpp',
@@ -110,11 +109,9 @@ hppFiles = [
     'src/convergence/INetworkAllocationVector.hpp',
     'src/convergence/IRxStartEnd.hpp',
     'src/convergence/ITxStartEnd.hpp',
-    'src/convergence/OFDMAAccessFunc.hpp',
     'src/convergence/PhyMode.hpp',
     'src/convergence/PhyModeProvider.hpp',
     'src/convergence/PhyUser.hpp',
-    'src/convergence/PhyUserCommand.hpp',
     'src/convergence/PreambleGenerator.hpp',
     'src/convergence/TxDurationSetter.hpp',
     'src/convergence/NetworkStateProbe.hpp',

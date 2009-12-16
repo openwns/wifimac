@@ -27,7 +27,7 @@
  ******************************************************************************/
 
 #include <WIFIMAC/management/Beacon.hpp>
-#include <WIFIMAC/convergence/PhyUserCommand.hpp>
+#include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/Layer2.hpp>
 #include <WNS/service/dll/StationTypes.hpp>
 #include <WNS/Exception.hpp>

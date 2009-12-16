@@ -27,7 +27,7 @@
  ******************************************************************************/
 
 #include <WIFIMAC/pathselection/BeaconLinkQualityMeasurement.hpp>
-#include <WIFIMAC/convergence/PhyUserCommand.hpp>
+#include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/FrameType.hpp>
 
 #include <DLL/Layer2.hpp>

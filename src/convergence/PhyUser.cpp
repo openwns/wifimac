@@ -38,6 +38,7 @@
 #include <WNS/ldk/concatenation/Concatenation.hpp>
 
 #include <boost/numeric/ublas/matrix.hpp>
+#include <boost/bind.hpp>
 
 using namespace wifimac::convergence;
 
@@ -66,7 +67,7 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
     tune.frequency = config.get<double>("myConfig.initFrequency");
     tune.bandwidth = config.get<double>("myConfig.initBandwidthMHz");
     tune.numberOfSubCarrier = 1;
-    
+
     GuiWriter_ = new GuiWriter();
 
 }
@@ -74,7 +75,7 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
 
 
 PhyUser::~PhyUser()
-{ 
+{
     delete GuiWriter_;
 }
 
@@ -107,19 +108,18 @@ void PhyUser::doSendData(const wns::ldk::CompoundPtr& compound)
 
     PhyUserCommand* command = activateCommand(compound->getCommandPool());
 
-    // generate functor
-    wifimac::convergence::BroadcastOFDMAAccessFunc* func = new wifimac::convergence::BroadcastOFDMAAccessFunc;
+    // schedule start of transmission to now
+    wns::Power defaultTxPower = getDataTransmissionService()->getMaxPowerPerSubband();
+    wns::simulator::getEventScheduler()->scheduleDelay(
+        boost::bind(&wns::service::phy::ofdma::DataTransmission::startBroadcast, this->getDataTransmissionService(), compound, 0, defaultTxPower),
+        0.0);
 
-    // transmit now
-    func->transmissionStart = wns::simulator::getEventScheduler()->getTime();
-    func->transmissionStop = wns::simulator::getEventScheduler()->getTime() + frameTxDuration;
-    func->subBand = 1;
+    // schedule end of transmission
+    wns::simulator::getEventScheduler()->scheduleDelay(
+        boost::bind(&wns::service::phy::ofdma::DataTransmission::stopTransmission, this->getDataTransmissionService(), compound, 0),
+        frameTxDuration);
 
     GuiWriter_->writeToProbe(compound, frameTxDuration);
-
-
-    command->local.pAFunc.reset(func);
-    (*command->local.pAFunc.get())(this, compound);
 
     MESSAGE_SINGLE(NORMAL, logger, "Transmission, rx disabled for " << frameTxDuration);
     if(phyUserStatus == txrxTurnaround)
