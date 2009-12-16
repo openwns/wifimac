@@ -24,29 +24,39 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+from openwns import dB
+from ofdmaphy.Receiver import *
 
-from NodeCreator import NodeCreator
-from ChannelManagerPool import ChannelManagerPool
-from Transceiver import *
-from Layer1Config import *
+class BaseClass(object):
+    receiverNoiseFigure = None
+    frequency = None
+    txPower = None
+    bandwidth = None
+    numAntennas = None
+    mimoProcessing = None
 
-class Node(object):
-    position = None
-    transceivers = None
+class Basic(BaseClass):
+    def __init__(self, frequency, txPower):
+        self.frequency = frequency
+        self.txPower = txPower
 
-    def __init__(self, position):
-        self.transceivers = []
-        self.position = position
+        self.bandwidth = 20
+        self.numAntennas = 1
+        self.mimoProcessing = NoCorrelationZF()
+        self.receiverNoiseFigure = dB(5)
 
-class idGenerator:
-    nextId = None
-    def __init__(self):
-        self.nextId = 0
-    def next(self):
-        self.nextId += 1
-        return self.nextId
-    def get(self, num):
-        bunch = []
-        for i in xrange(num):
-            bunch.append(self.next())
-        return bunch
+class IMTAMIMO_BS(Basic):
+    def __init__(self, frequency, txPower, numAntennas):
+        super(IMTAMIMO_BS, self).__init__(frequency, txPower)
+
+        self.numAntennas = numAntennas
+        self.mimoProcessing = CorrelatedStaticZF_IMTAUMi_BS(randomSpread = False, randomOrientation = False, arrayOrientation = 0.0)
+
+
+class IMTAMIMO_UT(Basic):
+    def __init__(self, frequency, txPower, numAntennas):
+        super(IMTAMIMO_UT, self).__init__(frequency, txPower)
+
+        self.numAntennas = numAntennas
+        self.mimoProcessing = CorrelatedStaticZF_IMTAUMi_UT(randomSpread = False, randomOrientation = False, arrayOrientation = 0.0)
+

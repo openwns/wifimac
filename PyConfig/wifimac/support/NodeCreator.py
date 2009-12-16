@@ -39,7 +39,6 @@ import ip.VirtualARP
 import ip.VirtualDNS
 import wifimac.pathselection
 
-
 import ip.Component
 import ip
 from ip.AddressResolver import FixedAddressResolver, VirtualDHCPResolver
@@ -86,41 +85,42 @@ class NodeCreator(object):
 
         openwns.pyconfig.attrsetter(self, kw)
 
-    def createPhyLayer(self, managerName, propagationName, txPower, frequency, parentLogger):
+    def createPhyLayer(self, managerName, propagationName, config, parentLogger):
         receiver = ofdmaphy.Receiver.OFDMAReceiver(propagation = self.propagation,
-                               propagationCharacteristicName = propagationName,
-                               receiverNoiseFigure = dB(5),
-                               parentLogger = parentLogger )
+                                                   propagationCharacteristicName = propagationName,
+                                                   receiverNoiseFigure = config.receiverNoiseFigure,
+                                                   parentLogger = parentLogger )
+        receiver.mimoProcessing = config.mimoProcessing
         transmitter = rise.Transmitter.Transmitter(propagation = self.propagation,
-                               propagationCharacteristicName = propagationName,
-                               parentLogger = parentLogger )
+                                                   propagationCharacteristicName = propagationName,
+                                                   parentLogger = parentLogger )
 
         phy = ofdmaphy.Station.OFDMAStation([receiver], [transmitter], parentLogger = parentLogger)
-        phy.txFrequency = frequency
-        phy.rxFrequency = frequency
-        phy.txPower = txPower
+        phy.txFrequency = config.frequency
+        phy.rxFrequency = config.frequency
+        phy.txPower = config.txPower
         phy.numberOfSubCarrier = 1
-        phy.bandwidth = 20
+        phy.bandwidth = config.bandwidth
         phy.systemManagerName = managerName
+        phy.numAntennas = config.numAntennas
 
         return(phy)
 
     def createTransceiver(self, node, name, MACAddress, managerName, config):
         # create PHY
         phyLayerConfig = self.createPhyLayer(managerName = managerName,
-                             propagationName = name,
-                             txPower = config.txPower,
-                             frequency = config.frequency,
-                             parentLogger = node.logger)
+                                             propagationName = name,
+                                             config = config.layer1,
+                                             parentLogger = node.logger)
         ofdma = ofdmaphy.Station.OFDMAComponent(node, name+' PHY' + str(MACAddress), phyLayerConfig, parentLogger = node.logger)
         node.phy.append(ofdma)
 
         # create lower MAC
         node.dll.addTransceiver(address = MACAddress,
-                    phyDataTransmission = ofdma.dataTransmission,
-                    phyNotification = ofdma.notification,
-                    phyCarrierSense = ofdma.notification,
-                    config = config.layer2)
+                                phyDataTransmission = ofdma.dataTransmission,
+                                phyNotification = ofdma.notification,
+                                phyCarrierSense = ofdma.notification,
+                                config = config.layer2)
 
 
     def createAP(self, idGen, managerPool, config):
@@ -149,7 +149,7 @@ class NodeCreator(object):
             self.createTransceiver(node = newAP,
                                    name = 'AP',
                                    MACAddress = idGen.next(),
-                                   managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
+                                   managerName = managerPool.getManager(config.transceivers[i+1].layer1.frequency, id).name,
                                    config = config.transceivers[i+1])
         # create Mobility component
         newAP.mobility = rise.Mobility.Component(node = newAP,
@@ -185,7 +185,7 @@ class NodeCreator(object):
             self.createTransceiver(node = newMP,
                                    name = 'MP',
                                    MACAddress = idGen.next(),
-                                   managerName = managerPool.getManager(config.transceivers[i+1].frequency, id).name,
+                                   managerName = managerPool.getManager(config.transceivers[i+1].layer1.frequency, id).name,
                                    config = config.transceivers[i+1])
 
         newMP.nl = ip.Component.IPv4Component ( newMP, "192.168.1."+str ( id ),"192.168.1."+str ( id ), probeWindow = config.transceivers[0].probeWindow )
@@ -218,8 +218,7 @@ class NodeCreator(object):
         newSTA.phy = ofdmaphy.Station.OFDMAComponent(newSTA, "PHY STA"+str(id),
                                                      self.createPhyLayer(managerName = managerPool.getBSSManager().name,
                                                                          propagationName="STA",
-                                                                         txPower = config.txPower,
-                                                                         frequency = config.frequency,
+                                                                         config = config.layer1,
                                                                          parentLogger = newSTA.logger),
                                                      parentLogger = newSTA.logger)
 

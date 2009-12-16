@@ -221,6 +221,7 @@ pyconfigs = [
     'wifimac/support/NodeCreator.py',
     'wifimac/support/Rang.py',
     'wifimac/support/Transceiver.py',
+    'wifimac/support/Layer1Config.py',
     'wifimac/support/__init__.py',
 
     'wifimac/protocolCalculator/__init__.py',

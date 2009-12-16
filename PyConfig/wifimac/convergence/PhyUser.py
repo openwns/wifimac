@@ -42,11 +42,8 @@ class PhyUserConfig(object):
     txrxTurnaroundDelay = 1E-6
     phyModesDeliverer = None
 
-    mimoCorrelation = None
-
-    def __init__(self, initFrequency, phyModesDeliverer = None, mimoCorrelation = 0.0):
+    def __init__(self, initFrequency, phyModesDeliverer = None):
         self.initFrequency = initFrequency
-        self.mimoCorrelation = mimoCorrelation
         if phyModesDeliverer is None:
             self.phyModesDeliverer = wifimac.convergence.PhyMode.IEEE80211a()
         else:

@@ -25,6 +25,7 @@
 #
 ###############################################################################
 
+import wifimac.support.Layer1Config
 import openwns.pyconfig
 from openwns import dBm, dB
 from wifimac.lowerMAC.RateAdaptation import SINRwithMIMO
@@ -34,16 +35,16 @@ import wifimac.draftn
 
 # begin example "wifimac.pyconfig.support.transceiver.Basic"
 class Basic(object):
-    frequency = None
-    txPower = dBm(30)
     position = None
     probeWindow = None
 
+    layer1 = None
     layer2 = None
 
     def __init__(self, frequency):
+        self.layer1 = wifimac.support.Layer1Config.Basic(frequency, txPower = dBm(30))
         self.layer2 = wifimac.Layer2.Config(frequency)
-        self.frequency = frequency
+
         self.probeWindow = 1.0
 # end example
 
@@ -63,12 +64,13 @@ class Station(Basic):
         self.layer2.beacon.scanDuration = scanDuration
 
 class DraftN(Basic):
-    def __init__(self, frequency, numAntennas, maxAggregation, mimoCorrelation = 0.0):
+    def __init__(self, frequency, numAntennas, maxAggregation):
         super(DraftN, self).__init__(frequency)
+        self.layer1.numAntennas = numAntennas
+
         self.layer2.funTemplate = wifimac.draftn.FUNTemplate
         self.layer2.arq = wifimac.draftn.BlockACKConfig()
         self.layer2.phyUser.phyModesDeliverer = wifimac.draftn.PhyModes()
-        self.layer2.phyUser.mimoCorrelation = mimoCorrelation
 
         # ACK becomes BlockACK -> longer duration
         self.layer2.maximumACKDuration = 68E-6
@@ -96,11 +98,22 @@ class DraftNMesh(DraftN):
         super(DraftNMesh, self).__init__( frequency, numAntennas, maxAggregation, mimoCorrelation)
         self.layer2.beacon.enabled = True
 
+class DraftN_IMTA(DraftN):
+    def __init__(self, frequency, numAntennas, maxAggregation):
+        super(DraftN_IMTA, self).__init__(frequency, numAntennas, maxAggregation)
+        self.layer1 = wifimac.support.Layer1Config.IMTAMIMO_BS(frequency, dBm(30), numAntennas)
+
 class DraftNStation(DraftN):
-    def __init__(self, frequency, position, scanFrequencies, scanDuration, numAntennas, maxAggregation, mimoCorrelation = 0.0):
-        super(DraftNStation, self).__init__(frequency, numAntennas, maxAggregation, mimoCorrelation)
+    def __init__(self, frequency, position, scanFrequencies, scanDuration, numAntennas, maxAggregation):
+        super(DraftNStation, self).__init__(frequency, numAntennas, maxAggregation)
 
         self.position = position
         self.layer2.beacon.enabled = False
         self.layer2.beacon.scanFrequencies = scanFrequencies
         self.layer2.beacon.scanDuration = scanDuration
+
+class DraftNStation_IMTA(DraftNStation):
+    def __init__(self, frequency, position, scanFrequencies, scanDuration, numAntennas, maxAggregation):
+        super(DraftNStation_IMTA, self).__init__(frequency, position, scanFrequencies, scanDuration, numAntennas, maxAggregation)
+        self.layer1 = wifimac.support.Layer1Config.IMTAMIMO_UT(frequency, dBm(30), numAntennas)
+

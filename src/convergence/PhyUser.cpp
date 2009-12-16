@@ -59,7 +59,6 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
     managerName(config.get<std::string>("managerName")),
     txDurationProviderCommandName(config.get<std::string>("txDurationProviderCommandName")),
     txrxTurnaroundDelay(config.get<wns::simulator::Time>("myConfig.txrxTurnaroundDelay")),
-    mimoCorrelation(config.get<double>("myConfig.mimoCorrelation")),
     phyUserStatus(receiving),
     currentTxCompound(),
     lastTxRxTurnaround(0.0)
@@ -194,7 +193,8 @@ void PhyUser::onData(wns::osi::PDUPtr pdu, wns::service::phy::power::PowerMeasur
         m << "from " << friends.manager->getTransmitterAddress(compound->getCommandPool());
         m << " has " << nss;
         m << " spatial streams, receiver has " << friends.manager->getNumAntennas() << " antennas";
-        m << " -> postSINRFactor = " << this->getExpectedPostSINRFactor(nss, friends.manager->getNumAntennas());
+        m << " -> postSINRFactor = " << rxPowerMeasurement->getPostProcessingSINRFactor()[0];
+        //this->getExpectedPostSINRFactor(nss, friends.manager->getNumAntennas());
         MESSAGE_END();
     }
 
@@ -203,7 +203,8 @@ void PhyUser::onData(wns::osi::PDUPtr pdu, wns::service::phy::power::PowerMeasur
     // store measured signal into Command
     phyCommand->local.rxPower      = rxPowerMeasurement->getRxPower();
     phyCommand->local.interference = rxPowerMeasurement->getInterferencePower();
-    phyCommand->local.postSINRFactor = this->getExpectedPostSINRFactor(nss, friends.manager->getNumAntennas());
+    phyCommand->local.postSINRFactor = rxPowerMeasurement->getPostProcessingSINRFactor();
+    //this->getExpectedPostSINRFactor(nss, friends.manager->getNumAntennas());
 
     this->wns::ldk::FunctionalUnit::onData(compound);
 } // onData
@@ -214,6 +215,7 @@ wns::Ratio PhyUser::getExpectedPostSINRFactor(unsigned int nss, unsigned int num
 
     double cF = 1.0;
 
+    double mimoCorrelation = 1.0;
     if(mimoCorrelation > 0.0)
     {
         // there is a correlation among the MIMO channels, thus we have a
@@ -273,7 +275,7 @@ void PhyUser::onTimeout()
     {
         // finished turnaround, ready to receive
         phyUserStatus = receiving;
-	lastTxRxTurnaround = wns::simulator::getEventScheduler()->getTime();
+        lastTxRxTurnaround = wns::simulator::getEventScheduler()->getTime();
         return;
     }
 

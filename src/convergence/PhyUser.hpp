@@ -56,7 +56,7 @@ namespace wifimac { namespace convergence {
     class CIRProviderCommand
     {
     public:
-        virtual wns::Ratio getCIR() const = 0;
+        virtual wns::Ratio getCIR(int stream = 0) const = 0;
         virtual wns::Power getRSS() const = 0;
         virtual ~CIRProviderCommand(){}
     };
@@ -69,15 +69,15 @@ namespace wifimac { namespace convergence {
         struct {
             wns::Power rxPower;
             wns::Power interference;
-            wns::Ratio postSINRFactor;
+            std::vector<wns::Ratio> postSINRFactor;
         } local;
 
         struct {} peer;
         struct {} magic;
 
-        wns::Ratio getCIR() const
+        wns::Ratio getCIR(int stream = 0) const
         {
-            return wns::Ratio::from_dB( local.rxPower.get_dBm() - local.interference.get_dBm() + local.postSINRFactor.get_dB() );
+            return wns::Ratio::from_dB( local.rxPower.get_dBm() - local.interference.get_dBm() + local.postSINRFactor[stream].get_dB() );
         }
 
         wns::Ratio getCIRwithoutMIMO() const
@@ -153,8 +153,6 @@ namespace wifimac { namespace convergence {
         const std::string txDurationProviderCommandName;
         const wns::simulator::Time txrxTurnaroundDelay;
 
-        const double mimoCorrelation;
-
         struct Friends
         {
             wifimac::lowerMAC::Manager* manager;
@@ -171,7 +169,6 @@ namespace wifimac { namespace convergence {
         wns::simulator::Time lastTxRxTurnaround;
 
         GuiWriter* GuiWriter_;
-
     };
 
 } // namespace convergence
