@@ -107,15 +107,33 @@ void PhyUser::doSendData(const wns::ldk::CompoundPtr& compound)
 
     PhyUserCommand* command = activateCommand(compound->getCommandPool());
 
-    // schedule start of transmission to now
     wns::Power defaultTxPower = getDataTransmissionService()->getMaxPowerPerSubband();
+
+    // to schedule the startBroadcast function, we have to indicate to
+    // boost::bind the correct function, as startBroadcast has two different
+    // signatures (with number of streams and phyMode). Therefore, we first
+    // create a variable of the desired function signature type and assign using
+    // desired member function.  This will resolve the correct function thanks
+    // to the signature including the argument types.
+    void (wns::service::phy::ofdma::NonBFTransmission::*fn)(wns::osi::PDUPtr, int, wns::Power, int) =
+        &wns::service::phy::ofdma::NonBFTransmission::startBroadcast;
+
+    // Now boost::bind can be used to schedue the start of the transmission
     wns::simulator::getEventScheduler()->scheduleDelay(
-        boost::bind(&wns::service::phy::ofdma::DataTransmission::startBroadcast, this->getDataTransmissionService(), compound, 0, defaultTxPower),
+        boost::bind(fn,
+                    this->getDataTransmissionService(),
+                    compound,
+                    0,
+                    defaultTxPower,
+                    friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams()),
         0.0);
 
-    // schedule end of transmission
+    // schedule end of transmission similarly
     wns::simulator::getEventScheduler()->scheduleDelay(
-        boost::bind(&wns::service::phy::ofdma::DataTransmission::stopTransmission, this->getDataTransmissionService(), compound, 0),
+        boost::bind(&wns::service::phy::ofdma::DataTransmission::stopTransmission,
+                    this->getDataTransmissionService(),
+                    compound,
+                    0),
         frameTxDuration);
 
     GuiWriter_->writeToProbe(compound, frameTxDuration);
