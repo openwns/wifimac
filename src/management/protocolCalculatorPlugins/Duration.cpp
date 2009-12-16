@@ -65,6 +65,16 @@ Duration::frame(Bit psduLength, const wifimac::convergence::PhyMode& pm) const
 }
 
 wns::simulator::Time
+Duration::frame(Bit psduLength, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const
+{
+    unsigned int n_es = 1;
+    // TODO: correct n_es for higher phy modes
+    double psduFrameSize = fl->service + psduLength + fl->tail*n_es;
+    double durationPSDU = psduFrameSize / grossBitRate;
+    return(preamble(pm) + durationPSDU);
+}
+
+wns::simulator::Time
 Duration::preamble(const wifimac::convergence::PhyMode& pm) const
 {
     // number of DLFT and ELFT in HT-preamble (D802.11n,D4.00, Table 20-11~13)
@@ -173,15 +183,33 @@ Duration::MSDU_PPDU(Bit msduFrameSize, const wifimac::convergence::PhyMode& pm) 
 }
 
 wns::simulator::Time
+Duration::MSDU_PPDU(Bit msduFrameSize, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const
+{
+    return(frame(fl->getPSDU(msduFrameSize), grossBitRate, pm));
+}
+
+wns::simulator::Time
 Duration::MPDU_PPDU(Bit mpduSize, const wifimac::convergence::PhyMode& pm) const
 {
     return(frame(mpduSize, pm));
 }
 
 wns::simulator::Time
+Duration::MPDU_PPDU(Bit mpduSize, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const
+{
+    return(frame(mpduSize, grossBitRate, pm));
+}
+
+wns::simulator::Time
 Duration::A_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, const wifimac::convergence::PhyMode& pm) const
 {
     return(frame(fl->getA_MPDU_PSDU(mpduFrameSize, n_aggFrames), pm));
+}
+
+wns::simulator::Time
+Duration::A_MPDU_PPDU(Bit mpduFrameSize, unsigned int n_aggFrames, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const
+{
+    return(frame(fl->getA_MPDU_PSDU(mpduFrameSize, n_aggFrames), grossBitRate, pm));
 }
 
 wns::simulator::Time
@@ -194,6 +222,12 @@ wns::simulator::Time
 Duration::A_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, const wifimac::convergence::PhyMode& pm) const
 {
     return(frame(fl->getA_MSDU_PSDU(msduFrameSize, n_aggFrames), pm));
+}
+
+wns::simulator::Time
+Duration::A_MSDU_PPDU(Bit msduFrameSize, unsigned int n_aggFrames, const double grossBitRate, const wifimac::convergence::PhyMode& pm) const
+{
+    return(frame(fl->getA_MSDU_PSDU(msduFrameSize, n_aggFrames), grossBitRate, pm));
 }
 
 wns::simulator::Time
