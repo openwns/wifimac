@@ -139,11 +139,11 @@ namespace wifimac {
             virtual ~BlockACK();
 
             /// Initialization
-            void
+            virtual void
             onFUNCreated();
 
             /// observers get called after an (un)successful transmission
-            void
+            virtual void
             registerObserver(IBlockACKObserver *o) 
                 {
                     observers.push_back(o);
@@ -158,7 +158,7 @@ namespace wifimac {
              * - processIncomingACKreq of the matching rxQueue in case of ACKreq
              * - processIncomingData of the matching rxQueue otherwise
              */
-            void
+            virtual void
             processIncoming(const wns::ldk::CompoundPtr& compound);
 
             /**
@@ -174,7 +174,7 @@ namespace wifimac {
              * possible from the upper FU before starting the transmission using
              * a getReceptor()->wakeup() recursion.
              */
-            void
+            virtual void
             processOutgoing(const wns::ldk::CompoundPtr& compound);
 
             /**
@@ -190,7 +190,7 @@ namespace wifimac {
              * #- The number of frames in the txQueue is below the number which
              *    can be send in the next round.
              */
-            bool
+            virtual bool
             hasCapacity() const;
 
             /**
@@ -222,22 +222,28 @@ namespace wifimac {
              * @brief CanTimeout interface realization, required for missing
              * ACKs.
              */
-            void onTimeout();
+            virtual void
+            onTimeout();
 
             /** @brief Observe rxStart to stop the timeout for ACK reception */
-            void onRxStart(wns::simulator::Time expRxTime);
+            virtual void
+            onRxStart(wns::simulator::Time expRxTime);
 
             /** @brief Observe rxEnd to signal the upcoming ACK reception */
-            void onRxEnd();
+            virtual void
+            onRxEnd();
 
             /** @brief Does nothing, required by IRxStartEnd interface */
-            void onRxError();
+            virtual void
+            onRxError();
 
             /** @brief Signals start of transmission */
-            void onTxStart(const wns::ldk::CompoundPtr& compound);
+            virtual void
+            onTxStart(const wns::ldk::CompoundPtr& compound);
 
             /** @brief Signals end of own transmission -> set timeout for ACK*/
-            void onTxEnd(const wns::ldk::CompoundPtr& compound);
+            virtual void
+            onTxEnd(const wns::ldk::CompoundPtr& compound);
 
             /**
              * @brief Signal from RTS/CTS that the transmission has failed
@@ -245,19 +251,20 @@ namespace wifimac {
              * A failed CTS is handled in the same way as a missing ACK or a
              * BlockACK reply with an empty SN-set
              */
-            void
+            virtual void
             onTransmissionHasFailed(const wns::ldk::CompoundPtr& compound);
 
             /** @brief Read the tx counter */
-            unsigned int
+            virtual unsigned int
             getTransmissionCounter(const wns::ldk::CompoundPtr& compound) const;
 
             /** @brief Copy the tx counter to anther FU. */
-            void
+            virtual void
             copyTransmissionCounter(const wns::ldk::CompoundPtr& src, const wns::ldk::CompoundPtr& dst);
 
             /// SDU and PCI size calculation
-            void calculateSizes(const wns::ldk::CommandPool* commandPool, Bit& commandPoolSize, Bit& dataSize) const;
+            virtual void
+            calculateSizes(const wns::ldk::CommandPool* commandPool, Bit& commandPoolSize, Bit& dataSize) const;
 
             /** @brief Returns the pointer to the wifimac::lowerMAC::Manager FU */
             wifimac::lowerMAC::Manager*
@@ -328,7 +335,7 @@ namespace wifimac {
              * transmissions can start (possible with the one compound for a
              * different receiver that has been stored temporarily)
              */
-            void
+            virtual void
             processIncomingACKSNs(std::set<BlockACKCommand::SequenceNumber> ackSNs);
 
     private:
