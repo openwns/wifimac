@@ -26,8 +26,12 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_DRAFTN_BlockACK_HPP
-#define WIFIMAC_DRAFTN_BlockACK_HPP
+#ifndef WIFIMAC_DRAFTN_BLOCKACK_HPP
+#define WIFIMAC_DRAFTN_BLOCKACK_HPP
+
+#include <WIFIMAC/draftn/BlockACKCommand.hpp>
+#include <WIFIMAC/draftn/TransmissionQueue.hpp>
+#include <WIFIMAC/draftn/ReceptionQueue.hpp>
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/management/PERInformationBase.hpp>
@@ -51,247 +55,6 @@
 
 namespace wifimac {
     namespace draftn {
-
-        typedef enum {I, BA, BAREQ} BlockAckFrameType;
-
-        /**
-         * @brief The Block ACK command implements (a) the SN for regular MSDUs,
-         * (b) the Block ACK Request and (c) the Block ACK reply.
-         *
-         * The combined implementation is neccessary because the BlockACK FU can
-         * add only one type of command to the outgoing FUs. Hence, this command
-         * combines all three BlockACK-relevant commands:
-         * -# The sequence number of each MSDU, which is needed to identify
-         *    missing MSDUs on the peer side.
-         * -# The start sequence number contained in a BlockACK request
-         * -# The set of sequence numbers contained (in a coded form) in the
-         *    BlockACK reply.
-         * The three different commands are separated by the BlockAckFrameType,
-         * which can be I, BA or BAREQ.
-         */
-        class BlockACKCommand:
-        public wns::ldk::arq::ARQCommand
-        {
-        public:
-
-            struct {} local;
-            struct {
-                /** @brief (sub-) type of this command */
-                BlockAckFrameType type;
-
-                /**
-                 * @brief Sequence number of the MSDU or starting SN in the
-                 *   blockACK Request / Reply
-                 */
-                SequenceNumber sn;
-
-                /**
-                 * @brief Set of sequence numbers in the BlockACK reply
-                 */
-                std::set<SequenceNumber> ackSNs;
-            } peer;
-            struct {} magic;
-
-            BlockACKCommand()
-                {
-                    peer.type = I;
-                    peer.sn = 0;
-                    peer.ackSNs.clear();
-                }
-
-            virtual bool
-            isACK() const
-                {
-                    return peer.type == BA;
-                }
-
-            virtual bool
-            isACKreq() const
-                {
-                    return peer.type == BAREQ;
-                }
-        };
-
-        class BlockACK;
-
-
-        /**
-         * @brief Store each compound together with its computed size
-         */
-        typedef std::pair<wns::ldk::CompoundPtr, unsigned int> CompoundPtrWithSize;
-
-        /**
-         * @brief Queue for outgoing compounds
-         *
-         * The transmission queue implements the storage and access functions of
-         * the BlockACK FU for outgoing compounds, most importantly the
-         * processOutgoing, has|getData and processIncomingACK functions. A
-         * transmission queue is only valid for a single receiver.
-         *
-         * Two queues are inside the transmission queue: One for the compounds
-         * waiting to be transmitted (txQueue), and the other for compounds already
-         * transmitted, but not acknowledged (onAirQueue). The onAirQueue cannot
-         * exceed the maxOnAir limitation.
-         */
-        class TransmissionQueue
-        {
-        public:
-            TransmissionQueue(BlockACK* parent_,
-                              size_t maxOnAir_,
-                              wns::service::dll::UnicastAddress adr_,
-                              BlockACKCommand::SequenceNumber sn_,
-                              wifimac::management::PERInformationBase* perMIB_);
-            ~TransmissionQueue();
-
-            /** @brief Append outgoing compound to the txQueue */
-            void
-            processOutgoing(const wns::ldk::CompoundPtr& compound,
-                            const unsigned int size);
-
-            /**
-             * @brief Gets next compound for transmission or NULL
-             *
-             * The availability of the next compound is dependent on many
-             * factors:
-             * - If a BlockACK request was send, but not yet replied, no frames
-             * can be send (status waitForACK).
-             * - If the txQueue is not empty and the next compound fits into the
-             * maxOnAir limit, this one is available
-             * - If a BlockACK request is pending it will be send (also
-             * depending on the "impatient" setting of the BlockACK FU
-             */
-            const wns::ldk::CompoundPtr
-            hasData() const;
-
-            /**
-             * @brief Returns the compound as selected by the hasData() function
-             */
-            wns::ldk::CompoundPtr
-            getData();
-
-            /**
-             * @brief Iterate, using two iterators, over the onAirQueue and the
-             *        SNs indicated in the ACK to identify packet losses.
-             *
-             * Two iterators are used to identify packet losses: One for the
-             * onAirQueue and the other on for the SNs in the received
-             * ACK. Frames are re-transmitted (by insertion at the head of the
-             * txQueue) until their lifetime is exceeded.
-             */
-            void
-            processIncomingACK(std::set<BlockACKCommand::SequenceNumber> ackSNs);
-
-            const size_t getNumOnAirPDUs() const
-                { return onAirQueue.size(); }
-
-            const size_t getNumWaitingPDUs() const
-                { return txQueue.size(); }
-
-            const unsigned int
-            onAirQueueSize() const;
-
-            const unsigned int
-            txQueueSize() const;
-
-            const unsigned int
-            storageSize() const;
-
-            const bool
-            waitsForACK() const;
-
-            const BlockACKCommand::SequenceNumber
-            getNextSN() const
-                { return nextSN; }
-
-        private:
-            bool
-            isSortedBySN(const std::deque<CompoundPtrWithSize> q) const;
-
-            wifimac::management::PERInformationBase* perMIB;
-            const BlockACK* parent;
-            const size_t maxOnAir;
-            const wns::service::dll::UnicastAddress adr;
-            std::deque<CompoundPtrWithSize> txQueue;
-            std::deque<CompoundPtrWithSize> onAirQueue;
-            BlockACKCommand::SequenceNumber nextSN;
-            wns::ldk::CompoundPtr baREQ;
-            bool waitForACK;
-            bool baReqRequired;
-        };
-
-        /**
-         * @brief Queue that stores received compounds that cannot be delivered
-         * (yet).
-         *
-         * The reception queue implements, for each transmitter, the handling of
-         * received compounds. Compounds stored due to out-of-order delivery in
-         * case of packet errors, until they can be delivered in order or until
-         * the transceiver signals that the missing frames are discarded.
-         *
-         * Hence, the reception queue implements the receiver functions of the
-         * BlockACK FU: processIncoming[Data|ACK] and [has|get]ACK
-         */
-
-        class ReceptionQueue
-        {
-        public:
-            ReceptionQueue(BlockACK* parent_,
-                           BlockACKCommand::SequenceNumber firstSN_,
-                           wns::service::dll::UnicastAddress adr_);
-            ~ReceptionQueue();
-
-            /**
-             * @brief Processes the incoming compound and delivers it if it is
-             * in-order.
-             *
-             * If the compound's SN matches the current waiting SN, the compound
-             * is delivered. Otherwise, either the compound was already received
-             * before (SN < waitingSN) or intermediate compounds are missing and
-             * the compound has to be stored until they are received
-             * successfully (SN > waitingSN). In both cases, the SN is added to
-             * the set of received SNs for the next BlockACK reply.
-             */
-            void
-            processIncomingData(const wns::ldk::CompoundPtr& compound,
-                                const unsigned int size);
-
-            /**
-             * @brief Process the incoming BlockACK request and create the
-             * BlockACK reply
-             *
-             * The BlockACK request contains a SN which indicates the start of
-             * the SNs that need to be ack'ed. If compounds are discarded by the
-             * transmitter (due to lifetime), this SN is higher than the current
-             * waitingSN, and pending frames in the rxQueue can be delivered.
-             *
-             * Of course, as a reply the Block ACK reply is created, containing
-             * a set of successfully received compound SNs.
-             */
-            void
-            processIncomingACKreq(const wns::ldk::CompoundPtr& compound);
-
-            /** @brief Indicates that an Block ACK reply is pending */
-            const wns::ldk::CompoundPtr hasACK() const;
-
-            /** @brief Returns the pending Block ACK */
-            wns::ldk::CompoundPtr getACK();
-
-            const size_t numPDUs() const
-                { return rxStorage.size(); }
-            const unsigned int storageSize() const;
-
-        private:
-            void purgeRxStorage();
-
-            const BlockACK* parent;
-            const wns::service::dll::UnicastAddress adr;
-            BlockACKCommand::SequenceNumber waitingForSN;
-            std::map<BlockACKCommand::SequenceNumber, CompoundPtrWithSize> rxStorage;
-            std::set<BlockACKCommand::SequenceNumber> rxSNs;
-            wns::ldk::CompoundPtr blockACK;
-        };
-
-        typedef wns::container::Registry<wns::service::dll::UnicastAddress, BlockACKCommand::SequenceNumber> AddrSNMap;
 
         /**
          * @brief Block ACK according to IEEE 802.11n Draft 8.0 / IEEE
@@ -361,6 +124,8 @@ namespace wifimac {
         {
             friend class TransmissionQueue;
             friend class ReceptionQueue;
+
+            typedef wns::container::Registry<wns::service::dll::UnicastAddress, BlockACKCommand::SequenceNumber> AddrSNMap;
 
         public:
 
