@@ -130,7 +130,7 @@ namespace wifimac { namespace lowerMAC {
         getPhyUser();
 
         /** @brief Access the stationType */
-        dll::Layer2::StationType
+        dll::ILayer2::StationType
         getStationType() const;
 
         /** @brief Returns the MAC address is this transceiver. Do not use the

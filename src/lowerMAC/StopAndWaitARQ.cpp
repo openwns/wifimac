@@ -94,7 +94,7 @@ void StopAndWaitARQ::onFUNCreated()
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
 
     // signal packet success/errors to MIB
-    perMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
+    perMIB = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::PERInformationBase>(perMIBServiceName);
 }
 
 

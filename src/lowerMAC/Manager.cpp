@@ -73,10 +73,10 @@ Manager::onFUNCreated()
     friends.phyUser = getFUN()->findFriend<wifimac::convergence::PhyUser*>(config_.get<std::string>("phyUserName"));
 
     friends.phyUser->setDataTransmissionService(
-        this->getFUN()->getLayer<dll::Layer2*>()
+        this->getFUN()->getLayer<dll::ILayer2*>()
         ->getService<wns::service::phy::ofdma::DataTransmission*>( config_.get<std::string>("phyDataTransmission") ) );
     friends.phyUser->setNotificationService(
-        this->getFUN()->getLayer<dll::Layer2*>()
+        this->getFUN()->getLayer<dll::ILayer2*>()
         ->getService<wns::service::phy::ofdma::Notification*>( config_.get<std::string>("phyNotification") ) );
 
     // set service in ChannelState to observe the CarrierSense
@@ -84,7 +84,7 @@ Manager::onFUNCreated()
     assure(cs, "Could not get ChannelState from my FUN");
 
     cs->setCarrierSensingService(
-        this->getFUN()->getLayer<dll::Layer2*>()
+        this->getFUN()->getLayer<dll::ILayer2*>()
         ->getService<wns::service::phy::ofdma::Notification*>(config_.get<std::string>("phyCarrierSense")) );
 
     // open the flow gate for my compounds
@@ -173,11 +173,11 @@ Manager::getPhyUser()
     }
 }
 
-dll::Layer2::StationType
+dll::ILayer2::StationType
 Manager::getStationType() const
 {
     // simply relayed to Layer2
-    return(this->getFUN()->getLayer<dll::Layer2*>()->getStationType());
+    return(this->getFUN()->getLayer<dll::ILayer2*>()->getStationType());
 }
 
 wns::service::dll::UnicastAddress
@@ -189,12 +189,12 @@ Manager::getMACAddress() const
 void
 Manager::associateWith(wns::service::dll::UnicastAddress svrAddress)
 {
-	assure(this->getFUN()->getLayer<dll::Layer2*>()->getStationType() == wns::service::dll::StationTypes::UT(),
+	assure(this->getFUN()->getLayer<dll::ILayer2*>()->getStationType() == wns::service::dll::StationTypes::UT(),
 		   "Called associateWith by non-UT");
 
 	// the association links the layer2 of this STA and the layer2 of the AP -
 	// not the transceiver
-	this->getFUN()->getLayer<dll::Layer2*>()->getControlService<dll::services::control::Association>("ASSOCIATION")
+	this->getFUN()->getLayer<dll::ILayer2*>()->getControlService<dll::services::control::Association>("ASSOCIATION")
 		->associate(this->myMACAddress_, svrAddress);
 
     this->associatedTo = svrAddress;

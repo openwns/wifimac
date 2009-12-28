@@ -54,7 +54,7 @@ ErrorModelling::ErrorModelling(wns::ldk::fun::FUN* fun, const wns::pyconfig::Vie
 
 void ErrorModelling::onFUNCreated()
 {
-    pc = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
+    pc = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
 
 void ErrorModelling::processIncoming(const wns::ldk::CompoundPtr& compound)

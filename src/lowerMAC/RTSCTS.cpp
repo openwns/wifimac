@@ -127,7 +127,7 @@ void RTSCTS::onFUNCreated()
     this->wns::Observer<wifimac::convergence::ITxStartEnd>::startObserving
         (getFUN()->findFriend<wifimac::convergence::TxStartEndNotification*>(txStartEndName));
 
-    protocolCalculator = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
+    protocolCalculator = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
 
 void
