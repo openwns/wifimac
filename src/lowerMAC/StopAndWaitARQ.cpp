@@ -415,13 +415,41 @@ StopAndWaitARQ::transmissionHasFailed(const wns::ldk::CompoundPtr& compound)
 
             if(stationShortRetryCounter < shortRetryLimit and stationLongRetryCounter < longRetryLimit)
             {
+                // no retry limit was reached so far
                 getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter =
                     stationShortRetryCounter + stationLongRetryCounter + 1;
             }
             else
             {
-                getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter =
-                    stationShortRetryCounter - shortRetryLimit + stationLongRetryCounter - longRetryLimit + 1;
+                int newCounter = 0;
+                if(stationShortRetryCounter >= shortRetryLimit)
+                {
+                    // the shortRetryLimit was reached (at least) once -> reduce
+                    // the retry counter
+                    newCounter += stationShortRetryCounter - shortRetryLimit;
+                }
+                else
+                {
+                    newCounter += stationShortRetryCounter;
+                }
+
+                if(stationLongRetryCounter >= longRetryLimit)
+                {
+                    // the longRetryLimit was reached (at least) once -> reduce
+                    // the retry counter
+                    newCounter += stationLongRetryCounter - longRetryLimit;
+                }
+                else
+                {
+                    newCounter += stationLongRetryCounter;
+                }
+
+                // new transmission!
+                newCounter += 1;
+
+                assure(newCounter > 0, "Transmission counter must be greater than 0");
+
+                getCommand(this->activeCompound->getCommandPool())->localTransmissionCounter = newCounter;
             }
         }
         MESSAGE_SINGLE(NORMAL, this->logger,
