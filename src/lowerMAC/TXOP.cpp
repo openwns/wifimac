@@ -149,22 +149,23 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
         wns::simulator::Time duration = protocolCalculator->getDuration()->MPDU_PPDU(compound->getLengthInBits(),
                                                                                      phyMode);
 
-        this->remainingTXOPDuration = this->remainingTXOPDuration
+        wns::simulator::Time cutTXOPDuration = this->remainingTXOPDuration
                                         - duration
                                         - this->sifsDuration
                                         - this->maximumACKDuration;
 
-        MESSAGE_SINGLE(NORMAL, this->logger, "Current compound cuts TXOP to " << this->remainingTXOPDuration);
+        MESSAGE_SINGLE(NORMAL, this->logger, "Current compound cuts TXOP to " << cutTXOPDuration);
 
-        if(this->remainingTXOPDuration <= 0)
+        if(cutTXOPDuration <= 0)
         {
             // no time for additional frames -> no (more) TXOP
             MESSAGE_SINGLE(NORMAL, this->logger, "Current compound fills complete TXOP");
             closeTXOP();
 	    return;
         }
+	this->remainingTXOPDuration  = cutTXOPDuration;
 
-        // check if next frame would fit into TXOP
+	// check if next frame would fit into TXOP
         wns::simulator::Time nextDuration = friends.txopWindow->getNextTransmissionDuration();
 
         if(nextDuration == wns::simulator::Time())
@@ -266,8 +267,8 @@ bool TXOP::doIsAccepting(const wns::ldk::CompoundPtr& compound) const
 
 void TXOP::closeTXOP() 
 {
-    this->remainingTXOPDuration = 0;
     TXOPDurationProbe->put(this->txopLimit - this->remainingTXOPDuration);
+    this->remainingTXOPDuration = 0;
     for(int i=0; i < observers.size();i++)
     {
 	observers[i]->onTXOPClosed();
