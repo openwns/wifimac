@@ -73,10 +73,10 @@ FrameLength::getPSDU(Bit msduFrameSize) const
 Bit
 FrameLength::getA_MPDU_PSDU(Bit mpduFrameSize, unsigned int n_aggFrames) const
 {
-    // n-1 frames with padding, last one without
+    // n frames with padding, blockACKreq without
     Bit len = n_aggFrames * pad(this->ampdu_delimiter + mpduFrameSize, 32);
-    len += blockACKreq;
-    return(len + this->ampdu_delimiter + mpduFrameSize);
+    len += (blockACKreq + this->ampdu_delimiter);
+    return(len);
 }
 
 Bit
@@ -94,7 +94,7 @@ FrameLength::getA_MPDU_PSDU(const std::vector<Bit>& mpduFrameSize) const
         last = pad(this->ampdu_delimiter + (*it), 32);
         len += last;
     }
-    len += blockACKreq;
+    len += (blockACKreq + this->ampdu_delimiter);
     return(len);
 }
 

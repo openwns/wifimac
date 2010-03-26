@@ -128,7 +128,7 @@ namespace wifimac { namespace convergence {
         void setSpatialStreams(const std::vector<MCS>& ss);
 
         wns::Ratio getMinSINR() const;
-        //{ return this->mcs.getMinSINR();};
+            { return this->spatialStreams[0].getMinSINR();};
 
         unsigned int getNumberOfDataSubcarriers() const
             { return this->numberOfDataSubcarriers;};
