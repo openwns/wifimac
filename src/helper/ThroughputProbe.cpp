@@ -59,7 +59,7 @@ HopContextWindowProbe::HopContextWindowProbe(wns::ldk::fun::FUN* fuNet, const wn
 	for (int ii = 0; ii<config_.len("localIDs.keys()"); ++ii)
 	{
 		std::string key = config_.get<std::string>("localIDs.keys()",ii);
-		uint32_t value  = config_.get<uint32_t>("localIDs.values()",ii);
+		unsigned long int value  = config_.get<unsigned long int>("localIDs.values()",ii);
 		localIDs.addProvider(wns::probe::bus::contextprovider::Constant(key, value));
 	}
 }
@@ -94,7 +94,7 @@ HopContextWindowProbe::processIncoming(const wns::ldk::CompoundPtr& compount)
 	Bit commandPoolSize;
 	Bit dataSize;
 	this->getFUN()->calculateSizes(compound->getCommandPool(), commandPoolSize, dataSize, this);
-	const int32_t compoundLength = commandPoolSize + dataSize;
+	const long int compoundLength = commandPoolSize + dataSize;
 
 	this->putIntoBitsIncomming(numHops, compoundLength);
 	this->putIntoCompoundsIncomming(numHops, 1);
