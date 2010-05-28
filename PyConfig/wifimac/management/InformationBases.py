@@ -98,8 +98,9 @@ class VirtualCIB(openwns.node.Component):
         self.defaultValues = CIBDefaultValues()
         self.logger = wifimac.Logger.Logger(name="VCIB", parent=parentLogger)
 
-class VirtualCababilityInformationService(openwns.node.Node):
+class VirtualCababilityInformationService(openwns.node.Node, openwns.node.NoRadio):
     vcib = None
     def __init__(self, name):
-        super(VirtualCababilityInformationService, self).__init__(name)
+        openwns.node.Node.__init__(self, name)
+        self.setProperty("Type", "VCIB")
         self.vcib = VirtualCIB(node = self, parentLogger=self.logger)

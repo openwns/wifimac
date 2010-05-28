@@ -90,8 +90,9 @@ class VirtualPS(openwns.node.Component):
         self.preKnowledge = Knowledge(preKnowledgeAlpha, numNodes)
         self.logger = wifimac.Logger.Logger(name="VPS", parent=parentLogger)
 
-class VirtualPSServer(openwns.node.Node):
+class VirtualPSServer(openwns.node.Node, openwns.node.NoRadio):
     vps = None
     def __init__(self, name, numNodes):
-        super(VirtualPSServer, self).__init__(name)
+        openwns.node.Node.__init__(self, name)
+        self.setProperty("Type", "VPS")
         self.vps = VirtualPS(node = self, numNodes = numNodes, parentLogger=self.logger)
