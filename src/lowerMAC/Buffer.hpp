@@ -56,7 +56,7 @@ namespace wifimac { namespace lowerMAC {
 		public wns::ldk::Delayed<Buffer>,
 		public wifimac::lowerMAC::ITXOPWindow
 	{
-		typedef uint32_t PDUCounter;
+		typedef unsigned long int PDUCounter;
 
 	public:
 
@@ -117,11 +117,11 @@ namespace wifimac { namespace lowerMAC {
 		getSomethingToSend();
 
 		/** @brief returns the currently used buffer size */
-		virtual uint32_t
+		virtual unsigned long int
 		getSize();
 
 		/** @brief returns the maximum size of the buffer */
-		virtual uint32_t
+		virtual unsigned long int
 		getMaxSize();
 
 
@@ -139,8 +139,8 @@ namespace wifimac { namespace lowerMAC {
 		void onFUNCreated();
 	        void checkLifetime();
 
-		uint32_t maxSize;
-		uint32_t currentSize;
+		unsigned long int maxSize;
+		unsigned long int currentSize;
 		bool isActive;
 		std::auto_ptr<wns::ldk::buffer::SizeCalculator> sizeCalculator;
 		std::auto_ptr<wns::ldk::buffer::dropping::Drop> dropper;

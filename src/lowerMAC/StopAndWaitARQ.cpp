@@ -73,7 +73,7 @@ StopAndWaitARQ::StopAndWaitARQ(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::V
     for (int ii = 0; ii<config.len("localIDs.keys()"); ++ii)
     {
         std::string key = config.get<std::string>("localIDs.keys()",ii);
-        uint32_t value  = config.get<uint32_t>("localIDs.values()",ii);
+        unsigned long int value  = config.get<unsigned long int>("localIDs.values()",ii);
         localContext.addProvider(wns::probe::bus::contextprovider::Constant(key, value));
         MESSAGE_SINGLE(VERBOSE, logger, "Using Local IDName '"<<key<<"' with value: "<<value);
     }

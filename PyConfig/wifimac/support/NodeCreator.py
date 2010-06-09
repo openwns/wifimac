@@ -61,6 +61,18 @@ class Station(openwns.node.Node):
         self.id = id
         self.logger = wifimac.Logger.Logger(name, parent = None)
 
+    def setPosition(self, position):
+        self.mobility.mobility.setCoords(position)      
+
+    def getPosition(self):
+        return self.mobility.mobility.getCoords()
+
+    def setAntenna(self, antenna):
+        assert False, "Not implemented!!!"
+
+    def getAntenna(self):
+        assert False, "Not implemented!!!"
+
 class NodeCreator(object):
     __slots__ = (
     'propagation',  # rise propagation object (pathloss, shadowing, fading... for node type pairs)
@@ -128,7 +140,7 @@ class NodeCreator(object):
         id = idGen.next()
 
         newAP = Station("AP" + str(id), id)
-
+        newAP.setProperty("Type", "AP")
         # Create tranceivers (phy+lower mac), for each given frequency one
         # Prepare the L1/L2
 
@@ -164,6 +176,7 @@ class NodeCreator(object):
         id = idGen.next()
 
         newMP = Station("MP" + str(id), id)
+        newMP.setProperty("Type", "MP")
 
         # Create tranceivers (phy+lower mac), for each given frequency one
         # Prepare the L1/L2
@@ -213,6 +226,7 @@ class NodeCreator(object):
     def createSTA ( self, idGen, managerPool, rang, config, loggerLevel, dllLoggerLevel) :
         id = idGen.next()
         newSTA = Station("STA" + str(id), id)
+        newSTA.setProperty("Type", "STA")
 
         # create Physical Layer
         newSTA.phy = ofdmaphy.Station.OFDMAComponent(newSTA, "PHY STA"+str(id),
@@ -272,6 +286,7 @@ class NodeCreator(object):
     def createRANG(self, listener, loggerLevel,
                    listenerWindowSize = 1.0, listenerSampleInterval = 0.5):
         rang = Station('RANG', (256*255)-1)
+        rang.setProperty("Type", "RANG")
 
         # create dll
         rang.dll = wifimac.support.Rang.RANG(rang, parentLogger = rang.logger)

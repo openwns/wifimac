@@ -216,14 +216,14 @@ Buffer::checkLifetime()
 // Buffer interface
 //
 
-uint32_t
+unsigned long int
 Buffer::getSize()
 {
 	return currentSize;
 } // getSize
 
 
-uint32_t
+unsigned long int
 Buffer::getMaxSize()
 {
 	return maxSize;
