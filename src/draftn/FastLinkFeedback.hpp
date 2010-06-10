@@ -30,7 +30,7 @@
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
-#include <WIFIMAC/management/SINRInformationBase.hpp>
+#include <WIFIMAC/draftn/SINRwithMIMOInformationBase.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Processor.hpp>
@@ -48,6 +48,7 @@ namespace wifimac { namespace draftn {
         struct {
             bool isRequest;
             wns::Ratio cqi;
+            std::vector< std::vector<wns::Ratio> > mimoFactors;
         } peer;
         struct {} magic;
     };
@@ -83,7 +84,7 @@ namespace wifimac { namespace draftn {
             wifimac::lowerMAC::Manager* manager;
         } friends;
 
-        wifimac::management::SINRInformationBase* sinrMIB;
+        wifimac::draftn::SINRwithMIMOInformationBase* sinrMIB;
 
         wns::logger::Logger logger;
 

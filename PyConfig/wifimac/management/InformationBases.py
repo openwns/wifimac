@@ -47,6 +47,17 @@ class SINR(Service):
         self.logger = wifimac.Logger.Logger(name = 'SINR-MIB', parent = parentLogger)
         openwns.pyconfig.attrsetter(self, kw)
 
+class SINRwithMIMO(Service):
+    logger  = None
+    windowSize = None
+
+    def __init__(self, serviceName, windowSize = 1.0, parentLogger=None, **kw):
+        self.nameInServiceFactory = 'wifimac.draftn.SINRwithMIMOInformationBase'
+        self.serviceName = serviceName
+        self.windowSize = windowSize
+        self.logger = wifimac.Logger.Logger(name = 'SINR-MIMO-MIB', parent = parentLogger)
+        openwns.pyconfig.attrsetter(self, kw)
+
 class PERConfig(object):
         windowSize = 1.0
         minSamples = 10
@@ -54,7 +65,7 @@ class PERConfig(object):
 
         def __init__(self, **kw):
             openwns.pyconfig.attrsetter(self, kw)
-            
+
 class PER(Service):
     logger = None
     myConfig = None

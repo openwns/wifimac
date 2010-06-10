@@ -30,6 +30,7 @@
 #define WIFIMAC_DRAFTN_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
 
 #include <WIFIMAC/draftn/rateAdaptationStrategies/OpportunisticwithMIMO.hpp>
+#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/SINR.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
@@ -56,6 +57,7 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
         SINRwithMIMO(
             const wns::pyconfig::View& _config,
             wifimac::management::PERInformationBase* _per,
+            wifimac::management::SINRInformationBase* _sinr,
             wifimac::lowerMAC::Manager* _manager,
             wifimac::convergence::PhyUser* _phyUser,
             wns::logger::Logger* _logger);
@@ -76,6 +78,8 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
             wifimac::lowerMAC::Manager* manager;
         } friends;
 
+        wifimac::draftn::SINRwithMIMOInformationBase* sinr;
+        wifimac::lowerMAC::rateAdaptationStrategies::SINR singleStreamRA;
         const double retransmissionLQMReduction;
 
         wns::logger::Logger* logger;

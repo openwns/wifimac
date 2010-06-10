@@ -33,6 +33,7 @@
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
+#include <WIFIMAC/draftn/SINRwithMIMOInformationBase.hpp>
 
 #include <WNS/ldk/Key.hpp>
 #include <WNS/distribution/Uniform.hpp>
@@ -59,6 +60,7 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
         OpportunisticwithMIMO(
             const wns::pyconfig::View& config_,
             wifimac::management::PERInformationBase* _per,
+            wifimac::management::SINRInformationBase* _sinr,
             wifimac::lowerMAC::Manager* _manager,
             wifimac::convergence::PhyUser* _phyUser,
             wns::logger::Logger* _logger);

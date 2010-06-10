@@ -139,11 +139,22 @@ void FrameSynchronization::processPreamble(const wns::ldk::CompoundPtr& compound
     wns::simulator::Time fDur = friends.manager->getFrameExchangeDuration(compound->getCommandPool());
 
     wns::Ratio sinr = getFUN()->getCommandReader(phyUserCommandName)->
-        readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool())->getCIR();
+        readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool())->getCIRwithoutMIMO();
 
     if(sinr < detectionThreshold)
     {
         MESSAGE_SINGLE(NORMAL, logger, "ProcessPreamble(idle), SINR= " << sinr << " below detection threshold -> DROP");
+        return;
+    }
+
+    if(curState == Synchronized and
+       friends.manager->getTransmitterAddress(compound->getCommandPool()) == this->synchronizedToAddress)
+    {
+        // the preamble comes from the same transmitter as the current
+        // synchronization
+        this->syncToNewPreamble(fDur, synchronizedToAddress);
+        // deliver preamble
+        getDeliverer()->getAcceptor(compound)->onData(compound);
         return;
     }
 

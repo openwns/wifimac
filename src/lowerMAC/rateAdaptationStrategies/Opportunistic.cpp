@@ -38,10 +38,11 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(Opportunistic, IRateAdaptationStrategy, "Op
 Opportunistic::Opportunistic(
     const wns::pyconfig::View& _config,
     wifimac::management::PERInformationBase* _per,
+    wifimac::management::SINRInformationBase* _sinr,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger),
+    IRateAdaptationStrategy(_config, _per, _sinr, _manager, _phyUser, _logger),
     per(_per),
     perForGoingDown(_config.get<double>("perForGoingDown")),
     perForGoingUp(_config.get<double>("perForGoingUp")),

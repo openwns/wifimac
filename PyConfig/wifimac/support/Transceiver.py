@@ -70,6 +70,7 @@ class DraftN(Basic):
 
         self.layer2.funTemplate = wifimac.draftn.FUNTemplate
         self.layer2.arq = wifimac.draftn.BlockACKConfig()
+        self.layer2.longTrainingFieldGeneratorConfig = wifimac.draftn.LongTrainingFieldGeneratorConfig()
         self.layer2.phyUser.phyModesDeliverer = wifimac.draftn.PhyModes()
 
         # ACK becomes BlockACK -> longer duration

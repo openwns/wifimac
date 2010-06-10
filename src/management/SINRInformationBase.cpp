@@ -140,6 +140,12 @@ SINRInformationBase::knowsPeerSINR(const wns::service::dll::UnicastAddress peer)
 {
     assure(peer.isValid(), "Address is not valid");
 
+    if(fakePeerMeasurement.knows(peer) and
+       (fakePeerMeasurement.find(peer)->second == wns::simulator::getEventScheduler()->getTime()))
+    {
+        return true;
+    }
+
     if(lastPeerMeasurement.knows(peer) and
        (lastPeerMeasurement.find(peer)->second > wns::simulator::getEventScheduler()->getTime()))
     {
@@ -154,6 +160,12 @@ SINRInformationBase::getPeerSINR(const wns::service::dll::UnicastAddress peer)
 {
     assure(this->knowsPeerSINR(peer), "peerSINR for " << peer << " is not known");
 
+    if(fakePeerMeasurement.knows(peer) and
+       (fakePeerMeasurement.find(peer)->second == wns::simulator::getEventScheduler()->getTime()))
+    {
+        return fakePeerMeasurement.find(peer)->first;
+    }
+
     if(lastPeerMeasurement.knows(peer) and
        (lastPeerMeasurement.find(peer)->second > wns::simulator::getEventScheduler()->getTime()))
     {
@@ -163,4 +175,17 @@ SINRInformationBase::getPeerSINR(const wns::service::dll::UnicastAddress peer)
     return(*(peerSINRHolder.find(peer)));
 }
 
+void
+SINRInformationBase::putFakePeerSINR(const wns::service::dll::UnicastAddress peer,
+                                     const wns::Ratio sinr)
+{
+    if(not fakePeerMeasurement.knows(peer))
+    {
+        fakePeerMeasurement.insert(peer, new ratioTimePair);
+    }
+    fakePeerMeasurement.find(peer)->first = sinr;
+    fakePeerMeasurement.find(peer)->second = wns::simulator::getEventScheduler()->getTime();
+
+
+}
 

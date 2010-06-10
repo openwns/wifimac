@@ -56,6 +56,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         SINR(
             const wns::pyconfig::View& _config,
             wifimac::management::PERInformationBase* _per,
+            wifimac::management::SINRInformationBase* _sinr,
             wifimac::lowerMAC::Manager* _manager,
             wifimac::convergence::PhyUser* _phyUser,
             wns::logger::Logger* _logger);
@@ -71,6 +72,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
     private:
         wifimac::management::PERInformationBase* per;
+        wifimac::management::SINRInformationBase* sinr;
 
         struct Friends
         {

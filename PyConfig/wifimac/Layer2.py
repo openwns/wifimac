@@ -237,7 +237,6 @@ class Config(Sealed):
     manager = None
     txop = None
     aggregation = None
-    fastLinkFeedback = None
     frameSynchronization = None
     beaconLQM = None
     # end example
@@ -314,7 +313,6 @@ class Config(Sealed):
         self.aggregation = wifimac.draftn.AggregationConfig()
         #self.multiBuffer = wifimac.draftn.MultiBufferConfig()
         #self.blockACK = wifimac.draftn.BlockACKConfig()
-        self.fastLinkFeedback = wifimac.draftn.FastLinkFeedbackConfig()
         self.blockUntilReply = wifimac.draftn.BlockUntilReplyConfig()
         self.frameSynchronization = wifimac.convergence.FrameSynchronizationConfig()
         self.beaconLQM = wifimac.pathselection.BeaconLinkQualityMeasurementConfig()

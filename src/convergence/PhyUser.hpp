@@ -129,6 +129,11 @@ namespace wifimac { namespace convergence {
 
         wns::Ratio getExpectedPostSINRFactor(unsigned int nss, unsigned int numRx);
 
+        bool isTransmitting() const
+            {
+                return this->phyUserStatus == transmitting;
+            }
+
     private:
 
         // CompoundHandlerInterface

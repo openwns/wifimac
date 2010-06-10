@@ -217,8 +217,8 @@ class NodeCreator(object):
         newMP.load = constanze.node.ConstanzeComponent ( newMP, "constanze" )
 
         newMP.mobility = rise.Mobility.Component ( node = newMP,
-                                       name = "Mobility MP"+str ( id ),
-                                     mobility = rise.Mobility.No ( openwns.geometry.position.Position() ))
+                                                   name = "Mobility MP"+str ( id ),
+                                                   mobility = rise.Mobility.No ( openwns.geometry.position.Position() ))
         newMP.mobility.mobility.setCoords ( config.position )
 
         return newMP

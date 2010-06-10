@@ -26,15 +26,19 @@
 ###############################################################################
 
 from BlockUntilReply import *
+from RTSCTSwithFLA import *
 from BlockACK import *
 from Aggregation import *
 from DeAggregation import *
 from PhyMode import *
-from FastLinkFeedback import *
+#from FastLinkFeedback import *
+from LongTrainingFieldGenerator import *
 
 import wifimac.lowerMAC
 import wifimac.convergence
 import wifimac.FUNModes
+import wifimac.management
+import wifimac.protocolCalculator
 
 import dll.CompoundSwitch
 import openwns.Multiplexer
@@ -58,6 +62,20 @@ class FUNTemplate(wifimac.FUNModes.Basic):
 
     def createConvergence(self, config, myFUN):
         return(getConvergenceFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
+
+    def createManagementServices(self, config):
+        myServices = []
+        myServices.append(wifimac.management.InformationBases.SINRwithMIMO(serviceName = self.names['sinrMIB'] + str(self.transceiverAddress),
+                                                                           parentLogger = self.logger))
+        myServices.append(wifimac.management.InformationBases.PER(serviceName = self.names['perMIB'] + str(self.transceiverAddress),
+                                                                  config = config.perMIB,
+                                                                  parentLogger = self.logger))
+        myServices.append(wifimac.protocolCalculator.ProtocolCalculator(serviceName = self.names['protocolCalculator'] + str(self.transceiverAddress),
+                                                                        config = config.protocolCalculator,
+                                                                        parentLogger = self.logger))
+        return(myServices)
+
+
 
 def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalIDs):
     FUs =  wifimac.lowerMAC.__getTopBlock__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs)
@@ -126,19 +144,26 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                  config = config.txop,
                                  parentLogger = logger)
 
-    rtscts = wifimac.lowerMAC.RTSCTS(functionalUnitName = names['rtscts'] + str(transceiverAddress),
-                                     commandName = names['rtscts'] + 'Command',
-                                     managerName = names['manager'] + str(transceiverAddress),
-                                     phyUserName = names['phyUser'] + str(transceiverAddress),
-                                     protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
-                                     arqName = names['arq'] + str(transceiverAddress),
-                                     navName = names['channelState'] + str(transceiverAddress),
-                                     rxStartName = names['frameSynchronization'] + str(transceiverAddress),
-                                     txStartEndName = names['phyUser'] + str(transceiverAddress),
-                                     probePrefix = 'wifimac.linkQuality',
-                                     config = config.rtscts,
-                                     parentLogger = logger,
-                                     localIDs = probeLocalIDs)
+    if(config.useFastLinkFeedback):
+        myRTSCTSClass = wifimac.draftn.RTSCTSwithFLA
+    else:
+        myRTSCTSClass = wifimac.lowerMAC.RTSCTS
+
+    rtscts = myRTSCTSClass(functionalUnitName = names['rtscts'] + str(transceiverAddress),
+                           commandName = names['rtscts'] + 'Command',
+                           managerName = names['manager'] + str(transceiverAddress),
+                           phyUserName = names['phyUser'] + str(transceiverAddress),
+                           protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                           arqName = names['arq'] + str(transceiverAddress),
+                           raName = names['ra'] + str(transceiverAddress),
+                           navName = names['channelState'] + str(transceiverAddress),
+                           rxStartName = names['frameSynchronization'] + str(transceiverAddress),
+                           txStartEndName = names['phyUser'] + str(transceiverAddress),
+                           sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
+                           probePrefix = 'wifimac.linkQuality',
+                           config = config.rtscts,
+                           parentLogger = logger,
+                           localIDs = probeLocalIDs)
 
     raACK = wifimac.lowerMAC.RateAdaptation(functionalUnitName = names['ra'] + 'ACK'+ str(transceiverAddress),
                                             commandName = names['ra'] + 'ACK' +'Command',
@@ -157,14 +182,6 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
                                             logName = 'ackMux',
                                             moduleName = 'WiFiMAC')
 
-    fastLinkFeedback = FastLinkFeedback(fuName = names['fastLinkFeedback'] + str(transceiverAddress),
-                                        commandName = names['fastLinkFeedback'] + 'Command',
-                                        managerName = names['manager'] +  str(transceiverAddress),
-                                        phyUserCommandName = names['phyUser'] + 'Command',
-                                        sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
-                                        config = config.fastLinkFeedback,
-                                        parentLogger = logger)
-
     block = BlockUntilReply(fuName = names['blockUntilReply'] + str(transceiverAddress),
                             commandName = names['blockUntilReply'] + 'Command',
                             managerName = names['manager'] +  str(transceiverAddress),
@@ -180,7 +197,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
     for num in xrange(0, len(FUs)-1):
         FUs[num].connect(FUs[num+1])
     # DraftN requires special structure to send (Block)ACKs via a different way
-    for fu in [ackSwitch, agg, ra, raACK, txop, rtscts, ackMux, fastLinkFeedback, block]:
+    for fu in [ackSwitch, agg, ra, raACK, txop, rtscts, ackMux, block]:
         myFUN.add(fu)
     # DraftN requires special handling so that the acks are not send through the aggregation path
     ackSwitch.connectOnDataFU(FUs[-1], dll.CompoundSwitch.FilterAll('All'))
@@ -191,11 +208,7 @@ def getLowerMACFUN(transceiverAddress, names, config, myFUN, logger, probeLocalI
     txop.connect(rtscts)
     rtscts.connect(ackMux)
     raACK.connect(ackMux)
-    if(config.useFastLinkFeedback):
-        ackMux.connect(fastLinkFeedback)
-        fastLinkFeedback.connect(block)
-    else:
-        ackMux.connect(block)
+    ackMux.connect(block)
 
     bottomFU = None
     bottomFU = __appendDraftNTimingBlock__(myFUN, block, config, names, transceiverAddress, logger, probeLocalIDs)
@@ -287,6 +300,16 @@ def getConvergenceFUN(transceiverAddress, names, config, myFUN, logger, probeLoc
                                             phyUserName = names['phyUser'] + str(transceiverAddress),
                                             aggregationCommandName = 'AggregationCommand',
                                             parentLogger = logger))
+    FUs.append(LongTrainingFieldGenerator(name = 'LongTrainingField' + str(transceiverAddress),
+                                              commandName = 'LongTrainingFieldCommand',
+                                              phyUserName = names['phyUser'] + str(transceiverAddress),
+                                              managerName = names['manager'] + str(transceiverAddress),
+                                              protocolCalculatorName = 'protocolCalculator' + str(transceiverAddress),
+                                              txDurationSetterName = names['deAggregation'] + str(transceiverAddress),
+                                              sinrMIBServiceName = names['sinrMIB'] + str(transceiverAddress),
+                                              config = config.longTrainingFieldGeneratorConfig,
+                                              parentLogger = logger))
+
     FUs.extend(wifimac.convergence.__lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalIDs))
 
     # add created FUs to FUN

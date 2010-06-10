@@ -48,6 +48,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         Constant(
             const wns::pyconfig::View& config_,
             wifimac::management::PERInformationBase*,
+            wifimac::management::SINRInformationBase*,
             wifimac::lowerMAC::Manager*,
             wifimac::convergence::PhyUser*,
             wns::logger::Logger*);

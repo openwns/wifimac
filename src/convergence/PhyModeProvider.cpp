@@ -105,7 +105,8 @@ PhyModeProvider::getPreamblePhyMode(PhyMode pmFrame) const
 {
     PhyMode pm = preamblePhyMode;
     pm.setGuardIntervalDuration(pmFrame.getGuardIntervalDuration());
-    pm.setUniformMCS(preamblePhyMode.getSpatialStreams()[0], pmFrame.getNumberOfSpatialStreams());
+    // Preamble has one spatial stream only
+    //pm.setUniformMCS(preamblePhyMode.getSpatialStreams()[0], pmFrame.getNumberOfSpatialStreams());
     pm.setPreambleMode(pmFrame.getPreambleMode());
 
     return(pm);

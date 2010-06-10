@@ -27,6 +27,7 @@
 
 import openwns.FUN
 import openwns.pyconfig
+import openwns.ARQ
 from openwns import dB
 
 import wifimac.Logger

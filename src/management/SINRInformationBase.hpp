@@ -116,6 +116,10 @@ namespace wifimac { namespace management {
         wns::Ratio
         getPeerSINR(const wns::service::dll::UnicastAddress peer);
 
+        /** @brief */
+        void
+        putFakePeerSINR(const wns::service::dll::UnicastAddress peer,
+                        const wns::Ratio sinr);
 
     private:
 
@@ -143,6 +147,9 @@ namespace wifimac { namespace management {
 
         /** @brief Holds the last received peer SINR measurement */
         ratioWithTimeMap lastPeerMeasurement;
+
+        /** @brief Holds fake peer measurements */
+        ratioWithTimeMap fakePeerMeasurement;
 
         /** @brief The logger */
         wns::logger::Logger logger;

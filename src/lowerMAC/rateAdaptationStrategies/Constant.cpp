@@ -34,10 +34,11 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(Constant, IRateAdaptationStrategy, "Constan
 
 Constant::Constant(const wns::pyconfig::View& _config,
                    wifimac::management::PERInformationBase* _per,
+                   wifimac::management::SINRInformationBase* _sinr,
                    wifimac::lowerMAC::Manager* _manager,
                    wifimac::convergence::PhyUser* _phyUser,
                    wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger),
+    IRateAdaptationStrategy(_config, _per, _sinr, _manager, _phyUser, _logger),
     myPM(_config.getView("phyMode"))
 {
     friends.phyUser = _phyUser;

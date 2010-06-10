@@ -81,7 +81,11 @@ NetworkStateProbe::~NetworkStateProbe()
 void
 NetworkStateProbe::processOutgoing(const  wns::ldk::CompoundPtr& compound)
 {
-    assure(not hasTimeoutSet(), "Outgoing compound, but timeout is still set!");
+    if(hasTimeoutSet())
+    {
+        cancelTimeout();
+        onTimeout();
+    }
 
     curTxCompound = compound;
     curFrameTxDuration = getFUN()->getCommandReader(txDurationProviderCommandName)->

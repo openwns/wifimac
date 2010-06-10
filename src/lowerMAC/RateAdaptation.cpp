@@ -118,12 +118,13 @@ RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver, size_t nu
                               rateAdaptationStrategies::RateAdaptationStrategyFactory::creator
                               (config.get<std::string>("myConfig.raStrategy.__plugin__"))->create(config.getView("myConfig.raStrategy"),
                                                                                                   perMIB,
+                                                                                                  sinrMIB,
                                                                                                   friends.manager,
                                                                                                   friends.phyUser,
                                                                                                   &logger));
     }
 
-    if(sinrMIB->knowsPeerSINR(receiver))
+/*    if(sinrMIB->knowsPeerSINR(receiver))
     {
         pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions, sinrMIB->getPeerSINR(receiver));
     }
@@ -131,6 +132,9 @@ RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver, size_t nu
     {
         pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions);
     }
+*/
+
+    pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions);
     return(pm);
 }
 wifimac::convergence::PhyMode

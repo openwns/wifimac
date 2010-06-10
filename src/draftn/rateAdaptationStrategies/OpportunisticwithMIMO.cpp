@@ -41,10 +41,11 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(OpportunisticwithMIMO,
 OpportunisticwithMIMO::OpportunisticwithMIMO(
     const wns::pyconfig::View& _config,
     wifimac::management::PERInformationBase* _per,
+    wifimac::management::SINRInformationBase* _sinr,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy(_config, _per, _manager, _phyUser, _logger),
+    wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy(_config, _per, _sinr, _manager, _phyUser, _logger),
     per(_per),
     perForGoingDown(_config.get<double>("perForGoingDown")),
     perForGoingUp(_config.get<double>("perForGoingUp")),

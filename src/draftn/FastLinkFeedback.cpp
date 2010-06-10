@@ -64,7 +64,7 @@ void FastLinkFeedback::onFUNCreated()
     MESSAGE_SINGLE(NORMAL, this->logger, "onFUNCreated() started");
 
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
-    sinrMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::management::SINRInformationBase>(sinrMIBServiceName);
+    sinrMIB = getFUN()->getLayer<dll::Layer2*>()->getManagementService<wifimac::draftn::SINRwithMIMOInformationBase>(sinrMIBServiceName);
 }
 
 void FastLinkFeedback::processIncoming(const wns::ldk::CompoundPtr& compound)
@@ -86,6 +86,23 @@ void FastLinkFeedback::processIncoming(const wns::ldk::CompoundPtr& compound)
             sinrMIB->putPeerSINR(friends.manager->getTransmitterAddress(compound->getCommandPool()),
                                  getCommand(compound->getCommandPool())->peer.cqi,
                                  estimatedValidity);
+            for(std::vector< std::vector<wns::Ratio> >::iterator it = getCommand(compound->getCommandPool())->peer.mimoFactors.begin();
+                it != getCommand(compound->getCommandPool())->peer.mimoFactors.end();
+                ++it)
+            {
+                sinrMIB->putPeerFactor(friends.manager->getTransmitterAddress(compound->getCommandPool()),
+                                       *it);
+#ifndef WNS_NO_LOGGING
+                MESSAGE_BEGIN(NORMAL, logger, m, "Contains peer factors");
+                for(std::vector<wns::Ratio>::iterator itFactors = it->begin();
+                    itFactors != it->end();
+                    ++itFactors)
+                {
+                    m << " " << *itFactors;
+                }
+                MESSAGE_END();
+#endif
+            }
         }
     }
     else
@@ -103,7 +120,36 @@ void FastLinkFeedback::processOutgoing(const wns::ldk::CompoundPtr& compound)
             FastLinkFeedbackCommand* flfc = activateCommand(compound->getCommandPool());
             flfc->peer.isRequest = false;
             flfc->peer.cqi = sinrMIB->getMeasuredSINR(currentPeer);
-            MESSAGE_SINGLE(NORMAL, this->logger, "Outgoing frame to requester " << currentPeer << ", piggyback measured SINR " << flfc->peer.cqi);
+
+            for(unsigned int numSS = 1; numSS <= friends.manager->getNumAntennas(); ++numSS)
+            {
+                if(sinrMIB->knowsMeasuredFactor(currentPeer, numSS))
+                {
+                    flfc->peer.mimoFactors.push_back(sinrMIB->getMeasuredFactor(currentPeer, numSS));
+                }
+            }
+
+#ifndef WNS_NO_LOGGING
+            MESSAGE_BEGIN(NORMAL, this->logger, m, "Outgoing frame to requester " << currentPeer);
+            m << ", piggyback measured SINR " << flfc->peer.cqi;
+            m << ", pF:";
+            for(unsigned int numSS = 1; numSS <= friends.manager->getNumAntennas(); ++numSS)
+            {
+                m << "(";
+                if(sinrMIB->knowsMeasuredFactor(currentPeer, numSS))
+                {
+                    std::vector<wns::Ratio> pF = sinrMIB->getMeasuredFactor(currentPeer, numSS);
+                    for(std::vector<wns::Ratio>::iterator it = pF.begin();
+                        it != pF.end();
+                        ++it)
+                    {
+                        m << " " << *it;
+                    }
+                }
+                m << ")";
+            }
+            MESSAGE_END();
+#endif
         }
         else
         {

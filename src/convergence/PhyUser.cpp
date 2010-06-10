@@ -211,8 +211,6 @@ void PhyUser::onData(wns::osi::PDUPtr pdu, wns::service::phy::power::PowerMeasur
         m << "from " << friends.manager->getTransmitterAddress(compound->getCommandPool());
         m << " has " << nss;
         m << " spatial streams, receiver has " << friends.manager->getNumAntennas() << " antennas";
-        m << " -> postSINRFactor = " << rxPowerMeasurement->getPostProcessingSINRFactor()[0];
-        //this->getExpectedPostSINRFactor(nss, friends.manager->getNumAntennas());
         MESSAGE_END();
     }
 
@@ -222,7 +220,6 @@ void PhyUser::onData(wns::osi::PDUPtr pdu, wns::service::phy::power::PowerMeasur
     phyCommand->local.rxPower      = rxPowerMeasurement->getRxPower();
     phyCommand->local.interference = rxPowerMeasurement->getInterferencePower();
     phyCommand->local.postSINRFactor = rxPowerMeasurement->getPostProcessingSINRFactor();
-    //this->getExpectedPostSINRFactor(nss, friends.manager->getNumAntennas());
 
     this->wns::ldk::FunctionalUnit::onData(compound);
 } // onData
