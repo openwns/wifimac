@@ -36,6 +36,7 @@
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/lowerMAC/RateAdaptation.hpp>
 #include <WIFIMAC/lowerMAC/ITransmissionCounter.hpp>
+#include <WIFIMAC/lowerMAC/RTSCTS.hpp>
 
 #include <WIFIMAC/convergence/INetworkAllocationVector.hpp>
 #include <WIFIMAC/convergence/IRxStartEnd.hpp>
@@ -57,7 +58,9 @@
 namespace wifimac { namespace draftn {
 
     class RTSCTSwithFLACommand:
-        public wifimac::lowerMAC::RTSCTSCommand
+        public wns::ldk::Command,
+        public wifimac::lowerMAC::RTSProviderCommand
+//        public wifimac::lowerMAC::RTSCTSCommand
     {
     public:
         struct {} local;
@@ -73,6 +76,11 @@ namespace wifimac { namespace draftn {
         struct {
             Bit frameSize;
         } magic;
+
+        bool isRTS() const
+            {
+                return(this->peer.isRTS);
+            }
     };
 
 

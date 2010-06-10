@@ -218,12 +218,12 @@ void
 ChannelState::processIncoming(const wns::ldk::CompoundPtr& compound)
 {
     assure(compound, "doOnData called with an invalid compound.");
-
     // Derive channel state from NAV information send in the MAC header
     if(friends.manager->getFrameType(compound->getCommandPool()) != PREAMBLE)
     {
         if(friends.manager->isForMe(compound->getCommandPool()))
         {
+
             if(this->waitForReply)
             {
                 // abort own NAV
@@ -235,6 +235,7 @@ ChannelState::processIncoming(const wns::ldk::CompoundPtr& compound)
             // NAV is only set for frames NOT for me
             return;
         }
+
 
         wns::simulator::Time duration = 0;
         if(isRTS(compound))
@@ -288,7 +289,7 @@ ChannelState::processIncoming(const wns::ldk::CompoundPtr& compound)
 bool ChannelState::isRTS(const wns::ldk::CompoundPtr& compound) const
 {
     return((getFUN()->getCommandReader(rtsctsCommandName)->commandIsActivated(compound->getCommandPool())) and
-           (getFUN()->getCommandReader(rtsctsCommandName)->readCommand<wifimac::lowerMAC::RTSCTSCommand>(compound->getCommandPool())->peer.isRTS));
+           (getFUN()->getCommandReader(rtsctsCommandName)->readCommand<wifimac::lowerMAC::RTSProviderCommand>(compound->getCommandPool())->isRTS()));
 }
 
 void ChannelState::onTimeout()

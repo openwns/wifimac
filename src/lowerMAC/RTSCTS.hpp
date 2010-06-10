@@ -51,8 +51,16 @@
 
 namespace wifimac { namespace lowerMAC {
 
+    class RTSProviderCommand
+    {
+    public:
+        virtual bool isRTS() const = 0;
+        virtual ~RTSProviderCommand() {};
+    };
+
     class RTSCTSCommand:
-        public wns::ldk::Command
+        public wns::ldk::Command,
+        public RTSProviderCommand
     {
     public:
         struct {} local;
@@ -60,6 +68,11 @@ namespace wifimac { namespace lowerMAC {
             bool isRTS;
         } peer;
         struct {} magic;
+
+        bool isRTS() const
+            {
+                return(this->peer.isRTS);
+            }
     };
 
 
