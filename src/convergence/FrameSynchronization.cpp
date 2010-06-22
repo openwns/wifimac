@@ -30,12 +30,19 @@
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PreambleGenerator.hpp>
 #include <WIFIMAC/convergence/ErrorModelling.hpp>
+#include <WIFIMAC/convergence/TxDurationSetter.hpp>
 
 #include <WNS/ldk/Layer.hpp>
 #include <WNS/ldk/crc/CRC.hpp>
 #include <WNS/probe/bus/utils.hpp>
+#include <WNS/probe/bus/json/probebus.hpp>
+
+#include <WNS/service/dll/StationTypes.hpp>
 
 #include <DLL/Layer2.hpp>
+#include <DLL/StationManager.hpp>
+
+#include <sstream>
 
 using namespace wifimac::convergence;
 
@@ -68,6 +75,7 @@ FrameSynchronization::FrameSynchronization(wns::ldk::fun::FUN* fun, const wns::p
     crcCommandName(config.get<std::string>("crcCommandName")),
     phyUserCommandName(config.get<std::string>("phyUserCommandName")),
     errorModellingCommandName(config.get<std::string>("errorModellingCommandName")),
+    txDurationProviderCommandName(config.get<std::string>("txDurationProviderCommandName")),
     sinrMIBServiceName(config.get<std::string>("sinrMIBServiceName"))
 {
     // read the localIDs from the config
@@ -82,6 +90,7 @@ FrameSynchronization::FrameSynchronization(wns::ldk::fun::FUN* fun, const wns::p
     successRateProbe = wns::probe::bus::collector(localContext, config, "successRateProbeName");
     sinrProbe = wns::probe::bus::collector(localContext, config, "sinrProbeName");
     perProbe = wns::probe::bus::collector(localContext, config, "perProbeName");
+    jsonTracing = wns::probe::bus::collector(localContext, config, "phyTraceProbeName");
 }
 
 FrameSynchronization::~FrameSynchronization()
@@ -119,6 +128,11 @@ void FrameSynchronization::doSendData(const wns::ldk::CompoundPtr& compound)
 
 void FrameSynchronization::doOnData(const wns::ldk::CompoundPtr& compound)
 {
+#ifndef NDEBUG
+    if(jsonTracing->hasObservers())
+        traceIncoming(compound);
+#endif
+
     if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
     {
         this->processPreamble(compound);
@@ -380,3 +394,129 @@ void FrameSynchronization::doWakeup()
 {
     getReceptor()->wakeup();
 }
+
+void
+FrameSynchronization::traceIncoming(wns::ldk::CompoundPtr compound)
+{
+    wns::probe::bus::json::Object objdoc;
+
+    // Can be invalid => Broadcast
+    wns::service::dll::UnicastAddress dstAdr = 
+        friends.manager->getReceiverAddress(compound->getCommandPool());
+
+    wns::service::dll::UnicastAddress srcAdr = 
+        friends.manager->getTransmitterAddress(compound->getCommandPool());
+    assure(srcAdr.isValid(), "Source address not set");
+
+    wns::service::dll::UnicastAddress myAdr = friends.manager->getMACAddress();
+    assure(srcAdr.isValid(), "MAC address not set");
+
+    // Can be used to distiguish hop and e2e
+    wns::service::dll::UnicastAddress senderAdr = 
+        friends.manager->getTransmitterAddress(compound->getCommandPool());
+    assure(senderAdr.isValid(), "Sender address not set");
+
+    dll::ILayer2* srcLayer;
+    dll::ILayer2* dstLayer;
+    dll::ILayer2* senderLayer;
+    dll::ILayer2* myLayer;
+
+    myLayer = getFUN()->getLayer<dll::ILayer2*>();
+    srcLayer = myLayer->getStationManager()->getStationByMAC(srcAdr);
+    if(dstAdr.isValid())
+        dstLayer = myLayer->getStationManager()->getStationByMAC(dstAdr);
+    senderLayer = myLayer->getStationManager()->getStationByMAC(senderAdr);
+
+    std::string src;
+    std::string dst("Broadcast");
+    std::string me;
+    std::string sender;
+
+    if(myLayer->getStationType() == wns::service::dll::StationTypes::UT())
+    {
+        std::stringstream s;
+        s << "UT" << myAdr;
+        me = s.str();
+    }
+    else
+    {
+        std::stringstream s;
+        s << "BS" << myAdr;
+        me = s.str();
+    }
+    if(srcLayer->getStationType() == wns::service::dll::StationTypes::UT())
+    {
+        std::stringstream s;
+        s << "UT" << srcAdr;
+        src = s.str();
+    }
+    else
+    {
+        std::stringstream s;
+        s << "BS" << srcAdr;
+        src = s.str();
+    }
+    if(dstAdr.isValid())
+    {
+        std::stringstream s;
+        if(dstLayer->getStationType() == wns::service::dll::StationTypes::UT())
+        {
+            s << "UT" << dstAdr;
+            dst = s.str();
+        }
+        else
+        {
+            s << "BS" << srcAdr;
+            dst = s.str();
+        }
+    }
+    if(senderLayer->getStationType() == wns::service::dll::StationTypes::UT())
+    {
+        std::stringstream s;
+        s << "UT" << senderAdr;
+        sender = s.str();
+    }
+    else
+    {
+        std::stringstream s;
+        s << "BS" << senderAdr;
+        sender = s.str();
+    }
+
+    objdoc["Transmission"]["ReceiverID"] = wns::probe::bus::json::String(me);
+    objdoc["Transmission"]["SenderID"] = wns::probe::bus::json::String(sender);
+    objdoc["Transmission"]["SourceID"] = wns::probe::bus::json::String(src);
+    objdoc["Transmission"]["DestinationID"] = wns::probe::bus::json::String(dst);
+
+    wns::simulator::Time now = wns::simulator::getEventScheduler()->getTime();
+    wns::simulator::Time frameTxDuration = 
+        getFUN()->getCommandReader(txDurationProviderCommandName)->
+            readCommand<wifimac::convergence::TxDurationProviderCommand>(
+                compound->getCommandPool())->getDuration();
+
+    objdoc["Transmission"]["Start"] =
+         wns::probe::bus::json::Number(now - frameTxDuration);
+        
+    objdoc["Transmission"]["Stop"] = wns::probe::bus::json::Number(now);
+
+    // We abuse this to watch per station results
+    objdoc["Transmission"]["Subchannel"] = wns::probe::bus::json::Number(srcAdr.getInteger());
+    
+
+    wns::Power rxPower = getFUN()->getCommandReader(phyUserCommandName)->
+        readCommand<wifimac::convergence::PhyUserCommand>(
+            compound->getCommandPool())->local.rxPower;
+    wns::Power interference = getFUN()->getCommandReader(phyUserCommandName)->
+        readCommand<wifimac::convergence::PhyUserCommand>(
+            compound->getCommandPool())->local.interference;
+
+    objdoc["Transmission"]["TxPower"] = 
+        wns::probe::bus::json::Number(0.0); // Unknown
+    objdoc["Transmission"]["RxPower"] = 
+        wns::probe::bus::json::Number(rxPower.get_dBm());
+    objdoc["Transmission"]["InterferencePower"] = 
+        wns::probe::bus::json::Number(interference.get_dBm());
+
+    wns::probe::bus::json::probeJSON(jsonTracing, objdoc);
+}
+

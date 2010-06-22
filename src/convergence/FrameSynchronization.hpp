@@ -109,6 +109,7 @@ namespace wifimac { namespace convergence {
         void failedSyncToNewPreamble(wns::simulator::Time fExDur);
         void syncToNewPreamble(const wns::simulator::Time fExDur, const wns::service::dll::UnicastAddress transmitter);
 
+        void traceIncoming(wns::ldk::CompoundPtr compound);
 
         wns::logger::Logger logger;
         SyncStateType curState;
@@ -124,6 +125,7 @@ namespace wifimac { namespace convergence {
         const std::string crcCommandName;
         const std::string phyUserCommandName;
         const std::string errorModellingCommandName;
+        const std::string txDurationProviderCommandName;
         const std::string sinrMIBServiceName;
 
         /**
@@ -135,6 +137,9 @@ namespace wifimac { namespace convergence {
 
         /** @brief Probing the per of received MPDUs */
         wns::probe::bus::ContextCollectorPtr perProbe;
+
+        /** @brief Detailed output about channel state */
+        wns::probe::bus::ContextCollectorPtr jsonTracing;
 
         wifimac::management::SINRInformationBase* sinrMIB;
 

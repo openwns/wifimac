@@ -27,7 +27,6 @@
  ******************************************************************************/
 
 #include <WIFIMAC/convergence/PhyUser.hpp>
-#include <WIFIMAC/convergence/GuiWriter.hpp>
 #include <WIFIMAC/convergence/TxDurationSetter.hpp>
 #include <WIFIMAC/helper/CholeskyDecomposition.hpp>
 
@@ -66,23 +65,17 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
     tune.frequency = config.get<double>("myConfig.initFrequency");
     tune.bandwidth = config.get<double>("myConfig.initBandwidthMHz");
     tune.numberOfSubCarrier = 1;
-
-    GuiWriter_ = new GuiWriter();
-
 }
 // PhyUser
 
 
 PhyUser::~PhyUser()
 {
-    delete GuiWriter_;
 }
 
 void PhyUser::onFUNCreated()
 {
     friends.manager = getFUN()->findFriend<wifimac::lowerMAC::Manager*>(managerName);
-
-    GuiWriter_->setManagerAndFun(friends.manager, getFUN());
 } // onFUNCreated
 
 bool PhyUser::doIsAccepting(const wns::ldk::CompoundPtr& /* compound */) const
@@ -135,8 +128,6 @@ void PhyUser::doSendData(const wns::ldk::CompoundPtr& compound)
                     compound,
                     0),
         frameTxDuration);
-
-    GuiWriter_->writeToProbe(compound, frameTxDuration);
 
     MESSAGE_SINGLE(NORMAL, logger, "Transmission, rx disabled for " << frameTxDuration);
     if(phyUserStatus == txrxTurnaround)

@@ -41,7 +41,6 @@ srcFiles = [
     'src/convergence/TxDurationSetter.cpp',
     'src/convergence/ChannelState.cpp',
     'src/convergence/NetworkStateProbe.cpp',
-    'src/convergence/GuiWriter.cpp',
 
     # lower MAC
     'src/lowerMAC/Manager.cpp',
@@ -117,7 +116,6 @@ hppFiles = [
     'src/convergence/PreambleGenerator.hpp',
     'src/convergence/TxDurationSetter.hpp',
     'src/convergence/NetworkStateProbe.hpp',
-    'src/convergence/GuiWriter.hpp',
     'src/helper/FilterFrameType.hpp',
     'src/helper/FilterSize.hpp',
     'src/helper/HopContextWindowProbe.hpp',

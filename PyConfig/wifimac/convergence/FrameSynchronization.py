@@ -59,10 +59,12 @@ class FrameSynchronization(openwns.Probe.Probe):
     crcCommandName = None
     phyUserCommandName = None
     errorModellingCommandName = None
+    txDurationProviderCommandName = None
 
     successRateProbeName = None
     sinrProbeName = None
     perProbeName = None
+    phyTraceProbeName = None
 
     sinrMIBServiceName = None
 
@@ -71,6 +73,7 @@ class FrameSynchronization(openwns.Probe.Probe):
              name,
              commandName,
              managerName,
+             txDurationProviderCommandName,
              crcCommandName,
              phyUserCommandName,
              errorModellingCommandName,
@@ -94,10 +97,12 @@ class FrameSynchronization(openwns.Probe.Probe):
              self.crcCommandName = crcCommandName
              self.phyUserCommandName = phyUserCommandName
              self.errorModellingCommandName = errorModellingCommandName
+             self.txDurationProviderCommandName = txDurationProviderCommandName
 
              self.successRateProbeName = probePrefix + ".msduSuccessRate"
              self.sinrProbeName = probePrefix + ".sinr"
              self.perProbeName = probePrefix + ".per"
+             self.phyTraceProbeName = probePrefix + ".phyTrace"
 
              self.sinrMIBServiceName = sinrMIBServiceName
 

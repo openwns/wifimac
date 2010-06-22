@@ -104,6 +104,7 @@ def __lowerPart__(transceiverAddress, names, config, myFUN, logger, probeLocalID
     FUs.append(FrameSynchronization(name = names['frameSynchronization'] + str(transceiverAddress),
                                     commandName = names['frameSynchronization'] + 'Command',
                                     managerName = names['manager'] + str(transceiverAddress),
+                                    txDurationProviderCommandName = names['txDuration'] + 'Command',
                                     crcCommandName = names['crc'] + 'Command',
                                     phyUserCommandName = names['phyUser'] + 'Command',
                                     errorModellingCommandName = names['errorModelling'] + 'Command',

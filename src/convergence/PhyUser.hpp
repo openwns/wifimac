@@ -30,7 +30,6 @@
 #define WIFIMAC_CONVERGENCE_PHYUSER_HPP
 
 #include <WIFIMAC/lowerMAC/Manager.hpp>
-#include <WIFIMAC/convergence/GuiWriter.hpp>
 #include <WIFIMAC/convergence/PhyModeProvider.hpp>
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 
@@ -172,8 +171,6 @@ namespace wifimac { namespace convergence {
 
         wns::ldk::CompoundPtr currentTxCompound;
         wns::simulator::Time lastTxRxTurnaround;
-
-        GuiWriter* GuiWriter_;
     };
 
 } // namespace convergence
