@@ -76,7 +76,8 @@ FrameSynchronization::FrameSynchronization(wns::ldk::fun::FUN* fun, const wns::p
     phyUserCommandName(config.get<std::string>("phyUserCommandName")),
     errorModellingCommandName(config.get<std::string>("errorModellingCommandName")),
     txDurationProviderCommandName(config.get<std::string>("txDurationProviderCommandName")),
-    sinrMIBServiceName(config.get<std::string>("sinrMIBServiceName"))
+    sinrMIBServiceName(config.get<std::string>("sinrMIBServiceName")),
+    numSpatialStreamsLastPreambleFragment(0)
 {
     // read the localIDs from the config
     wns::probe::bus::ContextProviderCollection localContext(&fun->getLayer()->getContextProviderCollection());
@@ -117,6 +118,7 @@ void FrameSynchronization::doSendData(const wns::ldk::CompoundPtr& compound)
         cancelTimeout();
         curState = Idle;
         synchronizedToAddress = wns::service::dll::UnicastAddress();
+        numSpatialStreamsLastPreambleFragment = 0;
         break;
     default:
         assure(false, "Unknown state");
@@ -164,6 +166,18 @@ void FrameSynchronization::processPreamble(const wns::ldk::CompoundPtr& compound
     if(curState == Synchronized and
        friends.manager->getTransmitterAddress(compound->getCommandPool()) == this->synchronizedToAddress)
     {
+        if(friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams() != (numSpatialStreamsLastPreambleFragment+1))
+        {
+            MESSAGE_BEGIN(NORMAL, logger, m, "Received LTF with ");
+            m << friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams();
+            m << "spatial streams, but waiting for";
+            m << numSpatialStreamsLastPreambleFragment+1;
+            m << " -> DROP";
+            MESSAGE_END();
+            return;
+        }
+        ++numSpatialStreamsLastPreambleFragment;
+
         // the preamble comes from the same transmitter as the current
         // synchronization
         this->syncToNewPreamble(fDur, synchronizedToAddress);
@@ -171,6 +185,15 @@ void FrameSynchronization::processPreamble(const wns::ldk::CompoundPtr& compound
         getDeliverer()->getAcceptor(compound)->onData(compound);
         return;
     }
+
+    // preamble from difference receiver
+    if(friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams() > 1)
+    {
+        MESSAGE_SINGLE(NORMAL, logger, "Received LTF, but no preamble with one stream -> DROP");
+        return;
+    }
+    numSpatialStreamsLastPreambleFragment = 1;
+
 
     wns::Ratio captureThreshold;
     switch(curState)
@@ -265,6 +288,7 @@ void FrameSynchronization::failedSyncToNewPreamble(wns::simulator::Time fDur)
         MESSAGE_SINGLE(NORMAL, logger, "Rx another preamble, but no sync possible -> garbled for " << fDur << " and afterwards until " << lastFrameEnd);
     }
     this->synchronizedToAddress = wns::service::dll::UnicastAddress();
+    numSpatialStreamsLastPreambleFragment = 0;
     curState = Garbled;
 }
 
@@ -315,6 +339,7 @@ void FrameSynchronization::onTimeout()
         curState = Idle;
     }
     this->synchronizedToAddress = wns::service::dll::UnicastAddress();
+    numSpatialStreamsLastPreambleFragment = 0;
 }
 
 void FrameSynchronization::processPSDU(const wns::ldk::CompoundPtr& compound)

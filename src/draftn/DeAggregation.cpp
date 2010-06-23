@@ -86,9 +86,12 @@ DeAggregation::processIncoming(const wns::ldk::CompoundPtr& compound)
     if(command->peer.singleFragment)
     {
         // no aggregation at all
+        MESSAGE_SINGLE(NORMAL, this->logger, "Single fragment -> deliver");
         getDeliverer()->getAcceptor(compound)->onData(compound);
         return;
     }
+
+    MESSAGE_SINGLE(NORMAL, this->logger, "Process incoming aggregation fragment from " << friends.manager->getTransmitterAddress(compound->getCommandPool()));
 
     if(friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE)
     {
@@ -121,6 +124,9 @@ DeAggregation::processIncoming(const wns::ldk::CompoundPtr& compound)
         getDeliverer()->getAcceptor(compound)->onData(compound);
         return;
     }
+
+    assure(not (this->currentRxContainer == wns::ldk::CompoundPtr()),
+           "Received A-MPDU fragment, but rxContainer is empty!");
 
     // append current compound
     wns::ldk::concatenation::ConcatenationCommand* aggCommand = getFUN()->getCommandReader(aggregationCommandName)->

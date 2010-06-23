@@ -86,7 +86,7 @@ LongTrainingFieldGenerator::processIncoming(const wns::ldk::CompoundPtr& compoun
         sinrMIB->putFactorMeasurement(friends.manager->getTransmitterAddress(compound->getCommandPool()),
                                       postSINRFactor);
 
-        MESSAGE_BEGIN(NORMAL, logger, m, "Received LTF with ");
+        MESSAGE_BEGIN(NORMAL, logger, m, "Received Preamble/LTF with ");
         m << postSINRFactor.size() << " streams. PostSINRFactor:";
         for(std::vector<wns::Ratio>::iterator it = postSINRFactor.begin();
             it != postSINRFactor.end();
@@ -95,14 +95,16 @@ LongTrainingFieldGenerator::processIncoming(const wns::ldk::CompoundPtr& compoun
             m << " " << *it;
         }
         MESSAGE_END();
-    }
 
-    if((friends.manager->getFrameType(compound->getCommandPool()) == PREAMBLE) and
-       (friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams() > 1))
-    {
-        // drop LTF
-        MESSAGE_SINGLE(NORMAL, logger, "Dropping incoming LTF");
-        return;
+        if(friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams() > 1)
+        {
+            // drop LTF
+            MESSAGE_BEGIN(NORMAL, logger, m, "Dropping incoming LTF with");
+            m << friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams();
+            m << "spatial streams";
+            MESSAGE_END();
+            return;
+        }
     }
 
     // deliver frame

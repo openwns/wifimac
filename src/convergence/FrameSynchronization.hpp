@@ -128,6 +128,8 @@ namespace wifimac { namespace convergence {
         const std::string txDurationProviderCommandName;
         const std::string sinrMIBServiceName;
 
+        int numSpatialStreamsLastPreambleFragment;
+
         /**
 		 * @brief Probing of the PSDU success rate
 		 */
