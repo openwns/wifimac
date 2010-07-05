@@ -196,11 +196,11 @@ Beacon::onTimeout()
     {
         {
             MESSAGE_BEGIN(NORMAL, this->logger, m, "Start association, received beacons: ");
-            std::map<wns::Power, wns::service::dll::UnicastAddress>::reverse_iterator i = beaconRxStrength.rbegin();
-            while(i != beaconRxStrength.rend())
+            for (std::map<wns::Power, wns::service::dll::UnicastAddress>::reverse_iterator itr = beaconRxStrength.rbegin();
+                 itr != beaconRxStrength.rend();
+                 ++itr)
             {
-                m << "\n   " << i->first << " from " << i->second << " on " << bssFrequencies[i->second] << "MHz";
-                i++;
+                m << "(" << itr->first << " from " << itr->second << " on " << bssFrequencies[itr->second] << "MHz)";
             }
             MESSAGE_END();
         }

@@ -130,12 +130,12 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
 
     if(networkProbes):
         # Table probe for bit throughput, separated by nodeId
-        for sourceName in ['wifimac.e2e.window.incoming.bitThroughput.hop', 'wifimac.e2e.window.aggregated.bitThroughput.hop']:
+        for sourceName in ['wifimac.e2e.window.incoming.bitThroughput.adr', 'wifimac.e2e.window.outgoing.bitThroughput.adr', 'wifimac.e2e.window.aggregated.bitThroughput.adr']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))
-            node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [3]))
-            minId = min(staIds)
-            maxId = max(staIds)
+            #node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [3]))
+            minId = min(staIds + apIds)
+            maxId = max(staIds + apIds)
             node.getLeafs().appendChildren(Table(axis1 = 'MAC.Id', minValue1 = minId, maxValue1 = maxId+1, resolution1 = maxId+1 - minId,
                                                  values = ['mean', 'trials'],
                                                  formats = ['MatlabReadableSparse']))

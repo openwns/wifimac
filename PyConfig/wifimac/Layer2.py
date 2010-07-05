@@ -57,12 +57,13 @@ class dllSTA(dll.Layer2.Layer2):
 
         ################
         # Upper MAC part
-        throughputProbe =  wifimac.helper.Probes.WindowProbeBus(name = "wifimac.e2eWindowProbe",
-                                                                prefix = "wifimac.e2e",
-                                                                commandName = 'e2eWindowProbeCommand',
-                                                                forwardingCommandName = "ForwardingCommand",
-                                                                parentLogger = self.logger,
-                                                                moduleName = 'WiFiMAC')
+        throughputProbe =  wifimac.helper.Probes.DestinationSortedWindowProbeBus(name = "wifimac.e2eWindowProbe",
+                                                                                 prefix = "wifimac.e2e",
+                                                                                 commandName = 'e2eWindowProbeCommand',
+                                                                                 ucCommandName = self.upperConvergenceName,
+                                                                                 parentLogger = self.logger,
+                                                                                 windowSize = config.e2eProbeWindowSize,
+                                                                                 moduleName = 'WiFiMAC')
 
         packetProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
                                                        prefix = "wifimac.e2e",
@@ -86,8 +87,8 @@ class dllSTA(dll.Layer2.Layer2):
         ################
         # Lower MAC part
         funTemplate = config.funTemplate(logger = self.logger,
-                         transceiverAddress = node.id,
-                         upperConvergenceName = self.upperConvergenceName)
+                                         transceiverAddress = node.id,
+                                         upperConvergenceName = self.upperConvergenceName)
 
         [managementTop, managementBottom] = funTemplate.createManagement(config, self.fun)
         [convergenceTop, convergenceBottom] = funTemplate.createConvergence(config, self.fun)
@@ -116,7 +117,7 @@ class MeshLayer2(dll.Layer2.Layer2):
     throughputProbe = None
     addresses = None
 
-    def __init__(self, node, name, parentLogger):
+    def __init__(self, node, name, config, parentLogger):
         super(MeshLayer2, self).__init__(node, name, parentLogger)
 
         self.nameInComponentFactory = "wifimac.Layer2"
@@ -128,23 +129,24 @@ class MeshLayer2(dll.Layer2.Layer2):
 
         ################
         # Upper MAC part
-        self.throughputProbe =  wifimac.helper.Probes.WindowProbeBus(name = "wifimac.e2eWindowProbe",
-                                         prefix = "wifimac.e2e",
-                                         commandName = 'e2eWindowProbeCommand',
-                                         forwardingCommandName = "ForwardingCommand",
-                                         parentLogger = self.logger,
-                                         moduleName = 'WiFiMAC')
+        self.throughputProbe =  wifimac.helper.Probes.DestinationSortedWindowProbeBus(name = "wifimac.e2eWindowProbe",
+                                                                                      prefix = "wifimac.e2e",
+                                                                                      commandName = 'e2eWindowProbeCommand',
+                                                                                      ucCommandName = self.upperConvergenceName,
+                                                                                      parentLogger = self.logger,
+                                                                                      windowSize = config.e2eProbeWindowSize,
+                                                                                      moduleName = 'WiFiMAC')
 
         packetProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
-                               prefix = "wifimac.e2e",
-                               commandName = "e2eDelayProbeCommand",
-                               parentLogger = self.logger,
-                               moduleName = 'WiFiMAC')
+                                                       prefix = "wifimac.e2e",
+                                                       commandName = "e2eDelayProbeCommand",
+                                                       parentLogger = self.logger,
+                                                       moduleName = 'WiFiMAC')
 
         forwarding = wifimac.pathselection.MeshForwarding(functionalUnitName = "MeshForwarding",
-                                  commandName = "ForwardingCommand",
-                                  upperConvergenceName = self.upperConvergenceName,
-                                  parentLogger = self.logger)
+                                                          commandName = "ForwardingCommand",
+                                                          upperConvergenceName = self.upperConvergenceName,
+                                                          parentLogger = self.logger)
 
         self.switch = dll.CompoundSwitch.CompoundSwitch(logName = 'AdrSwitch', moduleName = 'WiFiMAC', parentLogger=self.logger)
 
@@ -197,8 +199,8 @@ class MeshLayer2(dll.Layer2.Layer2):
                                          parentLogger = self.logger))
 class dllAP(MeshLayer2):
 
-    def __init__(self, node, name, parentLogger):
-        super(dllAP, self).__init__(node, name, parentLogger)
+    def __init__(self, node, name, config, parentLogger):
+        super(dllAP, self).__init__(node, name, config, parentLogger)
 
         self.stationType = "AP"
         self.ring = 1
@@ -210,8 +212,8 @@ class dllAP(MeshLayer2):
 
 class dllMP(MeshLayer2):
 
-    def __init__(self, node, name, parentLogger):
-        super(dllMP, self).__init__(node, name, parentLogger)
+    def __init__(self, node, name, config, parentLogger):
+        super(dllMP, self).__init__(node, name, config, parentLogger)
 
         self.stationType = "FRS"
         self.ring = 2
@@ -250,6 +252,8 @@ class Config(Sealed):
     maxFrameSize = 65538*8
 
     useFastLinkFeedback = False
+
+    e2eProbeWindowSize = 1.0
 
     funTemplate = None
     # end example
@@ -357,6 +361,5 @@ class Config(Sealed):
                     for target in self.multipleUsedVariables[muv]:
                         exec(target + '.__dict__[\'' + muv + '\']=self.__dict__[\''+muv+'\']')
 
-
-
-
+class configUpperLayer2(Sealed):
+    e2eProbeWindowSize = 1.0

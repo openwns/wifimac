@@ -68,6 +68,7 @@ void Layer2::onNodeCreated()
     // Create node-wide context providers and set them to zero
     this->setContext("MAC.STAAssociatedToAP", 0);
     this->setContext("MAC.WindowProbeHopCount", 0);
+    this->setContext("MAC.WindowProbeAddress", 0);
 
     // Add compound-based context providers
     // TODO: Readin names from configuration

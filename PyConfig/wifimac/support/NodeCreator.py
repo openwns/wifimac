@@ -145,7 +145,7 @@ class NodeCreator(object):
         # Prepare the L1/L2
 
         newAP.phy = []
-        newAP.dll = wifimac.Layer2.dllAP(newAP, "MAC AP"+str(id), parentLogger = newAP.logger)
+        newAP.dll = wifimac.Layer2.dllAP(newAP, "MAC AP"+str(id), config=config.configUpperLayer2, parentLogger = newAP.logger)
         newAP.dll.setStationID(id)
         newAP.dll.setPathSelectionService("PATHSELECTIONOVERVPS")
 
@@ -182,7 +182,7 @@ class NodeCreator(object):
         # Prepare the L1/L2
 
         newMP.phy = []
-        newMP.dll = wifimac.Layer2.dllMP(newMP, "MAC MP"+str(id), parentLogger = newMP.logger)
+        newMP.dll = wifimac.Layer2.dllMP(newMP, "MAC MP"+str(id), config=config.configUpperLayer2, parentLogger = newMP.logger)
         newMP.dll.setStationID(id)
         newMP.dll.setPathSelectionService("PATHSELECTIONOVERVPS")
 

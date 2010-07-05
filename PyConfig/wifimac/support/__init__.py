@@ -29,12 +29,15 @@ from NodeCreator import NodeCreator
 from ChannelManagerPool import ChannelManagerPool
 from Transceiver import *
 from Layer1Config import *
+import wifimac.Layer2
 
 class Node(object):
     position = None
     transceivers = None
+    configUpperLayer2 = None
 
     def __init__(self, position):
+        self.configUpperLayer2 = wifimac.Layer2.configUpperLayer2()
         self.transceivers = []
         self.position = position
 

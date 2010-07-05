@@ -55,3 +55,28 @@ class WindowProbeBus(openwns.Probe.WindowProbeBus):
         self.incomingHopCountedCompoundThroughputProbeName = prefix + ".window.incoming.compoundThroughput.hop"
         self.aggregatedHopCountedBitThroughputProbeName = prefix + ".window.aggregated.bitThroughput.hop"
         self.aggregatedHopCountedCompoundThroughputProbeName =  prefix + ".window.aggregated.compoundThroughput.hop"
+
+class DestinationSortedWindowProbeBus(openwns.Probe.WindowProbeBus):
+    """ Special WiFiMAC Window-Probe which allows for
+         * Filtering by the context MAC.SortedWindowAddress
+    """
+    __plugin__ = 'wifimac.helper.DestinationSortedWindowProbe'
+
+    """ Names of the associated probes """
+    incomingHopCountedBitThroughputProbeName = None
+    aggregatedHopCountedBitThroughputProbeName = None
+    outgoingBitDestinationSortedWindowProbeName = None
+    relativeGoodputDestinationSortedWindowProbeName = None
+
+    """ Required to read the hop-count """
+    ucCommandName = None
+
+    def __init__(self, name, prefix, commandName, ucCommandName, windowSize = 1.0, sampleInterval = None, parentLogger = None, moduleName = 'WiFiMAC', **kw):
+        super(openwns.Probe.WindowProbeBus, self).__init__(name, prefix, commandName, windowSize, sampleInterval, parentLogger, moduleName, **kw)
+        self.ucCommandName = ucCommandName
+
+        self.incomingBitDestinationSortedWindowProbeName = prefix + ".window.incoming.bitThroughput.adr"
+        self.aggregatedBitDestinationSortedWindowProbeName = prefix + ".window.aggregated.bitThroughput.adr"
+        self.outgoingBitDestinationSortedWindowProbeName = prefix + ".window.outgoing.bitThroughput.adr"
+        self.relativeGoodputDestinationSortedWindowProbeName = prefix + ".window.relativeGoodput.adr"
+        

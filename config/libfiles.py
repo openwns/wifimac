@@ -91,6 +91,7 @@ srcFiles = [
     # Helper
     'src/helper/Keys.cpp',
     'src/helper/HopContextWindowProbe.cpp',
+    'src/helper/DestinationSortedWindowProbe.cpp',
     'src/helper/FilterFrameType.cpp',
     'src/helper/FilterSize.cpp',
 
@@ -121,6 +122,7 @@ hppFiles = [
     'src/helper/HopContextWindowProbe.hpp',
     'src/helper/Keys.hpp',
     'src/helper/ThroughputProbe.hpp',
+    'src/helper/DestinationSortedWindowProbe.hpp',
     'src/helper/CholeskyDecomposition.hpp',
     'src/helper/contextprovider/CommandInformation.hpp',
     'src/helper/contextprovider/CompoundSize.hpp',

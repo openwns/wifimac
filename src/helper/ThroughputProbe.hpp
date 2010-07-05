@@ -39,14 +39,14 @@
 
 namespace wifimac { namespace helper {
 
-	/**
+    /**
 	 * @brief FunctionalUnit to probe windowing throughputs that include the hopcount.
 	 *
 	 * This is a derivate of the wns::ldk::probe::Window
 	 *
 	 */
-	class HopContextWindowProbe:
-		public wns::ldk::probe::bus::Window
+    class HopContextWindowProbe:
+        public wns::ldk::probe::bus::Window
 	{
 	public:
 		HopContextWindowProbe(wns::ldk::fun::FUN* fuNet, const wns::pyconfig::View& config);
