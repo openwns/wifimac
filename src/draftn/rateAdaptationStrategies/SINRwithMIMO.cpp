@@ -55,7 +55,7 @@ SINRwithMIMO::SINRwithMIMO(
 }
 
 wifimac::convergence::PhyMode
-SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio lqm)
+SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio lqm) const
 {
     unsigned int numTx = friends.manager->getNumAntennas();
     unsigned int numRx = 1;
@@ -144,7 +144,7 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_
 }
 
 wifimac::convergence::PhyMode
-SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions)
+SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions) const
 {
     if(sinr->knowsPeerSINR(receiver))
     {

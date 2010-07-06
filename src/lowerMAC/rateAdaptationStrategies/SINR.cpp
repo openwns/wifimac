@@ -49,7 +49,7 @@ SINR::SINR(
 }
 
 wifimac::convergence::PhyMode
-SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio lqm)
+SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio lqm) const
 {
     // Reduce lqm by retransmissionLQMReduction dB for every retransmission
     wns::Ratio myLQM = wns::Ratio::from_dB(lqm.get_dB() - (numTransmissions-1)*retransmissionLQMReduction);
@@ -60,7 +60,7 @@ SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTra
 }
 
 wifimac::convergence::PhyMode
-SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions)
+SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions) const
 {
     if(sinr->knowsPeerSINR(receiver))
     {

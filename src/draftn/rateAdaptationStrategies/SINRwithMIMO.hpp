@@ -64,12 +64,12 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
 
         wifimac::convergence::PhyMode
         getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions);
+                   size_t numTransmissions) const;
 
         wifimac::convergence::PhyMode
         getPhyMode(const wns::service::dll::UnicastAddress receiver,
                    size_t numTransmissions,
-                   const wns::Ratio lqm);
+                   const wns::Ratio lqm) const;
 
     private:
         struct Friends

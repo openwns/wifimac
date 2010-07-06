@@ -53,49 +53,47 @@ Opportunistic::Opportunistic(
 }
 
 wifimac::convergence::PhyMode
-Opportunistic::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio /*lqm*/)
+Opportunistic::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio /*lqm*/) const
 {
     return(this->getPhyMode(receiver, numTransmissions));
 }
 
 wifimac::convergence::PhyMode
-Opportunistic::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions)
+Opportunistic::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions) const
 {
     if(not per->knowsPER(receiver))
     {
         assure(numTransmissions >= 1, "Must have at least one transmission");
 
         // if no information about the PER is available (due to a recent change),
-        // we take the current phyMode and reduce it by the number of
-        // REtransmissions
-        wifimac::convergence::PhyMode pm = curPhyMode;
-        for(int i = 1; i < numTransmissions; ++i)
-        {
-            friends.phyUser->getPhyModeProvider()->mcsDown(pm);
-        }
-        return(pm);
+        // we take the current phyMode 
+        return(curPhyMode);
     }
 
     double curPER = per->getPER(receiver);
-    wifimac::convergence::PhyMode nextPhyMode = curPhyMode;
+    wifimac::convergence::PhyMode pm = curPhyMode;
 
     if(curPER > perForGoingDown)
     {
         // loose more than perForGoingDown of all frames -> go down
-        friends.phyUser->getPhyModeProvider()->mcsDown(nextPhyMode);
+        friends.phyUser->getPhyModeProvider()->mcsDown(pm);
     }
     if(curPER < perForGoingUp)
     {
         // nearly all frames are successful -> go up
-        friends.phyUser->getPhyModeProvider()->mcsUp(nextPhyMode);
+        friends.phyUser->getPhyModeProvider()->mcsUp(pm);
     }
 
-    if(curPhyMode != nextPhyMode)
+    return(pm);
+}
+
+void
+Opportunistic::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm)
+{
+    if(curPhyMode != pm)
     {
-        MESSAGE_SINGLE(NORMAL, *logger, "RA going from MCS "<< curPhyMode << " to " << nextPhyMode);
+        MESSAGE_SINGLE(NORMAL, *logger, "RA going from MCS "<< curPhyMode << " to " << pm);
         per->reset(receiver);
-        curPhyMode = nextPhyMode;
+        curPhyMode = pm;
     }
-
-    return(curPhyMode);
 }

@@ -59,13 +59,13 @@ OpportunisticwithMIMO::OpportunisticwithMIMO(
 }
 
 wifimac::convergence::PhyMode
-OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio /*lqm*/)
+OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio /*lqm*/) const
 {
     return(this->getPhyMode(receiver, numTransmissions));
 }
 
 wifimac::convergence::PhyMode
-OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions)
+OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions) const
 {
     unsigned int numTx = friends.manager->getNumAntennas();
     unsigned int numRx = 1;
@@ -75,55 +75,36 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
     }
     unsigned int maxNumSS = (numTx < numRx) ? numTx : numRx;
 
-    wifimac::convergence::PhyMode nextPhyMode = curPhyMode;
+    wifimac::convergence::PhyMode pm = curPhyMode;
 
     if(not per->knowsPER(receiver))
     {
         assure(numTransmissions >= 1, "Must have at least one transmission");
 
         // if no information about the PER is available (due to a recent change),
-        // we take the current phyMode and reduce it
+        // we return the current phyMode
 
-        for(int i = 1; i < numTransmissions; ++i)
-        {
-            reducePhyMode(nextPhyMode, maxNumSS);
-        }
-        return(nextPhyMode);
+        return(pm);
     }
 
     double curPER = per->getPER(receiver);
 
     if(curPER > perForGoingDown)
     {
-        reducePhyMode(nextPhyMode, maxNumSS);
+        reducePhyMode(pm, maxNumSS);
     }
 
     if(curPER < perForGoingUp)
     {
         // nearly all frames are successful -> go up
-        increasePhyMode(nextPhyMode, maxNumSS);
+        increasePhyMode(pm, maxNumSS);
     }
 
-    if(nextPhyMode != curPhyMode)
-    {
-        MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
-        m << " to receiver " << receiver;
-        m << " per: " << per->getPER(receiver);
-        m << " numTx: " << numTx;
-        m << " numRx: " << numRx;
-        m << " going from " << curPhyMode;
-        m << " to " << nextPhyMode;
-        MESSAGE_END();
-
-        per->reset(receiver);
-    }
-
-    curPhyMode = nextPhyMode;
-    return(nextPhyMode);
+    return(pm);
 }
 
 void
-OpportunisticwithMIMO::reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS)
+OpportunisticwithMIMO::reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const
 {
     if(friends.phyUser->getPhyModeProvider()->hasLowestMCS(pm))
     {
@@ -143,7 +124,7 @@ OpportunisticwithMIMO::reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned
 }
 
 void
-OpportunisticwithMIMO::increasePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS)
+OpportunisticwithMIMO::increasePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const
 {
     // nearly all frames are successful -> go up
     if(friends.phyUser->getPhyModeProvider()->hasHighestMCS(pm))
@@ -160,5 +141,48 @@ OpportunisticwithMIMO::increasePhyMode(wifimac::convergence::PhyMode& pm, unsign
     else
     {
         friends.phyUser->getPhyModeProvider()->mcsUp(pm);
+    }
+}
+
+
+
+void
+OpportunisticwithMIMO::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm)
+{
+
+    if(curPhyMode != pm)
+    {
+	    
+	unsigned int numTx = friends.manager->getNumAntennas();
+	unsigned int numRx = 1;
+	if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
+	{
+		numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(receiver, "numAntennas");
+	}
+	if(per->knowsPER(receiver))
+	{
+	        MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
+	        m << " to receiver " << receiver;
+	        m << " per: " << per->getPER(receiver);
+	        m << " numTx: " << numTx;
+	        m << " numRx: " << numRx;
+	        m << " going from " << curPhyMode;
+	        m << " to " << pm;
+	        MESSAGE_END();
+
+	        per->reset(receiver);
+	}
+	else
+	{
+	        MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
+	        m << " to receiver " << receiver;
+	        m << " , no currently known PER, ";
+	        m << " numTx: " << numTx;
+	        m << " numRx: " << numRx;
+	        m << " going from " << curPhyMode;
+	        m << " to " << pm;
+	        MESSAGE_END();
+	}
+        curPhyMode = pm;
     }
 }

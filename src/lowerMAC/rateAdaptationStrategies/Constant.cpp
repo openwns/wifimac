@@ -45,13 +45,19 @@ Constant::Constant(const wns::pyconfig::View& _config,
 }
 
 wifimac::convergence::PhyMode
-Constant::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/)
+Constant::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/) const
 {
     return(this->myPM);
 }
 
 wifimac::convergence::PhyMode
-Constant::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/, const wns::Ratio /*lqm*/)
+Constant::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/, const wns::Ratio /*lqm*/) const
 {
     return(this->myPM);
 }
+
+void
+Constant::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm) 
+{
+	 // do nothing, CONSTANT!
+};
