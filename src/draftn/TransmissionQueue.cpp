@@ -250,7 +250,7 @@ TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNumber> 
         {
              // retransmission
             int txCounter = ++(parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
-            //perMIB->onFailedTransmission(adr);
+            perMIB->onFailedTransmission(adr);
             blockACKsuccess = false;
             if(parent->getManager()->lifetimeExpired((onAirIt->first)->getCommandPool()))
             {
@@ -291,7 +291,7 @@ TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNumber> 
             MESSAGE_END();
             snIt++;
 
-            //perMIB->onSuccessfullTransmission(adr);
+            perMIB->onSuccessfullTransmission(adr);
             parent->numTxAttemptsProbe->put(onAirIt->first, parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
         } // SN matches
     } // for-loop over onAirQueue
