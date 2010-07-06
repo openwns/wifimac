@@ -37,7 +37,7 @@ namespace wifimac { namespace draftn {
 	{
 	public:
 		virtual void
-		onBlockACKReception(bool success) = 0;
+		onBlockACKReception(bool success, unsigned long numOfTxBits) = 0;
 	};
 } // draftn
 } // wifimac

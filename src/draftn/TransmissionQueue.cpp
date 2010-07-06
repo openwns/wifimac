@@ -227,6 +227,8 @@ TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNumber> 
     bool insertBack = false;
     bool blockACKsuccess = true;
     std::deque<CompoundPtrWithTime>::iterator txQueueFirst;
+    unsigned long transmittedBits =0;
+    
     if(txQueue.empty())
     {
         insertBack = true;
@@ -293,13 +295,14 @@ TransmissionQueue::processIncomingACK(std::set<BlockACKCommand::SequenceNumber> 
 
             perMIB->onSuccessfullTransmission(adr);
             parent->numTxAttemptsProbe->put(onAirIt->first, parent->getCommand((onAirIt->first)->getCommandPool())->localTransmissionCounter);
-        } // SN matches
+	    transmittedBits+=(onAirIt->first)->getCommandPool()->getSDU()->getLengthInBits();
+	} // SN matches
     } // for-loop over onAirQueue
 
     // nothing is onAir now
     for (int i=0; i < parent->observers.size(); i++)
     {
-        parent->observers[i]->onBlockACKReception(blockACKsuccess);
+        parent->observers[i]->onBlockACKReception(blockACKsuccess,transmittedBits);
     }
     onAirQueue.clear();
 
