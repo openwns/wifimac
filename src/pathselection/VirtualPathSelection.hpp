@@ -352,6 +352,14 @@ namespace wifimac { namespace pathselection {
         addressList mps;
 
         /**
+		 * @brief set True in order to keep network topology fixed
+		 */
+	bool useStaticPS;
+        /**
+		 * @brief time from which on changes to mesh topology or link costs will be ignored
+		 */
+	wns::simulator::Time staticPSsnapshotTimeout;
+        /**
          * @brief Maps the address to the upper convergence entry of a portal.
          */
         adr2ucMap portals;
