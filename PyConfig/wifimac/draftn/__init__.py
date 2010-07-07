@@ -40,6 +40,12 @@ import wifimac.FUNModes
 import wifimac.management
 import wifimac.protocolCalculator
 
+from wifimac.management.Beacon import *
+from wifimac.management.InformationBases import *
+from BeaconLinkQualityMeasurementwithMIMO import *
+from wifimac.lowerMAC import DCF
+
+
 import dll.CompoundSwitch
 import openwns.Multiplexer
 import openwns.FlowSeparator
@@ -50,6 +56,8 @@ names['aggregation'] = 'Aggregation'
 names['blockUntilReply'] = 'BlockUntilReply'
 names['deAggregation'] = 'DeAggregation'
 names['fastLinkFeedback'] = 'FastLinkFeedback'
+names['beacon'] = 'Beacon'
+names['broadcastDCF'] = 'BroadcastDCF'
 
 class FUNTemplate(wifimac.FUNModes.Basic):
 
@@ -62,6 +70,41 @@ class FUNTemplate(wifimac.FUNModes.Basic):
 
     def createConvergence(self, config, myFUN):
         return(getConvergenceFUN(self.transceiverAddress, self.names, config, myFUN, self.logger, self.probeLocalIDs))
+
+    def createManagement(self, config, myFUN):
+     FUs = []
+     FUs.append(Beacon(functionalUnitName = self.names['beacon'] + str(self.transceiverAddress),
+                      commandName = self.names['beacon'] + 'Command',
+                      managerName = self.names['manager'] + str(self.transceiverAddress),
+                      phyUserCommandName = self.names['phyUser'] + 'Command',
+                      config = config.beacon,
+                      parentLogger = self.logger))
+     FUs.append(BeaconLinkQualityMeasurementwithMIMO(fuName = self.names['beaconLQM'] + str(self.transceiverAddress),
+                                            commandName = self.names['beaconLQM'] + 'Command',
+                                            managerName = self.names['manager'] + str(self.transceiverAddress),
+                                            beaconInterval = FUs[-1].myConfig.period,
+                                            phyUserCommandName = self.names['phyUser'] + 'Command',
+                                            probePrefix = 'wifimac.linkQuality',
+                                            sinrMIBServiceName = self.names['sinrMIB'] + str(self.transceiverAddress),
+                                            config = config.beaconLQM,
+                                            parentLogger = self.logger,
+                                            localIDs =  self.probeLocalIDs))
+
+     FUs.append(DCF(fuName = self.names['broadcastDCF'] + str(self.transceiverAddress),
+                   commandName = self.names['broadcastDCF'] + 'Command',
+                   csName = self.names['channelState'] + str(self.transceiverAddress),
+                   rxStartEndName = self.names['frameSynchronization'] + str(self.transceiverAddress),
+                   arqCommandName = self.names['arq'] + 'Command',
+                   config = config.broadcastDCF,
+                   parentLogger = self.logger))
+    # add created FUs to FUN
+     for fu in FUs:
+         myFUN.add(fu)
+
+     for num in xrange(0, len(FUs)-1):
+        FUs[num].connect(FUs[num+1])
+
+     return([FUs[0], FUs[-1]])
 
     def createManagementServices(self, config):
         myServices = []
