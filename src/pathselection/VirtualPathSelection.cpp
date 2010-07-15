@@ -68,9 +68,14 @@ VirtualPathSelectionService::getVPS()
 VirtualPathSelection::VirtualPathSelection(wns::node::Interface* _node,	const wns::pyconfig::View& _config) :
 	wns::node::component::Component(_node, _config),
 	logger(_config.get("logger")),
-    numNodes(_config.get<int>("numNodes")),
+	numNodes(_config.get<int>("numNodes")),
+	useStaticPS(_config.get<bool>("useStaticPS")),
 	pathMatrixIsConsistent(true)
 {
+	if (useStaticPS)
+	{
+		staticPSsnapshotTimeout = _config.get<wns::simulator::Time>("staticPSsnapshotTimeout");
+	}
 	TheVPSService::Instance().setVPS(this);
 	MESSAGE_SINGLE(NORMAL, logger, "Starting VPS.");
 
@@ -113,6 +118,13 @@ VirtualPathSelection::VirtualPathSelection(wns::node::Interface* _node,	const wn
 void
 VirtualPathSelection::registerMP(const wns::service::dll::UnicastAddress mpAddress)
 {
+	if(useStaticPS)
+	{
+	    if (wns::simulator::getEventScheduler()->getTime() > staticPSsnapshotTimeout)
+	    {
+		    return;
+	    }
+	}
 	assure(!isPortal(mpAddress), "Node with address " << mpAddress << " is already registered as portal and thus automatically as MP");
 	assure(!isMeshPoint(mpAddress), "MP with address " << mpAddress << " already registered");
 	assure(mapper.getMaxId() < numNodes, "numNodes (" << numNodes << ") is too small for another MP");
@@ -130,6 +142,13 @@ VirtualPathSelection::registerMP(const wns::service::dll::UnicastAddress mpAddre
 void
 VirtualPathSelection::registerPortal(const wns::service::dll::UnicastAddress portalAddress, dll::APUpperConvergence* apUC)
 {
+	if(useStaticPS)
+	{
+	    if (wns::simulator::getEventScheduler()->getTime() > staticPSsnapshotTimeout)
+	    {
+		    return;
+	    }
+	}
 	assure(!isMeshPoint(portalAddress), "Node with address " << portalAddress << " is already registered as MP, cannot register also as portal");
 	assure(!isPortal(portalAddress), "Portal with address " << portalAddress << " already registered");
 	assure(mapper.getMaxId() < numNodes, "numNodes (" << numNodes << ") is too small for another Portal");
@@ -320,6 +339,15 @@ void
 VirtualPathSelection::registerProxy(const wns::service::dll::UnicastAddress proxy,
                                     const wns::service::dll::UnicastAddress client)
 {
+	if(useStaticPS)
+	{
+	    if (wns::simulator::getEventScheduler()->getTime() > staticPSsnapshotTimeout)
+	    {
+		    return;
+	    }
+	}
+
+	
 	if(!pathMatrixIsConsistent)
 	{
 		this->onNewPathSelectionEntry();
@@ -374,6 +402,14 @@ VirtualPathSelection::deRegisterProxy(const wns::service::dll::UnicastAddress
 #endif
                                       , const wns::service::dll::UnicastAddress client)
 {
+	if(useStaticPS)
+	{
+	    if (wns::simulator::getEventScheduler()->getTime() > staticPSsnapshotTimeout)
+	    {
+		    return;
+	    }
+	}
+
 	assure(mapper.knows(client), "client address is not known");
 	assure(mapper.knows(proxy), "proxy address is not known");
 	assure(getProxyFor(client) == proxy, "MP " << proxy << " is not a proxy for " << client << " --> cannot deRegisterProxy");
@@ -395,6 +431,13 @@ VirtualPathSelection::createPeerLink(const wns::service::dll::UnicastAddress mys
 									 const wns::service::dll::UnicastAddress peer,
 									 const Metric linkMetric)
 {
+    if(useStaticPS)
+    {
+	    if (wns::simulator::getEventScheduler()->getTime() > staticPSsnapshotTimeout)
+	    {
+		    return;
+	    }
+    }
 	assure(mapper.knows(myself), "myself (" << myself << ") is not a known address");
 	assure(mapper.knows(peer), "peer (" << peer << ") is not a known address");
 	assure(isMeshPoint(myself) , "myself (" << myself << ") is not a known MP");
@@ -434,11 +477,17 @@ VirtualPathSelection::updatePeerLink(const wns::service::dll::UnicastAddress mys
                                      const wns::service::dll::UnicastAddress peer,
                                      const Metric linkMetric)
 {
+    if(useStaticPS)
+    {
+	    if (wns::simulator::getEventScheduler()->getTime() > staticPSsnapshotTimeout)
+	    {
+		    return;
+	    }
+    }
     assure(mapper.knows(myself), "myself (" << myself << ") is not a known address");
     assure(mapper.knows(peer), "peer (" << peer << ") is not a known address");
     assure(isMeshPoint(myself) , "myself (" << myself << ") is not a known MP");
     assure(isMeshPoint(peer), "peer (" << peer << ") is not a known MP");
-
     int myselfId = mapper.get(myself);
     int peerId = mapper.get(peer);
 
@@ -456,7 +505,7 @@ VirtualPathSelection::updatePeerLink(const wns::service::dll::UnicastAddress mys
     Metric newLinkMetric = linkMetric;
     if(preKnowledgeCosts[myselfId][peerId].isNotInf())
     {
-        newLinkMetric = linkMetric * (1.0-preKnowledgeAlpha) + preKnowledgeCosts[myselfId][peerId] * preKnowledgeAlpha;
+	newLinkMetric = linkMetric * (1.0-preKnowledgeAlpha) + preKnowledgeCosts[myselfId][peerId] * preKnowledgeAlpha;
         MESSAGE_SINGLE(NORMAL, logger, "updatePeerLink: " << myself << "->" << peer << " has preKnowledge of " << preKnowledgeCosts[myselfId][peerId] << ", " << linkMetric << "->" << newLinkMetric);
     }
 
@@ -482,6 +531,13 @@ void
 VirtualPathSelection::closePeerLink(const wns::service::dll::UnicastAddress myself,
 									const wns::service::dll::UnicastAddress peer)
 {
+    if(useStaticPS)
+    {
+	    if (wns::simulator::getEventScheduler()->getTime() > staticPSsnapshotTimeout)
+	    {
+		    return;
+	    }
+    }
 	assure(mapper.knows(myself), "myself (" << myself << ") is not a known address");
 	assure(mapper.knows(peer), "peer (" << peer << ") is not a known address");
 	assure(isMeshPoint(myself) , "myself (" << myself << ") is not a known MP");

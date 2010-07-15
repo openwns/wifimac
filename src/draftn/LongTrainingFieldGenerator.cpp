@@ -120,7 +120,8 @@ LongTrainingFieldGenerator::processOutgoing(const wns::ldk::CompoundPtr& compoun
     {
         wns::service::dll::UnicastAddress receiver = friends.manager->getReceiverAddress(compound->getCommandPool());
         unsigned int numTx = friends.manager->getNumAntennas();
-        unsigned int numRx = 1;
+        unsigned int numRx = numTx;
+//        unsigned int numRx = 1;
         if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
         {
             numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(receiver, "numAntennas");

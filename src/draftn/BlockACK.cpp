@@ -245,7 +245,7 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
         assure(this->baState == receptionFinished, "Received ACK but not waiting for one");
 
 
-        perMIB->onSuccessfullTransmission(currentTxQueue->getReceiver());
+        //perMIB->onSuccessfullTransmission(currentTxQueue->getReceiver());
         this->processIncomingACKSNs(getCommand(compound->getCommandPool())->peer.ackSNs);
         return;
 
@@ -408,7 +408,7 @@ BlockACK::onTimeout()
     assure(currentTxQueue->waitsForACK(), "Timeout, but currentTxQueue is not waiting for ACK");
 
     MESSAGE_SINGLE(NORMAL, this->logger, "Timeout -> failed transmission to " << currentTxQueue->getReceiver());
-    perMIB->onFailedTransmission(currentTxQueue->getReceiver());
+    //perMIB->onFailedTransmission(currentTxQueue->getReceiver());
 
     // no ACK'ed SNs have arrived, use pseudo-vector
     std::set<BlockACKCommand::SequenceNumber> none;

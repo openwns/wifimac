@@ -59,12 +59,15 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
         virtual wifimac::convergence::PhyMode
         getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions) = 0;
+                   size_t numTransmissions) const = 0;
 
         virtual wifimac::convergence::PhyMode
         getPhyMode(const wns::service::dll::UnicastAddress receiver,
                    size_t numTransmissions,
-                   const wns::Ratio lqm) = 0;
+                   const wns::Ratio lqm) const = 0;
+
+	virtual void
+	setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm) = 0;
     };
 
     /** @brief Special creator for IRateAdaptation */

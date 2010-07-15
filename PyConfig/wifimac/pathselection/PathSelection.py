@@ -79,7 +79,8 @@ class VirtualPS(openwns.node.Component):
         pathselection-enabled node"""
 
     nameInComponentFactory = "wifimac.pathselection.VirtualPathSelection"
-
+    useStaticPS = False
+    staticPSsnapshotTimeout = 0.0
     logger = None
     numNodes = None
     preKnowledge = None

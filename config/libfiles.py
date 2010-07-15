@@ -70,6 +70,7 @@ srcFiles = [
     'src/draftn/rateAdaptationStrategies/SINRwithMIMO.cpp',
     'src/draftn/rateAdaptationStrategies/OpportunisticwithMIMO.cpp',
     'src/draftn/SINRwithMIMOInformationBase.cpp',
+    'src/draftn/BeaconLinkQualityMeasurementwithMIMO.cpp',
 
     # Management stuff
     'src/management/Beacon.cpp',
@@ -138,6 +139,7 @@ hppFiles = [
     'src/draftn/RTSCTSwithFLA.hpp',
     'src/draftn/LongTrainingFieldGenerator.hpp',
     'src/draftn/SINRwithMIMOInformationBase.hpp',
+    'src/draftn/BeaconLinkQualityMeasurementwithMIMO.hpp',
     'src/lowerMAC/DuplicateFilter.hpp',
     'src/lowerMAC/ITransmissionCounter.hpp',
     'src/lowerMAC/Manager.hpp',
@@ -198,6 +200,7 @@ pyconfigs = [
     'wifimac/draftn/PhyMode.py',
     'wifimac/draftn/RTSCTSwithFLA.py',
     'wifimac/draftn/LongTrainingFieldGenerator.py',
+    'wifimac/draftn/BeaconLinkQualityMeasurementwithMIMO.py',
     'wifimac/draftn/__init__.py',
     'wifimac/evaluation/__init__.py',
     'wifimac/evaluation/default.py',

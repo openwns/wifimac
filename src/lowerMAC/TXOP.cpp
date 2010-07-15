@@ -154,6 +154,9 @@ TXOP::processOutgoing(const wns::ldk::CompoundPtr& compound)
                                         - this->sifsDuration
                                         - this->maximumACKDuration;
 
+	if (friends.manager->getFrameType(compound->getCommandPool()) == DATA_TXOP)
+                cutTXOPDuration -= this->sifsDuration;
+					
         MESSAGE_SINGLE(NORMAL, this->logger, "Current compound cuts TXOP to " << cutTXOPDuration);
 
         if(cutTXOPDuration <= 0)

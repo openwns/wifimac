@@ -67,19 +67,22 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
 
         wifimac::convergence::PhyMode
         getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions);
+                   size_t numTransmissions) const;
 
         wifimac::convergence::PhyMode
         getPhyMode(const wns::service::dll::UnicastAddress receiver,
                    size_t numTransmissions,
-                   const wns::Ratio lqm);
-
+                   const wns::Ratio lqm) const;
+	
+	void
+        setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm);
+	   		   
     private:
         void
-        reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS);
+        reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const;
 
         void
-        increasePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS);
+        increasePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const;
 
         wifimac::management::PERInformationBase* per;
 
