@@ -90,7 +90,7 @@ ARF::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver, wifimac
     friends.phyUser->getPhyModeProvider()->mcsDown(pmDown);
 
     wifimac::convergence::PhyMode pmUp = curPhyMode;
-    friends.phyUser->getPhyModeProvider()->mcsUp(pmDown);
+    friends.phyUser->getPhyModeProvider()->mcsUp(pmUp);
 
     myReceiver = receiver;
 
