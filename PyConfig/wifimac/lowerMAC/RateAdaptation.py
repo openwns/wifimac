@@ -30,6 +30,7 @@ import openwns.pyconfig
 
 import wifimac.Logger
 import wifimac.convergence.PhyMode
+import wifimac.draftn
 
 class Constant:
     __plugin__ = 'Constant'
@@ -56,12 +57,41 @@ class Opportunistic:
         else:
             self.initialPhyMode = phyMode
 
+class ARF:
+    __plugin__ = 'ARF'
+
+    arfTimer = 1.0
+    initialPhyMode = None
+    exponentialBackoff = True
+    initialSuccessThreshold = 10
+    maxSuccessThreshold = 50
+
+    def __init__(self, phyMode = None):
+        if(phyMode is None):
+            self.initialPhyMode = wifimac.convergence.PhyMode.IEEE80211a().getLowest()
+        else:
+            self.initialPhyMode = phyMode
+
+class ARFwithMIMO(ARF):
+    __plugin__ = 'ARFwithMIMO'
+
+    def __init__(self, phyMode = None):
+        if(phyMode is None):
+            self.initialPhyMode = wifimac.draftn.PhyModes().getLowest()
+        else:
+            self.initialPhyMode = phyMode
 
 class OpportunisticwithMIMO(Opportunistic):
     __plugin__ = 'OpportunisticwithMIMO'
 
     phyModeIncreaseOnAntennaDecrease = 3
     phyModeDecreaseOnAntennaIncrease = 3
+
+    def __init__(self, phyMode = None):
+        if(phyMode is None):
+            self.initialPhyMode = wifimac.draftn.PhyModes().getLowest()
+        else:
+            self.initialPhyMode = phyMode
 
 class SINR(Opportunistic):
     __plugin__ = 'SINR'

@@ -57,6 +57,8 @@ srcFiles = [
     'src/lowerMAC/rateAdaptationStrategies/Constant.cpp',
     'src/lowerMAC/rateAdaptationStrategies/SINR.cpp',
     'src/lowerMAC/rateAdaptationStrategies/Opportunistic.cpp',
+    'src/lowerMAC/rateAdaptationStrategies/ARF.cpp',
+    
 
     # additions for DraftN
     'src/draftn/DeAggregation.cpp',
@@ -69,6 +71,7 @@ srcFiles = [
     'src/draftn/LongTrainingFieldGenerator.cpp',
     'src/draftn/rateAdaptationStrategies/SINRwithMIMO.cpp',
     'src/draftn/rateAdaptationStrategies/OpportunisticwithMIMO.cpp',
+    'src/draftn/rateAdaptationStrategies/ARFwithMIMO.cpp',
     'src/draftn/SINRwithMIMOInformationBase.cpp',
     'src/draftn/BeaconLinkQualityMeasurementwithMIMO.cpp',
 
@@ -151,9 +154,11 @@ hppFiles = [
     'src/lowerMAC/rateAdaptationStrategies/Constant.hpp',
     'src/lowerMAC/rateAdaptationStrategies/IRateAdaptationStrategy.hpp',
     'src/lowerMAC/rateAdaptationStrategies/Opportunistic.hpp',
+    'src/lowerMAC/rateAdaptationStrategies/ARF.hpp',
     'src/lowerMAC/rateAdaptationStrategies/SINR.hpp',
     'src/draftn/rateAdaptationStrategies/SINRwithMIMO.hpp',
     'src/draftn/rateAdaptationStrategies/OpportunisticwithMIMO.hpp',
+    'src/draftn/rateAdaptationStrategies/ARFwithMIMO.hpp',
     'src/lowerMAC/timing/Backoff.hpp',
     'src/lowerMAC/timing/DCF.hpp',
     'src/lowerMAC/timing/tests/BackoffTest.hpp',

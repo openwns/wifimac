@@ -62,6 +62,8 @@ void PERInformationBase::reset(const wns::service::dll::UnicastAddress receiver)
     if(perHolder.knows(receiver))
     {
         perHolder.find(receiver)->reset();
+        successfull.find(receiver) = 0;
+        failed.find(receiver) = 0;
     }
 }
 
@@ -72,8 +74,11 @@ void PERInformationBase::onSuccessfullTransmission(const wns::service::dll::Unic
     if(!perHolder.knows(receiver))
     {
         perHolder.insert(receiver, new wns::SlidingWindow(windowSize));
+        successfull.insert(receiver, 0);
+        failed.insert(receiver, 0);
     }
     perHolder.find(receiver)->put(0.0);
+    ++(successfull.find(receiver));
 }
 
 
@@ -84,8 +89,11 @@ void PERInformationBase::onFailedTransmission(const wns::service::dll::UnicastAd
     if(!perHolder.knows(receiver))
     {
         perHolder.insert(receiver, new wns::SlidingWindow(windowSize));
+        successfull.insert(receiver, 0);
+        failed.insert(receiver, 0);
     }
     perHolder.find(receiver)->put(1.0);
+    ++(failed.find(receiver));
 }
 
 bool PERInformationBase::knowsPER(const wns::service::dll::UnicastAddress receiver) const
@@ -111,3 +119,20 @@ double PERInformationBase::getPER(const wns::service::dll::UnicastAddress receiv
 }
 
 
+int PERInformationBase::getSuccessfull(const wns::service::dll::UnicastAddress receiver) const
+{
+    if(not successfull.knows(receiver))
+    {
+        return 0;
+    }
+    return successfull.find(receiver);
+}
+
+int PERInformationBase::getFailed(const wns::service::dll::UnicastAddress receiver) const
+{
+    if(not failed.knows(receiver))
+    {
+        return 0;
+    }
+    return failed.find(receiver);
+}

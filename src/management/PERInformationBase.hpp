@@ -81,6 +81,12 @@ namespace wifimac { namespace management {
         /** @brief Get the PER to the given target */
         double getPER(const wns::service::dll::UnicastAddress target) const;
 
+        int
+        getSuccessfull(const wns::service::dll::UnicastAddress receiver) const;
+
+        int
+        getFailed(const wns::service::dll::UnicastAddress receiver) const;
+
     private:
         /** @brief Initialization */
         void
@@ -88,6 +94,7 @@ namespace wifimac { namespace management {
 
         /** @brief Holder type of the sliding windows for the targets */
         typedef wns::container::Registry<wns::service::dll::UnicastAddress, wns::SlidingWindow*> slidingWindowMap;
+        typedef wns::container::Registry<wns::service::dll::UnicastAddress, int> intMap;
 
         /** @brief Holder of the sliding windows, one for each target */
         slidingWindowMap perHolder;
@@ -101,6 +108,9 @@ namespace wifimac { namespace management {
         /** @brief The minimum number of samples in the sliding window so that
          * an average can be computed */
         const int minSamples;
+
+        intMap successfull;
+        intMap failed;
     };
 } // management
 } // wifimac

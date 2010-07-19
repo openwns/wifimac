@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTIC_HPP
-#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTIC_HPP
+#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_ARF_HPP
+#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_ARF_HPP
 
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/IRateAdaptationStrategy.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
@@ -37,23 +37,25 @@
 #include <WNS/ldk/Key.hpp>
 #include <WNS/distribution/Uniform.hpp>
 #include <WNS/logger/Logger.hpp>
+#include <WNS/events/CanTimeout.hpp>
 
 namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
     /**
-	 * @brief The Opportunistic Rate Adpation tries to find the maximum MCS with
+	 * @brief The ARF Rate Adpation tries to find the maximum MCS with
      *   a packet error rate below a given value.
      *
-     * Opportunistic RA works only using the statistics of received ACKs as a
+     * ARF RA works only using the statistics of received ACKs as a
      * reply to the used MCS. Hence, it slowly increases the rate by selecting
      * high-rate MCSs, until the PER exceeds a given value. Then, it stays at
      * the next lower MCS until the percieved PER changes again.
 	 */
-    class Opportunistic:
-        public IRateAdaptationStrategy
+    class ARF:
+        public IRateAdaptationStrategy,
+        public wns::events::CanTimeout
     {
     public:
-        Opportunistic(
+        ARF(
             const wns::pyconfig::View& config_,
             wifimac::management::PERInformationBase* _per,
             wifimac::management::SINRInformationBase* _sinr,
@@ -63,30 +65,38 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
         wifimac::convergence::PhyMode
         getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions) const ;
+                   size_t numTransmissions) const;
 
         wifimac::convergence::PhyMode
         getPhyMode(const wns::service::dll::UnicastAddress receiver,
                    size_t numTransmissions,
                    const wns::Ratio lqm) const;
 
-        void
-        setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm);   
+        virtual void
+        setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,
+                          wifimac::convergence::PhyMode pm);
 
     private:
+        void
+        onTimeout();
+
         wifimac::management::PERInformationBase* per;
+        const wns::simulator::Time arfTimer;
+        const bool exponentialBackoff;
+        const int initialSuccessThreshold;
+        const int maxSuccessThreshold;
+        int successThreshold;
+        bool probePacket;
 
         struct Friends
         {
             wifimac::convergence::PhyUser* phyUser;
         } friends;
 
-        const double perForGoingDown;
-        const double perForGoingUp;
-
         wns::logger::Logger* logger;
 
         wifimac::convergence::PhyMode curPhyMode;
+        wns::service::dll::UnicastAddress myReceiver;
     };
 }}}
 

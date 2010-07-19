@@ -93,7 +93,7 @@ void RateAdaptation::processOutgoing(const wns::ldk::CompoundPtr& compound)
     {
         wns::service::dll::UnicastAddress receiver = friends.manager->getReceiverAddress(compound->getCommandPool());
         size_t numTransmissions = friends.arq->getTransmissionCounter(compound);
-	friends.manager->setPhyMode(compound->getCommandPool(), this->setCurrentPhyMode(receiver, numTransmissions));
+        friends.manager->setPhyMode(compound->getCommandPool(), this->setCurrentPhyMode(receiver, numTransmissions));
 
         MESSAGE_BEGIN(NORMAL, logger, m, "Send data frame to ");
         m << " rx: " << friends.manager->getReceiverAddress(compound->getCommandPool());
@@ -107,7 +107,7 @@ RateAdaptation::setCurrentPhyMode(wns::service::dll::UnicastAddress receiver, si
 {
     wifimac::convergence::PhyMode pm;
     pm = this->getPhyMode(receiver, numTransmissions);
-    rateAdaptation.find(receiver)->setCurrentPhyMode(receiver,pm);
+    rateAdaptation.find(receiver)->setCurrentPhyMode(receiver, pm);
     return pm;
 }
 
@@ -132,16 +132,6 @@ RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver, size_t nu
                                                                                                   friends.phyUser,
                                                                                                   &logger));
     }
-
-/*    if(sinrMIB->knowsPeerSINR(receiver))
-    {
-        pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions, sinrMIB->getPeerSINR(receiver));
-    }
-    else
-    {
-        pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions);
-    }
-*/
 
     pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions);
     return(pm);
