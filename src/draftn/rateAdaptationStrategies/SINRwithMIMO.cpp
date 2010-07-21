@@ -38,15 +38,17 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(SINRwithMIMO,
 
 SINRwithMIMO::SINRwithMIMO(
     const wns::pyconfig::View& _config,
+    wns::service::dll::UnicastAddress _receiver,
     wifimac::management::PERInformationBase* _per,
     wifimac::management::SINRInformationBase* _sinr,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    OpportunisticwithMIMO(_config, _per, _sinr, _manager, _phyUser, _logger),
+    OpportunisticwithMIMO(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     sinr(dynamic_cast<wifimac::draftn::SINRwithMIMOInformationBase*>(_sinr)),
-    singleStreamRA(_config, _per, _sinr, _manager, _phyUser, _logger),
+    singleStreamRA(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     retransmissionLQMReduction(_config.get<double>("retransmissionLQMReduction")),
+    myReceiver(_receiver),
     logger(_logger)
 {
     friends.phyUser = _phyUser;
@@ -55,19 +57,19 @@ SINRwithMIMO::SINRwithMIMO(
 }
 
 wifimac::convergence::PhyMode
-SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio lqm) const
+SINRwithMIMO::getPhyMode(size_t numTransmissions, const wns::Ratio lqm) const
 {
     unsigned int numTx = friends.manager->getNumAntennas();
     unsigned int numRx = 1;
-    if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
+    if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(myReceiver, "numAntennas"))
     {
-        numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(receiver, "numAntennas");
+        numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(myReceiver, "numAntennas");
     }
 
     unsigned int maxNumSS = (numTx < numRx) ? numTx : numRx;
 
     MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
-    m << " to receiver " << receiver;
+    m << " to receiver " << myReceiver;
     m << " lqm: " << lqm;
     m << " transmissions: " << numTransmissions;
     m << " numTx: " << numTx;
@@ -81,13 +83,13 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_
 
     for(unsigned int numSS = maxNumSS; numSS >= 1; --numSS)
     {
-        if(sinr->knowsPeerFactor(receiver, numSS))
+        if(sinr->knowsPeerFactor(myReceiver, numSS))
         {
             wifimac::convergence::PhyMode pm = friends.phyUser->getPhyModeProvider()->getDefaultPhyMode();
             std::vector<wifimac::convergence::MCS> mcs;
             bool reduceAntennas = false;
 
-            std::vector<wns::Ratio> sinrFactor = sinr->getPeerFactor(receiver, numSS);
+            std::vector<wns::Ratio> sinrFactor = sinr->getPeerFactor(myReceiver, numSS);
 
 #ifndef WNS_NO_LOGGING
             MESSAGE_BEGIN(NORMAL, *logger, m, "peerFactor for ");
@@ -112,7 +114,7 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_
                 }
                 else
                 {
-                    wifimac::convergence::PhyMode singleStreamPM = singleStreamRA.getPhyMode(receiver, numTransmissions, streamLQM);
+                    wifimac::convergence::PhyMode singleStreamPM = singleStreamRA.getPhyMode(numTransmissions, streamLQM);
                     MESSAGE_SINGLE(NORMAL, *logger, "lqm for stream is " << streamLQM << " -> " << singleStreamPM);
                     mcs.push_back(singleStreamPM.getSpatialStreams()[0]);
                 }
@@ -144,14 +146,14 @@ SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_
 }
 
 wifimac::convergence::PhyMode
-SINRwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions) const
+SINRwithMIMO::getPhyMode(size_t numTransmissions) const
 {
-    if(sinr->knowsPeerSINR(receiver))
+    if(sinr->knowsPeerSINR(myReceiver))
     {
-        return(getPhyMode(receiver, numTransmissions, sinr->getPeerSINR(receiver)));
+        return(getPhyMode(numTransmissions, sinr->getPeerSINR(myReceiver)));
     }
     else
     {
-        return(OpportunisticwithMIMO::getPhyMode(receiver, numTransmissions));
+        return(OpportunisticwithMIMO::getPhyMode(numTransmissions));
     }
 }

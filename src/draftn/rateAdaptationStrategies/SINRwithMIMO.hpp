@@ -56,6 +56,7 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
     public:
         SINRwithMIMO(
             const wns::pyconfig::View& _config,
+            wns::service::dll::UnicastAddress _receiver,
             wifimac::management::PERInformationBase* _per,
             wifimac::management::SINRInformationBase* _sinr,
             wifimac::lowerMAC::Manager* _manager,
@@ -63,12 +64,10 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
             wns::logger::Logger* _logger);
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions) const;
+        getPhyMode(size_t numTransmissions) const;
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions,
+        getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const;
 
     private:
@@ -81,6 +80,7 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
         wifimac::draftn::SINRwithMIMOInformationBase* sinr;
         wifimac::lowerMAC::rateAdaptationStrategies::SINR singleStreamRA;
         const double retransmissionLQMReduction;
+        const wns::service::dll::UnicastAddress myReceiver;
 
         wns::logger::Logger* logger;
 

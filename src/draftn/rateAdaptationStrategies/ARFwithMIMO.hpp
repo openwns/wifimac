@@ -58,6 +58,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
     public:
         ARFwithMIMO(
             const wns::pyconfig::View& config_,
+            wns::service::dll::UnicastAddress receiver,
             wifimac::management::PERInformationBase* _per,
             wifimac::management::SINRInformationBase* _sinr,
             wifimac::lowerMAC::Manager* _manager,
@@ -65,24 +66,16 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
             wns::logger::Logger* _logger);
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions) const;
+        getPhyMode(size_t numTransmissions) const;
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions,
+        getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const;
 
         void
-        setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,
-                          wifimac::convergence::PhyMode pm);
+        setCurrentPhyMode(wifimac::convergence::PhyMode pm);
 
     private:
-        wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions,
-                   const std::vector<wifimac::convergence::PhyMode>& myPMList) const;
-
         void
         onTimeout();
 
@@ -97,6 +90,8 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         const bool exponentialBackoff;
         const int initialSuccessThreshold;
         const int maxSuccessThreshold;
+        const wns::service::dll::UnicastAddress myReceiver;
+
         int successThreshold;
         bool probePacket;
 
@@ -108,10 +103,9 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
         wns::logger::Logger* logger;
 
-        wns::service::dll::UnicastAddress myReceiver;
         std::vector<wifimac::convergence::PhyMode> pmList;
         int curPhyModeId;
-        bool knowsReceiver;
+        bool timeout;
     };
 }}}
 

@@ -33,31 +33,32 @@ using namespace wifimac::lowerMAC::rateAdaptationStrategies;
 STATIC_FACTORY_REGISTER_WITH_CREATOR(Constant, IRateAdaptationStrategy, "Constant", IRateAdaptationStrategyCreator);
 
 Constant::Constant(const wns::pyconfig::View& _config,
+                   wns::service::dll::UnicastAddress _receiver,
                    wifimac::management::PERInformationBase* _per,
                    wifimac::management::SINRInformationBase* _sinr,
                    wifimac::lowerMAC::Manager* _manager,
                    wifimac::convergence::PhyUser* _phyUser,
                    wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _per, _sinr, _manager, _phyUser, _logger),
+    IRateAdaptationStrategy(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     myPM(_config.getView("phyMode"))
 {
     friends.phyUser = _phyUser;
 }
 
 wifimac::convergence::PhyMode
-Constant::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/) const
+Constant::getPhyMode(size_t /*numTransmissions*/) const
 {
     return(this->myPM);
 }
 
 wifimac::convergence::PhyMode
-Constant::getPhyMode(const wns::service::dll::UnicastAddress /*receiver*/, size_t /*numTransmissions*/, const wns::Ratio /*lqm*/) const
+Constant::getPhyMode(size_t /*numTransmissions*/, const wns::Ratio /*lqm*/) const
 {
     return(this->myPM);
 }
 
 void
-Constant::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm) 
+Constant::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
 {
-	 // do nothing, CONSTANT!
+     // do nothing, be CONSTANT!
 };

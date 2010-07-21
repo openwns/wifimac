@@ -56,7 +56,8 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
     {
     public:
         ARF(
-            const wns::pyconfig::View& config_,
+            const wns::pyconfig::View& _config,
+            wns::service::dll::UnicastAddress _receiver,
             wifimac::management::PERInformationBase* _per,
             wifimac::management::SINRInformationBase* _sinr,
             wifimac::lowerMAC::Manager* _manager,
@@ -64,27 +65,26 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
             wns::logger::Logger* _logger);
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions) const;
+        getPhyMode(size_t numTransmissions) const;
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions,
+        getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const;
 
         virtual void
-        setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,
-                          wifimac::convergence::PhyMode pm);
+        setCurrentPhyMode(wifimac::convergence::PhyMode pm);
 
     private:
         void
         onTimeout();
 
         wifimac::management::PERInformationBase* per;
+        const wns::service::dll::UnicastAddress myReceiver;
         const wns::simulator::Time arfTimer;
         const bool exponentialBackoff;
         const int initialSuccessThreshold;
         const int maxSuccessThreshold;
+        bool timeout;
         int successThreshold;
         bool probePacket;
 
@@ -96,7 +96,6 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         wns::logger::Logger* logger;
 
         wifimac::convergence::PhyMode curPhyMode;
-        wns::service::dll::UnicastAddress myReceiver;
     };
 }}}
 

@@ -107,7 +107,7 @@ RateAdaptation::setCurrentPhyMode(wns::service::dll::UnicastAddress receiver, si
 {
     wifimac::convergence::PhyMode pm;
     pm = this->getPhyMode(receiver, numTransmissions);
-    rateAdaptation.find(receiver)->setCurrentPhyMode(receiver, pm);
+    rateAdaptation.find(receiver)->setCurrentPhyMode(pm);
     return pm;
 }
 
@@ -126,6 +126,7 @@ RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver, size_t nu
         rateAdaptation.insert(receiver,
                               rateAdaptationStrategies::RateAdaptationStrategyFactory::creator
                               (config.get<std::string>("myConfig.raStrategy.__plugin__"))->create(config.getView("myConfig.raStrategy"),
+                                                                                                  receiver,
                                                                                                   perMIB,
                                                                                                   sinrMIB,
                                                                                                   friends.manager,
@@ -133,7 +134,7 @@ RateAdaptation::getPhyMode(wns::service::dll::UnicastAddress receiver, size_t nu
                                                                                                   &logger));
     }
 
-    pm = rateAdaptation.find(receiver)->getPhyMode(receiver, numTransmissions);
+    pm = rateAdaptation.find(receiver)->getPhyMode(numTransmissions);
     return(pm);
 }
 wifimac::convergence::PhyMode

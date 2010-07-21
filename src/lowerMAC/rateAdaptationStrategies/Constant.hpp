@@ -47,6 +47,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
     public:
         Constant(
             const wns::pyconfig::View& config_,
+            wns::service::dll::UnicastAddress receiver_,
             wifimac::management::PERInformationBase*,
             wifimac::management::SINRInformationBase*,
             wifimac::lowerMAC::Manager*,
@@ -55,17 +56,15 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions) const;
+        getPhyMode(size_t numTransmissions) const;
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions,
+        getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const;
 
-	void
-        setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm);   
-		   
+        void
+        setCurrentPhyMode(wifimac::convergence::PhyMode pm);   
+
     private:
         const wifimac::convergence::PhyMode myPM;
 

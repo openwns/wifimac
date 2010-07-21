@@ -37,12 +37,14 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(ARF, IRateAdaptationStrategy, "ARF", IRateA
 
 ARF::ARF(
     const wns::pyconfig::View& _config,
+    wns::service::dll::UnicastAddress _receiver,
     wifimac::management::PERInformationBase* _per,
     wifimac::management::SINRInformationBase* _sinr,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _per, _sinr, _manager, _phyUser, _logger),
+    IRateAdaptationStrategy(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
+    myReceiver(_receiver),
     per(_per),
     arfTimer(_config.get<wns::simulator::Time>("arfTimer")),
     exponentialBackoff(_config.get<bool>("exponentialBackoff")),
@@ -50,22 +52,29 @@ ARF::ARF(
     maxSuccessThreshold(_config.get<int>("maxSuccessThreshold")),
     successThreshold(_config.get<int>("initialSuccessThreshold")),
     probePacket(false),
-    logger(_logger)
+    logger(_logger),
+    timeout(false)
 {
     friends.phyUser = _phyUser;
     curPhyMode = _config.getView("initialPhyMode");
 }
 
 wifimac::convergence::PhyMode
-ARF::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio /*lqm*/) const
+ARF::getPhyMode(size_t numTransmissions, const wns::Ratio /*lqm*/) const
 {
-    return(this->getPhyMode(receiver, numTransmissions));
+    return(this->getPhyMode(numTransmissions));
 }
 
 wifimac::convergence::PhyMode
-ARF::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions) const
+ARF::getPhyMode(size_t numTransmissions) const
 {
     wifimac::convergence::PhyMode pm = curPhyMode;
+
+    if(timeout)
+    {
+        friends.phyUser->getPhyModeProvider()->mcsUp(pm);
+        return pm;
+    }
 
     if((probePacket and numTransmissions == 2) or (numTransmissions >= 3))
     {
@@ -74,7 +83,7 @@ ARF::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTran
         return pm;
     }
 
-    if(per->getSuccessfull(receiver) == successThreshold)
+    if(per->getSuccessfull(myReceiver) == successThreshold)
     {
         friends.phyUser->getPhyModeProvider()->mcsUp(pm);
         return pm;
@@ -84,15 +93,15 @@ ARF::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTran
 }
 
 void
-ARF::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver, wifimac::convergence::PhyMode pm)
+ARF::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
 {
+    timeout = false;
+
     wifimac::convergence::PhyMode pmDown = curPhyMode;
     friends.phyUser->getPhyModeProvider()->mcsDown(pmDown);
 
     wifimac::convergence::PhyMode pmUp = curPhyMode;
     friends.phyUser->getPhyModeProvider()->mcsUp(pmUp);
-
-    myReceiver = receiver;
 
     if(curPhyMode == pm)
     {
@@ -101,23 +110,23 @@ ARF::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver, wifimac
     }
     else
     {
-        curPhyMode = pm;
         assure(pm == pmDown or pm == pmUp,
                "pm " << pm << " is neither " << pmDown << " nor " << pmUp);
-        per->reset(receiver);
+
+        if(not this->hasTimeoutSet())
+        {
+            this->cancelTimeout();
+        }
 
         if(pm == pmDown)
         {
-            if(not this->hasTimeoutSet())
-            {
-                this->setTimeout(arfTimer);
-            }
+            this->setTimeout(arfTimer);
 
             if(probePacket)
             {
                 // last one was a probe packet, but did not succeed
                 probePacket = false;
-                MESSAGE_SINGLE(NORMAL, *logger, "Last probe packet to " << receiver << " did not succeed, going down to MCS "<< curPhyMode);
+                MESSAGE_SINGLE(NORMAL, *logger, "Last probe packet to " << myReceiver << " did not succeed, going down to MCS "<< pm);
                 if(exponentialBackoff and successThreshold < maxSuccessThreshold)
                 {
                     successThreshold = successThreshold*2;
@@ -126,7 +135,7 @@ ARF::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver, wifimac
             }
             else
             {
-                MESSAGE_SINGLE(NORMAL, *logger, "Failed transmissions to " << receiver << " , going down to MCS "<< curPhyMode);
+                MESSAGE_SINGLE(NORMAL, *logger, "Failed transmissions to " << myReceiver << " , going down to MCS "<< pm);
                 if(exponentialBackoff)
                 {
                     successThreshold = successThreshold / 2;
@@ -137,30 +146,22 @@ ARF::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver, wifimac
                     MESSAGE_SINGLE(NORMAL, *logger, "Set successThreshold to " << successThreshold);
                 }
             }
-            return;
         }
-
-        if(pm == pmUp)
+        else
         {
             probePacket = true;
-
-            if(this->hasTimeoutSet())
-            {
-                this->cancelTimeout();
-            }
-
-            MESSAGE_SINGLE(NORMAL, *logger, per->getSuccessfull(receiver) << " successfull transmissions to " << receiver << ", sending probe packet with " << curPhyMode);
-            return;
+            MESSAGE_SINGLE(NORMAL, *logger, per->getSuccessfull(myReceiver) << " successfull transmissions to " << myReceiver << ", sending probe packet with " << pm);
         }
+
+        per->reset(myReceiver);
+        curPhyMode = pm;
+
     }
 }
 
 void
 ARF::onTimeout()
 {
-    friends.phyUser->getPhyModeProvider()->mcsUp(curPhyMode);
-    per->reset(myReceiver);
-    probePacket = true;
+    timeout = true;
     MESSAGE_SINGLE(NORMAL, *logger, "Timeout, set mcs up to " << curPhyMode);
-
 }

@@ -37,31 +37,41 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(ARFwithMIMO, IRateAdaptationStrategy, "ARFw
 
 ARFwithMIMO::ARFwithMIMO(
     const wns::pyconfig::View& _config,
+    wns::service::dll::UnicastAddress _receiver,
     wifimac::management::PERInformationBase* _per,
     wifimac::management::SINRInformationBase* _sinr,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _per, _sinr, _manager, _phyUser, _logger),
+    IRateAdaptationStrategy(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     per(_per),
     arfTimer(_config.get<wns::simulator::Time>("arfTimer")),
     exponentialBackoff(_config.get<bool>("exponentialBackoff")),
     initialSuccessThreshold(_config.get<int>("initialSuccessThreshold")),
     maxSuccessThreshold(_config.get<int>("maxSuccessThreshold")),
     successThreshold(_config.get<int>("initialSuccessThreshold")),
+    myReceiver(_receiver),
     probePacket(false),
     logger(_logger),
     curPhyModeId(0),
-    knowsReceiver(false)
+    timeout(false)
 {
     friends.phyUser = _phyUser;
     friends.manager = _manager;
+
+    unsigned int numTx = friends.manager->getNumAntennas();
+    unsigned int numRx = 1;
+    if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(myReceiver, "numAntennas"))
+    {
+        numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(myReceiver, "numAntennas");
+    }
+    unsigned int maxNumSS = (numTx < numRx) ? numTx : numRx;
 
     // create an ordered list of the available phyModes
     wifimac::convergence::PhyMode pm;
     std::vector<wifimac::convergence::PhyMode> allPMs;
     allPMs.clear();
-    for (int i = 1; i <= friends.manager->getNumAntennas(); i++)
+    for (int i = 1; i <= maxNumSS; i++)
     {
         pm = friends.manager->getPhyUser()->getPhyModeProvider()->getDefaultPhyMode();
         while(not friends.manager->getPhyUser()->getPhyModeProvider()->hasLowestMCS(pm))
@@ -95,6 +105,7 @@ ARFwithMIMO::ARFwithMIMO(
         }
         }*/
 
+    // keep only PhyModes with non-overlapping dbps
     unsigned int maxdbps = 0;
     pmList.clear();
     for (std::vector<wifimac::convergence::PhyMode>::iterator itr = allPMs.begin();
@@ -112,121 +123,61 @@ ARFwithMIMO::ARFwithMIMO(
 }
 
 wifimac::convergence::PhyMode
-ARFwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                        size_t numTransmissions,
+ARFwithMIMO::getPhyMode(size_t numTransmissions,
                         const wns::Ratio /*lqm*/) const
 {
-    return(this->getPhyMode(receiver, numTransmissions));
+    return(this->getPhyMode(numTransmissions));
 }
 
 wifimac::convergence::PhyMode
-ARFwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                        size_t numTransmissions) const
+ARFwithMIMO::getPhyMode(size_t numTransmissions) const
 {
-
-    if(not knowsReceiver)
+    if(timeout)
     {
-        std::vector<wifimac::convergence::PhyMode>* myPMList = new std::vector<wifimac::convergence::PhyMode>;
-        unsigned int numTx = friends.manager->getNumAntennas();
-        unsigned int numRx = 1;
-        if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
+        if (curPhyModeId < (pmList.size()-1))
         {
-            numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(receiver, "numAntennas");
+            return pmList[curPhyModeId+1];
         }
-        unsigned int maxNumSS = (numTx < numRx) ? numTx : numRx;
-
-        std::vector<wifimac::convergence::PhyMode>::const_iterator itr = pmList.begin();
-        while(itr != pmList.end())
+        else
         {
-            if(itr->getNumberOfSpatialStreams() <= maxNumSS)
-            {
-                myPMList->push_back(*itr);
-                ++itr;
-            }
+            return pmList[curPhyModeId];
         }
-        return (this->getPhyMode(receiver, numTransmissions, *myPMList));
     }
-    else
-    {
-        return (this->getPhyMode(receiver, numTransmissions, pmList));
-    }
-}
 
-wifimac::convergence::PhyMode
-ARFwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                        size_t numTransmissions,
-                        const std::vector<wifimac::convergence::PhyMode>& myPMList) const
-{
     if((probePacket and numTransmissions == 2) or (numTransmissions >= 3))
     {
         // last frame did not succeed
         if (curPhyModeId > 0)
         {
-            return myPMList[curPhyModeId-1];
+            return pmList[curPhyModeId-1];
         }
         else
         {
-            return myPMList[curPhyModeId];
+            return pmList[curPhyModeId];
         }
     }
 
-    if(per->getSuccessfull(receiver) == successThreshold)
+    if(per->getSuccessfull(myReceiver) == successThreshold)
     {
         // last frame did not succeed
         if (curPhyModeId < (pmList.size()-1))
         {
-            return myPMList[curPhyModeId+1];
+            return pmList[curPhyModeId+1];
         }
         else
         {
-            return myPMList[curPhyModeId];
+            return pmList[curPhyModeId];
         }
     }
 
-    return myPMList[curPhyModeId];
+    return pmList[curPhyModeId];
 
 }
 
 void
-ARFwithMIMO::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver, 
-                               wifimac::convergence::PhyMode pm)
+ARFwithMIMO::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
 {
-    if(not knowsReceiver)
-    {
-        // clear pmList of impossible PhyModes with too many streams
-
-        unsigned int numTx = friends.manager->getNumAntennas();
-        unsigned int numRx = 1;
-        if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
-        {
-            numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(receiver, "numAntennas");
-        }
-        unsigned int maxNumSS = (numTx < numRx) ? numTx : numRx;
-
-        std::vector<wifimac::convergence::PhyMode>::iterator itr = pmList.begin();
-        while(itr != pmList.end())
-        {
-            if(itr->getNumberOfSpatialStreams() > maxNumSS)
-            {
-                pmList.erase(itr);
-                itr = pmList.begin();
-            }
-            else
-            {
-                ++itr;
-            }
-        }
-
-        MESSAGE_BEGIN(NORMAL, *logger, m, "Initializing RA to " << receiver << " with PhyModes: ");
-        for(itr = pmList.begin(); itr != pmList.end(); ++itr)
-        {
-            m << *itr << " ";
-        }
-        MESSAGE_END();
-
-        knowsReceiver = true;
-    }
-    myReceiver = receiver;
+    timeout = false;
 
     int nextPhyModeId = 0;
     for(; nextPhyModeId < pmList.size(); nextPhyModeId++)
@@ -245,19 +196,21 @@ ARFwithMIMO::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,
     }
     else
     {
-        per->reset(receiver);
+        if(this->hasTimeoutSet())
+        {
+            this->cancelTimeout();
+        }
 
         if(nextPhyModeId < curPhyModeId)
         {
-            if(not this->hasTimeoutSet())
-            {
-                this->setTimeout(arfTimer);
-            }
+            // set new timeout for switching up
+            this->setTimeout(arfTimer);
+
             if(probePacket)
             {
                 // last one was a probe packet, but did not succeed
                 probePacket = false;
-                MESSAGE_SINGLE(NORMAL, *logger, "Last probe packet to " << receiver << " did not succeed, going down to MCS "<< pmList[nextPhyModeId]);
+                MESSAGE_SINGLE(NORMAL, *logger, "Last probe packet to " << myReceiver << " did not succeed, going down to MCS "<< pmList[nextPhyModeId]);
                 if(exponentialBackoff and successThreshold < maxSuccessThreshold)
                 {
                     successThreshold = successThreshold*2;
@@ -265,8 +218,8 @@ ARFwithMIMO::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,
                 }
             }
             else
-                {
-                MESSAGE_SINGLE(NORMAL, *logger, "Failed transmissions to " << receiver << " , going down to MCS "<< pmList[nextPhyModeId]);
+            {
+                MESSAGE_SINGLE(NORMAL, *logger, "Failed transmissions to " << myReceiver << " , going down to MCS "<< pmList[nextPhyModeId]);
                 if(exponentialBackoff)
                 {
                     successThreshold = successThreshold / 2;
@@ -281,15 +234,11 @@ ARFwithMIMO::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,
         else
         {
             probePacket = true;
-
-            if(this->hasTimeoutSet())
-            {
-                this->cancelTimeout();
-            }
-
-            MESSAGE_SINGLE(NORMAL, *logger, per->getSuccessfull(receiver) << " successfull transmissions to " << receiver << ", sending probe packet with " << pmList[nextPhyModeId]);
+            MESSAGE_SINGLE(NORMAL, *logger, per->getSuccessfull(myReceiver) << " successfull transmissions to " << myReceiver << ", sending probe packet with " << pmList[nextPhyModeId]);
         }
         curPhyModeId = nextPhyModeId;
+        per->reset(myReceiver);
+
     }
 }
 
@@ -300,8 +249,6 @@ ARFwithMIMO::onTimeout()
     {
         return;
     }
-    ++curPhyModeId;
-    per->reset(myReceiver);
-    probePacket = true;
-    MESSAGE_SINGLE(NORMAL, *logger, "Timeout, set mcs up to " << pmList[curPhyModeId]);
+    timeout = true;
+    MESSAGE_SINGLE(NORMAL, *logger, "Timeout");
 }

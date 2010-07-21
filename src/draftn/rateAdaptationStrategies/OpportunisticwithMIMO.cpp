@@ -40,17 +40,19 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(OpportunisticwithMIMO,
 
 OpportunisticwithMIMO::OpportunisticwithMIMO(
     const wns::pyconfig::View& _config,
+    wns::service::dll::UnicastAddress _receiver,
     wifimac::management::PERInformationBase* _per,
     wifimac::management::SINRInformationBase* _sinr,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy(_config, _per, _sinr, _manager, _phyUser, _logger),
+    wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     per(_per),
     perForGoingDown(_config.get<double>("perForGoingDown")),
     perForGoingUp(_config.get<double>("perForGoingUp")),
     phyModeIncreaseOnAntennaDecrease(_config.get<unsigned int>("phyModeIncreaseOnAntennaDecrease")),
     phyModeDecreaseOnAntennaIncrease(_config.get<unsigned int>("phyModeDecreaseOnAntennaIncrease")),
+    myReceiver(_receiver),
     logger(_logger)
 {
     friends.phyUser = _phyUser;
@@ -59,25 +61,25 @@ OpportunisticwithMIMO::OpportunisticwithMIMO(
 }
 
 wifimac::convergence::PhyMode
-OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio /*lqm*/) const
+OpportunisticwithMIMO::getPhyMode(size_t numTransmissions, const wns::Ratio /*lqm*/) const
 {
-    return(this->getPhyMode(receiver, numTransmissions));
+    return(this->getPhyMode(numTransmissions));
 }
 
 wifimac::convergence::PhyMode
-OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions) const
+OpportunisticwithMIMO::getPhyMode(size_t numTransmissions) const
 {
     unsigned int numTx = friends.manager->getNumAntennas();
     unsigned int numRx = 1;
-    if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
+    if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(myReceiver, "numAntennas"))
     {
-        numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(receiver, "numAntennas");
+        numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(myReceiver, "numAntennas");
     }
     unsigned int maxNumSS = (numTx < numRx) ? numTx : numRx;
 
     wifimac::convergence::PhyMode pm = curPhyMode;
 
-    if(not per->knowsPER(receiver))
+    if(not per->knowsPER(myReceiver))
     {
         assure(numTransmissions >= 1, "Must have at least one transmission");
 
@@ -87,7 +89,7 @@ OpportunisticwithMIMO::getPhyMode(const wns::service::dll::UnicastAddress receiv
         return(pm);
     }
 
-    double curPER = per->getPER(receiver);
+    double curPER = per->getPER(myReceiver);
 
     if(curPER > perForGoingDown)
     {
@@ -147,42 +149,40 @@ OpportunisticwithMIMO::increasePhyMode(wifimac::convergence::PhyMode& pm, unsign
 
 
 void
-OpportunisticwithMIMO::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm)
+OpportunisticwithMIMO::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
 {
 
     if(curPhyMode != pm)
     {
-	    
-	unsigned int numTx = friends.manager->getNumAntennas();
-	unsigned int numRx = 1;
-	if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(receiver, "numAntennas"))
-	{
-		numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(receiver, "numAntennas");
-	}
-	if(per->knowsPER(receiver))
-	{
-	        MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
-	        m << " to receiver " << receiver;
-	        m << " per: " << per->getPER(receiver);
-	        m << " numTx: " << numTx;
-	        m << " numRx: " << numRx;
-	        m << " going from " << curPhyMode;
-	        m << " to " << pm;
-	        MESSAGE_END();
-
-	        per->reset(receiver);
-	}
-	else
-	{
-	        MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
-	        m << " to receiver " << receiver;
-	        m << " , no currently known PER, ";
-	        m << " numTx: " << numTx;
-	        m << " numRx: " << numRx;
-	        m << " going from " << curPhyMode;
-	        m << " to " << pm;
-	        MESSAGE_END();
-	}
+        unsigned int numTx = friends.manager->getNumAntennas();
+        unsigned int numRx = 1;
+        if(wifimac::management::TheVCIBService::Instance().getVCIB()->knows(myReceiver, "numAntennas"))
+        {
+            numRx = wifimac::management::TheVCIBService::Instance().getVCIB()->get<int>(myReceiver, "numAntennas");
+        }
+        if(per->knowsPER(myReceiver))
+        {
+            MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
+            m << " to receiver " << myReceiver;
+            m << " per: " << per->getPER(myReceiver);
+            m << " numTx: " << numTx;
+            m << " numRx: " << numRx;
+            m << " going from " << curPhyMode;
+            m << " to " << pm;
+            MESSAGE_END();
+            per->reset(myReceiver);
+        }
+        else
+        {
+            MESSAGE_BEGIN(NORMAL, *logger, m, "RA");
+            m << " to receiver " << myReceiver;
+            m << " , no currently known PER, ";
+            m << " numTx: " << numTx;
+            m << " numRx: " << numRx;
+            m << " going from " << curPhyMode;
+            m << " to " << pm;
+            MESSAGE_END();
+        }
         curPhyMode = pm;
     }
 }

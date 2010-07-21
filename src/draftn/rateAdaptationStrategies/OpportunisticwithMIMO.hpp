@@ -59,6 +59,7 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
     public:
         OpportunisticwithMIMO(
             const wns::pyconfig::View& config_,
+            wns::service::dll::UnicastAddress _receiver,
             wifimac::management::PERInformationBase* _per,
             wifimac::management::SINRInformationBase* _sinr,
             wifimac::lowerMAC::Manager* _manager,
@@ -66,17 +67,15 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
             wns::logger::Logger* _logger);
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions) const;
+        getPhyMode(size_t numTransmissions) const;
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions,
+        getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const;
-	
-	void
-        setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm);
-	   		   
+
+        void
+        setCurrentPhyMode(wifimac::convergence::PhyMode pm);
+
     private:
         void
         reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const;
@@ -96,6 +95,7 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
         const double perForGoingUp;
         const unsigned int phyModeIncreaseOnAntennaDecrease;
         const unsigned int phyModeDecreaseOnAntennaIncrease;
+        const wns::service::dll::UnicastAddress myReceiver;
 
         wns::logger::Logger* logger;
 

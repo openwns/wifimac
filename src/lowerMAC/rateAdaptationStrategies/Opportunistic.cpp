@@ -37,12 +37,14 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(Opportunistic, IRateAdaptationStrategy, "Op
 
 Opportunistic::Opportunistic(
     const wns::pyconfig::View& _config,
+    wns::service::dll::UnicastAddress _receiver,
     wifimac::management::PERInformationBase* _per,
     wifimac::management::SINRInformationBase* _sinr,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _per, _sinr, _manager, _phyUser, _logger),
+    IRateAdaptationStrategy(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
+    myReceiver(_receiver),
     per(_per),
     perForGoingDown(_config.get<double>("perForGoingDown")),
     perForGoingUp(_config.get<double>("perForGoingUp")),
@@ -53,15 +55,15 @@ Opportunistic::Opportunistic(
 }
 
 wifimac::convergence::PhyMode
-Opportunistic::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio /*lqm*/) const
+Opportunistic::getPhyMode(size_t numTransmissions, const wns::Ratio /*lqm*/) const
 {
-    return(this->getPhyMode(receiver, numTransmissions));
+    return(this->getPhyMode(numTransmissions));
 }
 
 wifimac::convergence::PhyMode
-Opportunistic::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions) const
+Opportunistic::getPhyMode(size_t numTransmissions) const
 {
-    if(not per->knowsPER(receiver))
+    if(not per->knowsPER(myReceiver))
     {
         assure(numTransmissions >= 1, "Must have at least one transmission");
 
@@ -70,7 +72,7 @@ Opportunistic::getPhyMode(const wns::service::dll::UnicastAddress receiver, size
         return(curPhyMode);
     }
 
-    double curPER = per->getPER(receiver);
+    double curPER = per->getPER(myReceiver);
     wifimac::convergence::PhyMode pm = curPhyMode;
 
     if(curPER > perForGoingDown)
@@ -88,12 +90,12 @@ Opportunistic::getPhyMode(const wns::service::dll::UnicastAddress receiver, size
 }
 
 void
-Opportunistic::setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm)
+Opportunistic::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
 {
     if(curPhyMode != pm)
     {
         MESSAGE_SINGLE(NORMAL, *logger, "RA going from MCS "<< curPhyMode << " to " << pm);
-        per->reset(receiver);
+        per->reset(myReceiver);
         curPhyMode = pm;
     }
 }

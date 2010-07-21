@@ -34,14 +34,16 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(SINR, IRateAdaptationStrategy, "SINR", IRat
 
 SINR::SINR(
     const wns::pyconfig::View& _config,
+    wns::service::dll::UnicastAddress receiver,
     wifimac::management::PERInformationBase* _per,
     wifimac::management::SINRInformationBase* _sinr,
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    Opportunistic(_config, _per, _sinr, _manager, _phyUser, _logger),
+    Opportunistic(_config, receiver, _per, _sinr, _manager, _phyUser, _logger),
     per(_per),
     sinr(_sinr),
+    myReceiver(receiver),
     retransmissionLQMReduction(_config.get<double>("retransmissionLQMReduction")),
     logger(_logger)
 {
@@ -49,7 +51,7 @@ SINR::SINR(
 }
 
 wifimac::convergence::PhyMode
-SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions, const wns::Ratio lqm) const
+SINR::getPhyMode(size_t numTransmissions, const wns::Ratio lqm) const
 {
     // Reduce lqm by retransmissionLQMReduction dB for every retransmission
     wns::Ratio myLQM = wns::Ratio::from_dB(lqm.get_dB() - (numTransmissions-1)*retransmissionLQMReduction);
@@ -60,14 +62,14 @@ SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTra
 }
 
 wifimac::convergence::PhyMode
-SINR::getPhyMode(const wns::service::dll::UnicastAddress receiver, size_t numTransmissions) const
+SINR::getPhyMode(size_t numTransmissions) const
 {
-    if(sinr->knowsPeerSINR(receiver))
+    if(sinr->knowsPeerSINR(myReceiver))
     {
-        return(getPhyMode(receiver, numTransmissions, sinr->getPeerSINR(receiver)));
+        return(getPhyMode(numTransmissions, sinr->getPeerSINR(myReceiver)));
     }
     else
     {
-        return(Opportunistic::getPhyMode(receiver, numTransmissions));
+        return(Opportunistic::getPhyMode(numTransmissions));
     }
 }

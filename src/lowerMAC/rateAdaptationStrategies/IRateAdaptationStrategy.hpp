@@ -48,6 +48,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
     {
     public:
         IRateAdaptationStrategy(const wns::pyconfig::View&,
+                                wns::service::dll::UnicastAddress receiver,
                                 wifimac::management::PERInformationBase*,
                                 wifimac::management::SINRInformationBase*,
                                 wifimac::lowerMAC::Manager*,
@@ -58,16 +59,14 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
             {};
 
         virtual wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions) const = 0;
+        getPhyMode(size_t numTransmissions) const = 0;
 
         virtual wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions,
+        getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const = 0;
 
         virtual void
-        setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm) = 0;
+        setCurrentPhyMode(wifimac::convergence::PhyMode pm) = 0;
     };
 
     /** @brief Special creator for IRateAdaptation */
@@ -78,13 +77,14 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
     public:
         virtual
         KIND* create(const wns::pyconfig::View& _config,
+                     wns::service::dll::UnicastAddress _receiver,
                      wifimac::management::PERInformationBase* _per,
                      wifimac::management::SINRInformationBase* _sinr,
                      wifimac::lowerMAC::Manager* _manager,
                      wifimac::convergence::PhyUser* _phyUser,
                      wns::logger::Logger* _logger)
             {
-                return new T(_config, _per, _sinr, _manager, _phyUser, _logger);
+                return new T(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger);
             }
     };
 
@@ -97,6 +97,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 
         virtual KIND*
         create(const wns::pyconfig::View& _config,
+               wns::service::dll::UnicastAddress _receiver,
                wifimac::management::PERInformationBase* _per,
                wifimac::management::SINRInformationBase* _sinr,
                wifimac::lowerMAC::Manager* _manager,

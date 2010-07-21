@@ -55,6 +55,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
     public:
         Opportunistic(
             const wns::pyconfig::View& config_,
+            wns::service::dll::UnicastAddress _receiver,
             wifimac::management::PERInformationBase* _per,
             wifimac::management::SINRInformationBase* _sinr,
             wifimac::lowerMAC::Manager* _manager,
@@ -62,16 +63,14 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
             wns::logger::Logger* _logger);
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions) const ;
+        getPhyMode(size_t numTransmissions) const ;
 
         wifimac::convergence::PhyMode
-        getPhyMode(const wns::service::dll::UnicastAddress receiver,
-                   size_t numTransmissions,
+        getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const;
 
         void
-        setCurrentPhyMode(const wns::service::dll::UnicastAddress receiver,wifimac::convergence::PhyMode pm);   
+        setCurrentPhyMode(wifimac::convergence::PhyMode pm);
 
     private:
         wifimac::management::PERInformationBase* per;
@@ -81,6 +80,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
             wifimac::convergence::PhyUser* phyUser;
         } friends;
 
+        const wns::service::dll::UnicastAddress myReceiver;
         const double perForGoingDown;
         const double perForGoingUp;
 
