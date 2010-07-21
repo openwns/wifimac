@@ -97,7 +97,7 @@ RTSCTSwithFLA::RTSCTSwithFLA(wns::ldk::fun::FUN* fun, const wns::pyconfig::View&
     for (int ii = 0; ii<config_.len("localIDs.keys()"); ++ii)
     {
         std::string key = config_.get<std::string>("localIDs.keys()",ii);
-        uint32_t value  = config_.get<uint32_t>("localIDs.values()",ii);
+        unsigned long int value  = config_.get<unsigned long int>("localIDs.values()",ii);
         localContext.addProvider(wns::probe::bus::contextprovider::Constant(key, value));
         MESSAGE_SINGLE(VERBOSE, logger, "Using Local IDName '"<<key<<"' with value: "<<value);
     }
