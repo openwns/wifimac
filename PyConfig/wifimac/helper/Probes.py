@@ -79,4 +79,4 @@ class DestinationSortedWindowProbeBus(openwns.Probe.WindowProbeBus):
         self.aggregatedBitDestinationSortedWindowProbeName = prefix + ".window.aggregated.bitThroughput.adr"
         self.outgoingBitDestinationSortedWindowProbeName = prefix + ".window.outgoing.bitThroughput.adr"
         self.relativeGoodputDestinationSortedWindowProbeName = prefix + ".window.relativeGoodput.adr"
-        
+

@@ -57,31 +57,46 @@ class dllSTA(dll.Layer2.Layer2):
 
         ################
         # Upper MAC part
-        throughputProbe =  wifimac.helper.Probes.DestinationSortedWindowProbeBus(name = "wifimac.e2eWindowProbe",
-                                                                                 prefix = "wifimac.e2e",
-                                                                                 commandName = 'e2eWindowProbeCommand',
-                                                                                 ucCommandName = self.upperConvergenceName,
-                                                                                 parentLogger = self.logger,
-                                                                                 windowSize = config.e2eProbeWindowSize,
-                                                                                 moduleName = 'WiFiMAC')
+        e2eThroughputProbe =  wifimac.helper.Probes.DestinationSortedWindowProbeBus(name = "wifimac.e2eWindowProbe",
+                                                                                    prefix = "wifimac.e2e",
+                                                                                    commandName = 'e2eWindowProbeCommand',
+                                                                                    ucCommandName = self.upperConvergenceName,
+                                                                                    parentLogger = self.logger,
+                                                                                    windowSize = config.e2eProbeWindowSize,
+                                                                                    moduleName = 'WiFiMAC')
 
-        packetProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
-                                                       prefix = "wifimac.e2e",
-                                                       commandName = "e2eDelayProbeCommand",
-                                                       parentLogger = self.logger,
-                                                       moduleName = 'WiFiMAC')
+        e2ePacketProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
+                                                          prefix = "wifimac.e2e",
+                                                          commandName = "e2eDelayProbeCommand",
+                                                          parentLogger = self.logger,
+                                                          moduleName = 'WiFiMAC')
+
+
+        upperConvergence = dll.UpperConvergence.UT(parent = self.logger,
+                                                   commandName = self.upperConvergenceName)
+        upperConvergence.logger.moduleName = 'WiFiMAC'
 
         forwarding = wifimac.pathselection.StationForwarding(functionalUnitName = "STAForwarding",
                                                              commandName = "ForwardingCommand",
                                                              upperConvergenceName = self.upperConvergenceName,
                                                              parentLogger = self.logger)
 
-        upperConvergence = dll.UpperConvergence.UT(parent = self.logger,
-                                                   commandName = self.upperConvergenceName)
-        upperConvergence.logger.moduleName = 'WiFiMAC'
+        throughputProbe =  wifimac.helper.Probes.DestinationSortedWindowProbeBus(name = "wifimac.hopWindowProbe",
+                                                                                 prefix = "wifimac.hop",
+                                                                                 commandName = 'hopWindowProbeCommand',
+                                                                                 ucCommandName = self.upperConvergenceName,
+                                                                                 parentLogger = self.logger,
+                                                                                 windowSize = config.probeWindowSize,
+                                                                                 moduleName = 'WiFiMAC')
+
+        packetProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.hopDelayProbe",
+                                                       prefix = "wifimac.hop",
+                                                       commandName = "hopDelayProbeCommand",
+                                                       parentLogger = self.logger,
+                                                       moduleName = 'WiFiMAC')
 
         self.fun = openwns.FUN.FUN()
-        for fu in ([throughputProbe, packetProbe, forwarding, upperConvergence]):
+        for fu in ([e2eThroughputProbe, e2ePacketProbe, upperConvergence, forwarding, packetProbe, throughputProbe]):
             self.fun.add(fu)
 
         ################
@@ -97,11 +112,15 @@ class dllSTA(dll.Layer2.Layer2):
 
         ###################################
         # connect FUs with each other
-        upperConvergence.connect(throughputProbe)
+        upperConvergence.connect(e2eThroughputProbe)
+        e2eThroughputProbe.connect(e2ePacketProbe)
+        e2ePacketProbe.connect(forwarding)
+        forwarding.connect(throughputProbe)
         throughputProbe.connect(packetProbe)
-        packetProbe.connect(forwarding)
-        forwarding.connect(lowerMACTop)
+        packetProbe.connect(lowerMACTop)
+
         lowerMACBottom.connect(convergenceTop)
+
         managementBottom.connect(convergenceTop)
 
         ##########
@@ -114,7 +133,7 @@ class MeshLayer2(dll.Layer2.Layer2):
     pathSelectionServiceName = None
     manager = None
     switch = None
-    throughputProbe = None
+    topFU = None
     addresses = None
 
     def __init__(self, node, name, config, parentLogger):
@@ -129,17 +148,32 @@ class MeshLayer2(dll.Layer2.Layer2):
 
         ################
         # Upper MAC part
-        self.throughputProbe =  wifimac.helper.Probes.DestinationSortedWindowProbeBus(name = "wifimac.e2eWindowProbe",
-                                                                                      prefix = "wifimac.e2e",
-                                                                                      commandName = 'e2eWindowProbeCommand',
-                                                                                      ucCommandName = self.upperConvergenceName,
-                                                                                      parentLogger = self.logger,
-                                                                                      windowSize = config.e2eProbeWindowSize,
-                                                                                      moduleName = 'WiFiMAC')
+        e2eThroughputProbe = wifimac.helper.Probes.DestinationSortedWindowProbeBus(name = "wifimac.e2eWindowProbe",
+                                                                                   prefix = "wifimac.e2e",
+                                                                                   commandName = 'e2eWindowProbeCommand',
+                                                                                   ucCommandName = self.upperConvergenceName,
+                                                                                   parentLogger = self.logger,
+                                                                                   windowSize = config.e2eProbeWindowSize,
+                                                                                   moduleName = 'WiFiMAC')
 
-        packetProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
+
+        throughputProbe =  wifimac.helper.Probes.DestinationSortedWindowProbeBus(name = "wifimac.hopWindowProbe",
+                                                                                 prefix = "wifimac.hop",
+                                                                                 commandName = 'hopWindowProbeCommand',
+                                                                                 ucCommandName = self.upperConvergenceName,
+                                                                                 parentLogger = self.logger,
+                                                                                 windowSize = config.probeWindowSize,
+                                                                                 moduleName = 'WiFiMAC')
+
+        e2ePacketProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.e2eDelayProbe",
                                                        prefix = "wifimac.e2e",
                                                        commandName = "e2eDelayProbeCommand",
+                                                       parentLogger = self.logger,
+                                                       moduleName = 'WiFiMAC')
+
+        packetProbe = openwns.ldk.Probe.PacketProbeBus(name = "wifimac.hopDelayProbe",
+                                                       prefix = "wifimac.hop",
+                                                       commandName = "hopDelayProbeCommand",
                                                        parentLogger = self.logger,
                                                        moduleName = 'WiFiMAC')
 
@@ -148,15 +182,20 @@ class MeshLayer2(dll.Layer2.Layer2):
                                                           upperConvergenceName = self.upperConvergenceName,
                                                           parentLogger = self.logger)
 
+
         self.switch = dll.CompoundSwitch.CompoundSwitch(logName = 'AdrSwitch', moduleName = 'WiFiMAC', parentLogger=self.logger)
 
-        for fu in [self.throughputProbe, packetProbe, forwarding, self.switch]:
+        for fu in [e2eThroughputProbe, e2ePacketProbe, forwarding, throughputProbe, packetProbe, self.switch]:
             self.fun.add(fu)
 
-        self.throughputProbe.connect(packetProbe)
-        packetProbe.connect(forwarding)
+        self.topFU = e2eThroughputProbe
 
-        self.switch.connectOnDataFU(forwarding, dll.CompoundSwitch.FilterAll('All'))
+        e2eThroughputProbe.connect(e2ePacketProbe)
+        e2ePacketProbe.connect(forwarding)
+        forwarding.connect(throughputProbe)
+        throughputProbe.connect(packetProbe)
+
+        self.switch.connectOnDataFU(packetProbe, dll.CompoundSwitch.FilterAll('All'))
 
         self.controlServices.append(dll.Services.Association(parent = self.logger))
 
@@ -208,7 +247,7 @@ class dllAP(MeshLayer2):
         upperConvergence = dll.UpperConvergence.AP(parent = self.logger, commandName = self.upperConvergenceName)
         upperConvergence.logger.moduleName = 'WiFiMAC'
         self.fun.add(upperConvergence)
-        upperConvergence.connect(self.throughputProbe)
+        upperConvergence.connect(self.topFU)
 
 class dllMP(MeshLayer2):
 
@@ -222,7 +261,7 @@ class dllMP(MeshLayer2):
                                commandName = self.upperConvergenceName)		
         upperConvergence.logger.moduleName = 'WiFiMAC'
         self.fun.add(upperConvergence)
-        upperConvergence.connect(self.throughputProbe)
+        upperConvergence.connect(self.topFU)
 
 # begin example "wifimac.pyconfig.layer2.config.start"
 class Config(Sealed):
@@ -253,6 +292,7 @@ class Config(Sealed):
 
     useFastLinkFeedback = False
 
+    probeWindowSize = 1.0
     e2eProbeWindowSize = 1.0
 
     funTemplate = None
@@ -362,4 +402,5 @@ class Config(Sealed):
                         exec(target + '.__dict__[\'' + muv + '\']=self.__dict__[\''+muv+'\']')
 
 class configUpperLayer2(Sealed):
+    probeWindowSize = 1.0
     e2eProbeWindowSize = 1.0

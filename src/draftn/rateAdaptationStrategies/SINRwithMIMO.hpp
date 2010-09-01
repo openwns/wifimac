@@ -29,7 +29,7 @@
 #ifndef WIFIMAC_DRAFTN_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
 #define WIFIMAC_DRAFTN_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
 
-#include <WIFIMAC/draftn/rateAdaptationStrategies/OpportunisticwithMIMO.hpp>
+#include <WIFIMAC/draftn/rateAdaptationStrategies/PERwithMIMO.hpp>
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/SINR.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
@@ -45,13 +45,13 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
 	 * @brief The SINR-based Rate Adaptation (RA) selects the MCS/antenna based
 	 * on the knowledge of received link quality indicators.
      *
-     * In contrast to the Opportunistic RA, the SINR-based RA gets direct
+     * In contrast to the PER RA, the SINR-based RA gets direct
      * feedback about the link quality from the peer of the link. Hence, it can
      * directly select the matching MCS and number of antennas for the indicated
      * (averaged) link quality.
 	 */
     class SINRwithMIMO:
-        public OpportunisticwithMIMO
+        public PERwithMIMO
     {
     public:
         SINRwithMIMO(

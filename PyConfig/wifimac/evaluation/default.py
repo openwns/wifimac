@@ -105,6 +105,18 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
         # packet delay probe
         # * the station type determines if it is uplink (measured at the APs) or downlink (measured at the STAs) traffic
         # * the probe is measured (a) completely and (b) separated by hop count
+        node = openwns.evaluation.createSourceNode(sim, 'wifimac.hop.packet.incoming.delay')
+        node.appendChildren(SettlingTimeGuard(settlingTime))
+        n = node.getLeafs().appendChildren(Enumerated(by = 'MAC.StationType', keys = [1,3], names = ['ul', 'dl'], format = '%s'))
+        if(useDLRE):
+            node.getLeafs().appendChildren(DLRE(mode = 'g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001,
+                                                name = "wifimac.hop.packet.incoming.delay",
+                                                description = "Incoming packet delay [s]"))
+        else:
+            node.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
+                                               name = "wifimac.hop.packet.incoming.delay",
+                                               description = "Incoming packet delay [s]"))
+
         node = openwns.evaluation.createSourceNode(sim, 'wifimac.e2e.packet.incoming.delay')
         node.appendChildren(SettlingTimeGuard(settlingTime))
         n = node.getLeafs().appendChildren(Enumerated(by = 'MAC.StationType', keys = [1,3], names = ['ul', 'dl'], format = '%s'))
@@ -121,16 +133,34 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
             n.appendChildren(Separate(by = "MAC.CompoundHopCount", forAll = range(1, maxHopCount+1), format = "hc%d"))
             if(useDLRE):
                 n.getLeafs().appendChildren(DLRE(mode = 'g', xMin = 0.0, xMax = 0.1, intervalWidth = 0.001,
-                                                 name = "wifimac.e2e.packet.incoming.delay",
+                                                 name = "wifimac.hop.packet.incoming.delay",
                                                  description = "Incoming packet delay [s]"))
             else:
                 n.getLeafs().appendChildren(PDF(minXValue = 0.0, maxXValue = 0.1, resolution=100,
-                                                name = "wifimac.e2e.packet.incoming.delay",
+                                                name = "wifimac.hop.packet.incoming.delay",
                                                 description = "Incoming packet delay [s]"))
+
 
     if(networkProbes):
         # Table probe for bit throughput, separated by nodeId
-        for sourceName in ['wifimac.e2e.window.incoming.bitThroughput.adr', 'wifimac.e2e.window.outgoing.bitThroughput.adr', 'wifimac.e2e.window.aggregated.bitThroughput.adr']:
+        for sourceName in ['wifimac.hop.window.incoming.bitThroughput.adr',
+                           'wifimac.hop.window.outgoing.bitThroughput.adr',
+                           'wifimac.hop.window.aggregated.bitThroughput.adr',
+                           'wifimac.hop.window.relativeGoodput.adr']:
+            node = openwns.evaluation.createSourceNode(sim, sourceName)
+            node.appendChildren(SettlingTimeGuard(settlingTime))
+            #node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [3]))
+            minId = min(staIds + apIds)
+            maxId = max(staIds + apIds)
+            node.getLeafs().appendChildren(Table(axis1 = 'MAC.Id', minValue1 = minId, maxValue1 = maxId+1, resolution1 = maxId+1 - minId,
+                                                 axis2 = 'MAC.WindowProbeAddress',  minValue2 = minId, maxValue2 = maxId+1, resolution2 = maxId+1-minId,
+                                                 values = ['mean', 'trials'],
+                                                 formats = ['MatlabReadableSparse']))
+
+        for sourceName in ['wifimac.e2e.window.incoming.bitThroughput.adr',
+                           'wifimac.e2e.window.outgoing.bitThroughput.adr',
+                           'wifimac.e2e.window.aggregated.bitThroughput.adr',
+                           'wifimac.e2e.window.relativeGoodput.adr']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))
             #node.getLeafs().appendChildren(Accept(by = 'MAC.StationType', ifIn = [3]))
@@ -142,7 +172,7 @@ def installEvaluation(sim, settlingTime, apIds, mpIds, staIds, apAdrs, mpAdrs, s
 
     if(networkProbes):
         #  * Unicast & received by me
-        #  * Table with source | target | 
+        #  * Table with source | target |
         for sourceName in ['wifimac.linkQuality.msduSuccessRate', 'wifimac.linkQuality.sinr']:
             node = openwns.evaluation.createSourceNode(sim, sourceName)
             node.appendChildren(SettlingTimeGuard(settlingTime))

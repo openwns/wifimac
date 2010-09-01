@@ -205,7 +205,7 @@ VirtualPathSelection::getNextHop(const wns::service::dll::UnicastAddress current
 	if(pathCosts[mapper.get(current)][mapper.get(fD)].isInf())
 	{
 		MESSAGE_SINGLE(NORMAL, logger, "getNextHop query from " << current << " to " << fD << " is unknown");
-		this->printPathSelectionTable();
+        //this->printPathSelectionTable();
 		return wns::service::dll::UnicastAddress();
 	}
 	else
@@ -576,13 +576,23 @@ VirtualPathSelection::onNewPathSelectionEntry()
     pathCosts = linkCosts;
     for (addressList::const_iterator i = mps.begin(); i != mps.end(); ++i)
     {
+        MESSAGE_BEGIN(VERBOSE, logger, m, "lc " << *i << ":");
         for (addressList::const_iterator j = mps.begin(); j != mps.end(); ++j)
         {
-            if((*i != *j) && (linkCosts[*i][*j].isNotInf()))
+            m << " " << *j << ":" << linkCosts[*i][*j];
+        }
+        MESSAGE_END();
+    }
+
+    for (addressList::const_iterator i = mps.begin(); i != mps.end(); ++i)
+    {
+        for (addressList::const_iterator j = mps.begin(); j != mps.end(); ++j)
+        {
+            if((*i != *j) and (linkCosts[*i][*j].isNotInf()))
             {
                 pred[*i][*j] = *i;
             }
-            if((*i != *j) && (linkCosts[*i][*j].isNotInf()) && (linkCosts[*j][*i].isInf()))
+            if((*i != *j) and (linkCosts[*i][*j].isNotInf()) and (linkCosts[*j][*i].isInf()))
             {
                 pathCosts[*i][*j] = Metric();
             }
@@ -597,7 +607,7 @@ VirtualPathSelection::onNewPathSelectionEntry()
         {
             for (addressList::const_iterator j = mps.begin(); j != mps.end(); ++j)
             {
-                if(pathCosts[*i][*k].isNotInf() && pathCosts[*k][*j].isNotInf())
+                if(pathCosts[*i][*k].isNotInf() and pathCosts[*k][*j].isNotInf())
                 {
                     if(pathCosts[*i][*k] + pathCosts[*k][*j] < pathCosts[*i][*j])
                     {
@@ -678,52 +688,52 @@ VirtualPathSelection::onNewPathSelectionEntry()
 void
 VirtualPathSelection::printPathSelectionTable() const
 {
-	assure(pathMatrixIsConsistent, "Called printPathSelectionTable for inconsistent pathMatrix");
+    assure(pathMatrixIsConsistent, "Called printPathSelectionTable for inconsistent pathMatrix");
 
-	MESSAGE_SINGLE(NORMAL, logger, "PathSelectionTable:");
-	for(addressList::const_iterator itr = mps.begin(); itr != mps.end(); ++itr)
-	{
-		if(isPortal(mapper.get(*itr)))
-		{
-			MESSAGE_SINGLE(NORMAL, logger, "AP" << mapper.get(*itr) );
-			printPortalInformation(mapper.get(*itr));
-		}
-		else
-		{
-			MESSAGE_SINGLE(NORMAL, logger, "MP" << mapper.get(*itr) );
-		}
-		printProxyInformation(mapper.get(*itr));
-		printPathSelectionLine(mapper.get(*itr));
-	}
+    MESSAGE_SINGLE(VERBOSE, logger, "PathSelectionTable:");
+    for(addressList::const_iterator itr = mps.begin(); itr != mps.end(); ++itr)
+    {
+        if(isPortal(mapper.get(*itr)))
+        {
+            MESSAGE_SINGLE(VERBOSE, logger, "AP" << mapper.get(*itr) );
+            printPortalInformation(mapper.get(*itr));
+        }
+        else
+        {
+            MESSAGE_SINGLE(VERBOSE, logger, "MP" << mapper.get(*itr) );
+        }
+        printProxyInformation(mapper.get(*itr));
+        printPathSelectionLine(mapper.get(*itr));
+    }
 }
 
 void VirtualPathSelection::printPathSelectionLine(const wns::service::dll::UnicastAddress source) const
 {
-	MESSAGE_BEGIN(NORMAL, logger, m, "routing: ");
-	for(addressList::const_iterator itr = mps.begin(); itr != mps.end(); ++itr)
-	{
-		if(pathCosts[mapper.get(source)][*itr].isInf())
-		{
-			m << mapper.get(*itr) << " (Inf/-1)\t";
-		}
-		else
-		{
-			if(*itr == mapper.get(source))
-			{
-				m << mapper.get(*itr) << " (0/-1)\t";
-			}
-			else
-			{
-				m << mapper.get(*itr) << " (" << pathCosts[mapper.get(source)][*itr] << "/" << mapper.get(paths[mapper.get(source)][*itr]) << ")\t";
-			}
-		}
-	}
-	MESSAGE_END();
+    MESSAGE_BEGIN(VERBOSE, logger, m, "routing: ");
+    for(addressList::const_iterator itr = mps.begin(); itr != mps.end(); ++itr)
+    {
+        if(pathCosts[mapper.get(source)][*itr].isInf())
+        {
+            m << mapper.get(*itr) << " (Inf/-1)\t";
+        }
+        else
+        {
+            if(*itr == mapper.get(source))
+            {
+                m << mapper.get(*itr) << " (0/-1)\t";
+            }
+            else
+            {
+                m << mapper.get(*itr) << " (" << pathCosts[mapper.get(source)][*itr].toDouble() << "/" << mapper.get(paths[mapper.get(source)][*itr]) << ")\t";
+            }
+        }
+    }
+    MESSAGE_END();
 }
 
 void VirtualPathSelection::printProxyInformation(const wns::service::dll::UnicastAddress proxy) const
 {
-	MESSAGE_BEGIN(NORMAL, logger, m, "proxied clients: ");
+	MESSAGE_BEGIN(VERBOSE, logger, m, "proxied clients: ");
 	for(addressMap::const_iterator itr = clients2proxies.begin(); itr != clients2proxies.end(); ++itr)
 	{
 		if(itr->second == mapper.get(proxy))
@@ -736,7 +746,7 @@ void VirtualPathSelection::printProxyInformation(const wns::service::dll::Unicas
 
 void VirtualPathSelection::printPortalInformation(const wns::service::dll::UnicastAddress portal) const
 {
-	MESSAGE_BEGIN(NORMAL, logger, m, "portal for: ");
+	MESSAGE_BEGIN(VERBOSE, logger, m, "portal for: ");
 	for(addressMap::const_iterator itr = clients2portals.begin(); itr != clients2portals.end(); ++itr)
 	{
 		if(itr->second == mapper.get(portal))

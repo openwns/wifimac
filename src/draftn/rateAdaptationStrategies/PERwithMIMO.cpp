@@ -26,19 +26,19 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/draftn/rateAdaptationStrategies/OpportunisticwithMIMO.hpp>
+#include <WIFIMAC/draftn/rateAdaptationStrategies/PERwithMIMO.hpp>
 #include <WIFIMAC/management/VirtualCapabilityInformationBase.hpp>
 
 #include <algorithm>
 
 using namespace wifimac::draftn::rateAdaptationStrategies;
 
-STATIC_FACTORY_REGISTER_WITH_CREATOR(OpportunisticwithMIMO,
+STATIC_FACTORY_REGISTER_WITH_CREATOR(PERwithMIMO,
                                      wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy,
-                                     "OpportunisticwithMIMO",
+                                     "PERwithMIMO",
                                      wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategyCreator);
 
-OpportunisticwithMIMO::OpportunisticwithMIMO(
+PERwithMIMO::PERwithMIMO(
     const wns::pyconfig::View& _config,
     wns::service::dll::UnicastAddress _receiver,
     wifimac::management::PERInformationBase* _per,
@@ -61,13 +61,13 @@ OpportunisticwithMIMO::OpportunisticwithMIMO(
 }
 
 wifimac::convergence::PhyMode
-OpportunisticwithMIMO::getPhyMode(size_t numTransmissions, const wns::Ratio /*lqm*/) const
+PERwithMIMO::getPhyMode(size_t numTransmissions, const wns::Ratio /*lqm*/) const
 {
     return(this->getPhyMode(numTransmissions));
 }
 
 wifimac::convergence::PhyMode
-OpportunisticwithMIMO::getPhyMode(size_t numTransmissions) const
+PERwithMIMO::getPhyMode(size_t numTransmissions) const
 {
     unsigned int numTx = friends.manager->getNumAntennas();
     unsigned int numRx = 1;
@@ -106,7 +106,7 @@ OpportunisticwithMIMO::getPhyMode(size_t numTransmissions) const
 }
 
 void
-OpportunisticwithMIMO::reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const
+PERwithMIMO::reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const
 {
     if(friends.phyUser->getPhyModeProvider()->hasLowestMCS(pm))
     {
@@ -126,7 +126,7 @@ OpportunisticwithMIMO::reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned
 }
 
 void
-OpportunisticwithMIMO::increasePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const
+PERwithMIMO::increasePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const
 {
     // nearly all frames are successful -> go up
     if(friends.phyUser->getPhyModeProvider()->hasHighestMCS(pm))
@@ -149,7 +149,7 @@ OpportunisticwithMIMO::increasePhyMode(wifimac::convergence::PhyMode& pm, unsign
 
 
 void
-OpportunisticwithMIMO::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
+PERwithMIMO::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
 {
 
     if(curPhyMode != pm)

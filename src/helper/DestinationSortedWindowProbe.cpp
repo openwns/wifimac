@@ -28,6 +28,7 @@
 
 #include <WIFIMAC/helper/DestinationSortedWindowProbe.hpp>
 #include <WIFIMAC/Layer2.hpp>
+#include <WIFIMAC/pathselection/IPathSelection.hpp>
 
 #include <WNS/StaticFactory.hpp>
 #include <WNS/probe/bus/utils.hpp>
@@ -115,10 +116,6 @@ DestinationSortedWindowProbe::processOutgoing(const wns::ldk::CompoundPtr& compo
     wns::service::dll::UnicastAddress destAdr =
         ucReader->readCommand<dll::UpperCommand>(compound->getCommandPool())->peer.targetMACAddress;
 
-    assure(destAdr.isValid() or
-           this->getFUN()->getLayer<dll::ILayer2*>()->getStationType() == wns::service::dll::StationTypes::UT(),
-           "Destination address is not valid and node is not a STA");
-
     if((not destAdr.isValid()) and
        (this->getFUN()->getLayer<dll::ILayer2*>()->getStationType() == wns::service::dll::StationTypes::UT()))
     {
@@ -127,6 +124,19 @@ DestinationSortedWindowProbe::processOutgoing(const wns::ldk::CompoundPtr& compo
                "Outgoing data, but no association");
         destAdr = this->getFUN()->getLayer<dll::ILayer2*>()->getControlService<dll::services::control::Association>("ASSOCIATION")->getAssociation();
     }
+
+    if((not destAdr.isValid()) and
+       (this->getFUN()->getLayer<dll::ILayer2*>()->getStationType() == wns::service::dll::StationTypes::FRS()))
+    {
+        // no destination address and MP -> destination is portal
+        wns::service::dll::UnicastAddress sourceAdr =
+            ucReader->readCommand<dll::UpperCommand>(compound->getCommandPool())->peer.sourceMACAddress;
+        destAdr = this->getFUN()->getLayer<wifimac::Layer2*>()->getManagementService<wifimac::pathselection::IPathSelection>("PATHSELECTIONOVERVPS")->getPortalFor(sourceAdr);
+        assure(destAdr.isValid(), "Could not get destAdr from ps service");
+    }
+
+    assure(destAdr.isValid(),
+           "Unable to get destination address!");
 
     Bit commandPoolSize;
     Bit dataSize;

@@ -67,11 +67,24 @@ class Station(openwns.node.Node):
     def getPosition(self):
         return self.mobility.mobility.getCoords()
 
-    def setAntenna(self, antenna):
-        assert False, "Not implemented!!!"
+    def setAntenna(self, antenna, antennaNumber=0, transceiverNumber=0):
+        if type(self.phy) is list:
+            assert transceiverNumber < len(self.phy)
+            a = self.phy[transceiverNumber].ofdmaStation.antennas
+        else:
+            a = self.phy.ofdmaStation.antennas
+        assert(antennaNumber < len(a))
+        a[antennaNumber] = antenna
 
-    def getAntenna(self):
-        assert False, "Not implemented!!!"
+    def getAntenna(self, antennaNumber = 0, transceiverNumber = 0):
+        if type(self.phy) is list:
+            assert transceiverNumber < len(self.phy)
+            a = self.phy[transceiverNumber].ofdmaStation.antennas
+        else:
+            a = self.phy.ofdmaStation.antennas
+        assert(antennaNumber < len(a))
+        return a[antennaNumber]
+
 
 class NodeCreator(object):
     __slots__ = (

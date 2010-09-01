@@ -149,7 +149,13 @@ BroadcastLinkQualitywithMIMO::newPeerMeasurement(double peerSuccessRate, wns::Ra
     // scale metric with usual BPSK1/2 transmission time
     wifimac::pathselection::Metric m = ett/this->scalingFactor;
 
-    MESSAGE_SINGLE(NORMAL, parent->logger, "BroadcastLinkQualitywithMIMO for " << peerAddress << ": new PeerMeasurement with " << peerSuccessRate << "/" << peerSINR << " --> " << m);
+    MESSAGE_BEGIN(NORMAL, parent->logger, msg, "BroadcastLinkQualitywithMIMO for ");
+    msg << peerAddress;
+    msg << ": new PeerMeasurement with " << peerSuccessRate;
+    msg << "/" << peerSINR;
+    msg << "/" << getBestTotalRate(peerSINR,factors);
+    msg << " --> " << m;
+    MESSAGE_END();
 
     if(linkCreated)
     {
@@ -215,12 +221,12 @@ double BroadcastLinkQualitywithMIMO::getBestTotalRate(wns::Ratio peerSINR, SINRw
   for (SINRwithMIMOInformationBase::NumSSToFactorMap::const_iterator it=factors.begin(); it != factors.end();it++)   
   {
         rate = 0;
-	for (int i=0; i < it->second.size();i++)
-	{
-	 rate += getBestRate(peerSINR+it->second[i]);	
-	}
-	maxBitRate = std::max(maxBitRate,rate);
-  }	
+        for (int i=0; i < it->second.size();i++)
+        {
+            rate += getBestRate(peerSINR+it->second[i]);
+        }
+        maxBitRate = std::max(maxBitRate,rate);
+  }
   return(maxBitRate);
 }
 

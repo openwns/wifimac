@@ -44,7 +44,7 @@ SINRwithMIMO::SINRwithMIMO(
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    OpportunisticwithMIMO(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
+    PERwithMIMO(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     sinr(dynamic_cast<wifimac::draftn::SINRwithMIMOInformationBase*>(_sinr)),
     singleStreamRA(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     retransmissionLQMReduction(_config.get<double>("retransmissionLQMReduction")),
@@ -154,6 +154,6 @@ SINRwithMIMO::getPhyMode(size_t numTransmissions) const
     }
     else
     {
-        return(OpportunisticwithMIMO::getPhyMode(numTransmissions));
+        return(PERwithMIMO::getPhyMode(numTransmissions));
     }
 }

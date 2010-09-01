@@ -42,8 +42,8 @@ class Constant:
         else:
             self.phyMode = phyMode
 
-class Opportunistic:
-    __plugin__ = 'Opportunistic'
+class PER:
+    __plugin__ = 'PER'
 
     perForGoingDown = 0.25
     """ if the per is above this value, then the next lower phy mode will be used """
@@ -81,8 +81,8 @@ class ARFwithMIMO(ARF):
         else:
             self.initialPhyMode = phyMode
 
-class OpportunisticwithMIMO(Opportunistic):
-    __plugin__ = 'OpportunisticwithMIMO'
+class PERwithMIMO(PER):
+    __plugin__ = 'PERwithMIMO'
 
     phyModeIncreaseOnAntennaDecrease = 3
     phyModeDecreaseOnAntennaIncrease = 3
@@ -93,13 +93,13 @@ class OpportunisticwithMIMO(Opportunistic):
         else:
             self.initialPhyMode = phyMode
 
-class SINR(Opportunistic):
+class SINR(PER):
     __plugin__ = 'SINR'
 
     retransmissionLQMReduction = 3.0
     """ Reduce the expected lqm by this value [in dB] for every retransmission of the packet """
 
-class SINRwithMIMO(OpportunisticwithMIMO):
+class SINRwithMIMO(PERwithMIMO):
     __plugin__ = 'SINRwithMIMO'
 
     retransmissionLQMReduction = 3.0

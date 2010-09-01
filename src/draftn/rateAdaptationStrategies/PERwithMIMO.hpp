@@ -26,34 +26,38 @@
  *
  ******************************************************************************/
 
-#ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTIC_HPP
-#define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_OPPORTUNISTIC_HPP
+#ifndef WIFIMAC_DRAFTN_RATEADAPTATIONSTRATEGIES_PERWITHMIMO_HPP
+#define WIFIMAC_DRAFTN_RATEADAPTATIONSTRATEGIES_PERWITHMIMO_HPP
 
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/IRateAdaptationStrategy.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
+#include <WIFIMAC/draftn/SINRwithMIMOInformationBase.hpp>
 
 #include <WNS/ldk/Key.hpp>
 #include <WNS/distribution/Uniform.hpp>
 #include <WNS/logger/Logger.hpp>
 
-namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
+namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
 
     /**
-	 * @brief The Opportunistic Rate Adpation tries to find the maximum MCS with
-     *   a packet error rate below a given value.
+	 * @brief The Opportunisitc Rate Adpation tries to find the maximum rate
+     *   (using MCSs and number of antennas) with a packet error rate below a
+     *   given value.
      *
-     * Opportunistic RA works only using the statistics of received ACKs as a
-     * reply to the used MCS. Hence, it slowly increases the rate by selecting
-     * high-rate MCSs, until the PER exceeds a given value. Then, it stays at
-     * the next lower MCS until the percieved PER changes again.
+     * PER RA works only using the statistics of received ACKs as a
+     * reply to the used MCS and number of antennas. Hence, it slowly increases
+     * the rate by selecting high-rate MCSs (and switching the number of
+     * antennas, if possible), until the PER exceeds a given value. Then, it
+     * stays at the next lower MCS/antenna combination until the percieved PER
+     * changes again.
 	 */
-    class Opportunistic:
-        public IRateAdaptationStrategy
+    class PERwithMIMO:
+        public wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy
     {
     public:
-        Opportunistic(
+        PERwithMIMO(
             const wns::pyconfig::View& config_,
             wns::service::dll::UnicastAddress _receiver,
             wifimac::management::PERInformationBase* _per,
@@ -63,7 +67,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
             wns::logger::Logger* _logger);
 
         wifimac::convergence::PhyMode
-        getPhyMode(size_t numTransmissions) const ;
+        getPhyMode(size_t numTransmissions) const;
 
         wifimac::convergence::PhyMode
         getPhyMode(size_t numTransmissions,
@@ -73,16 +77,25 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         setCurrentPhyMode(wifimac::convergence::PhyMode pm);
 
     private:
+        void
+        reducePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const;
+
+        void
+        increasePhyMode(wifimac::convergence::PhyMode& pm, unsigned int maxNumSS) const;
+
         wifimac::management::PERInformationBase* per;
 
         struct Friends
         {
             wifimac::convergence::PhyUser* phyUser;
+            wifimac::lowerMAC::Manager* manager;
         } friends;
 
-        const wns::service::dll::UnicastAddress myReceiver;
         const double perForGoingDown;
         const double perForGoingUp;
+        const unsigned int phyModeIncreaseOnAntennaDecrease;
+        const unsigned int phyModeDecreaseOnAntennaIncrease;
+        const wns::service::dll::UnicastAddress myReceiver;
 
         wns::logger::Logger* logger;
 

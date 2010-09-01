@@ -29,7 +29,7 @@
 #ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_SINR_HPP
 #define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_SINR_HPP
 
-#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/Opportunistic.hpp>
+#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/PER.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
@@ -44,13 +44,13 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
 	 * @brief The SINR-based Rate Adaptation (RA) selects the MCS based on the
 	 * knowledge of received link quality indicators.
      *
-     * In contrast to the Opportunistic RA, the SINR-based RA gets direct
+     * In contrast to the PER RA, the SINR-based RA gets direct
      * feedback about the link quality from the peer of the link. Hence, it can
      * directly select the matching MCS for the indicated (averaged) link
      * quality.
 	 */
     class SINR:
-        public Opportunistic
+        public PER
     {
     public:
         SINR(

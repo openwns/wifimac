@@ -26,16 +26,16 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/Opportunistic.hpp>
+#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/PER.hpp>
 #include <WIFIMAC/management/VirtualCapabilityInformationBase.hpp>
 
 #include <algorithm>
 
 using namespace wifimac::lowerMAC::rateAdaptationStrategies;
 
-STATIC_FACTORY_REGISTER_WITH_CREATOR(Opportunistic, IRateAdaptationStrategy, "Opportunistic", IRateAdaptationStrategyCreator);
+STATIC_FACTORY_REGISTER_WITH_CREATOR(PER, IRateAdaptationStrategy, "PER", IRateAdaptationStrategyCreator);
 
-Opportunistic::Opportunistic(
+PER::PER(
     const wns::pyconfig::View& _config,
     wns::service::dll::UnicastAddress _receiver,
     wifimac::management::PERInformationBase* _per,
@@ -55,13 +55,13 @@ Opportunistic::Opportunistic(
 }
 
 wifimac::convergence::PhyMode
-Opportunistic::getPhyMode(size_t numTransmissions, const wns::Ratio /*lqm*/) const
+PER::getPhyMode(size_t numTransmissions, const wns::Ratio /*lqm*/) const
 {
     return(this->getPhyMode(numTransmissions));
 }
 
 wifimac::convergence::PhyMode
-Opportunistic::getPhyMode(size_t numTransmissions) const
+PER::getPhyMode(size_t numTransmissions) const
 {
     if(not per->knowsPER(myReceiver))
     {
@@ -90,7 +90,7 @@ Opportunistic::getPhyMode(size_t numTransmissions) const
 }
 
 void
-Opportunistic::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
+PER::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
 {
     if(curPhyMode != pm)
     {

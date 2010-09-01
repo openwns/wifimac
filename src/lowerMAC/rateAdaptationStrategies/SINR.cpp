@@ -40,7 +40,7 @@ SINR::SINR(
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    Opportunistic(_config, receiver, _per, _sinr, _manager, _phyUser, _logger),
+    PER(_config, receiver, _per, _sinr, _manager, _phyUser, _logger),
     per(_per),
     sinr(_sinr),
     myReceiver(receiver),
@@ -70,6 +70,6 @@ SINR::getPhyMode(size_t numTransmissions) const
     }
     else
     {
-        return(Opportunistic::getPhyMode(numTransmissions));
+        return(PER::getPhyMode(numTransmissions));
     }
 }
