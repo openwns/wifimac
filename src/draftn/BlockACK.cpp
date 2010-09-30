@@ -242,7 +242,8 @@ BlockACK::processIncoming(const wns::ldk::CompoundPtr& compound)
     {
         assure(currentTxQueue != NULL, "got ACK though no transmission queue");
         assure(transmitter == currentTxQueue->getReceiver(), "got ACK from wrong Station");
-        assure(this->baState == receptionFinished, "Received ACK but not waiting for one");
+        assure(this->baState == receptionFinished or this->baState == receiving,
+               "Received ACK but not waiting for one");
 
 
         //perMIB->onSuccessfullTransmission(currentTxQueue->getReceiver());

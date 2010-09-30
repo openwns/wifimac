@@ -236,7 +236,7 @@ RTSCTSwithFLA::processIncoming(const wns::ldk::CompoundPtr& compound)
                     m << "state is receiveCTS\n";
                 MESSAGE_END();
             }
-            assure(state == receptionFinished,
+            assure(state == receptionFinished or state == receiveCTS,
                    "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout);
 
             if(friends.manager->getTransmitterAddress(compound->getCommandPool())
@@ -439,13 +439,13 @@ void RTSCTSwithFLA::onNAVBusy(const wns::service::dll::UnicastAddress setter)
 {
     nav = true;
     navSetter = setter;
-    MESSAGE_SINGLE(NORMAL, logger, "onNAVBusy from " << navSetter);
+    MESSAGE_SINGLE(VERBOSE, logger, "onNAVBusy from " << navSetter);
 }
 
 void RTSCTSwithFLA::onNAVIdle()
 {
     nav = false;
-    MESSAGE_SINGLE(NORMAL, logger, "onNAVIdle");
+    MESSAGE_SINGLE(VERBOSE, logger, "onNAVIdle");
 }
 
 void

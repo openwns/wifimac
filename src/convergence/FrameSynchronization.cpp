@@ -155,7 +155,7 @@ void FrameSynchronization::processPreamble(const wns::ldk::CompoundPtr& compound
     wns::simulator::Time fDur = friends.manager->getFrameExchangeDuration(compound->getCommandPool());
 
     wns::Ratio sinr = getFUN()->getCommandReader(phyUserCommandName)->
-        readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool())->getCIRwithoutMIMO();
+        readCommand<wifimac::convergence::PhyUserCommand>(compound->getCommandPool())->getCIR();
 
     if(sinr < detectionThreshold)
     {
@@ -166,11 +166,18 @@ void FrameSynchronization::processPreamble(const wns::ldk::CompoundPtr& compound
     if(curState == Synchronized and
        friends.manager->getTransmitterAddress(compound->getCommandPool()) == this->synchronizedToAddress)
     {
+         MESSAGE_BEGIN(NORMAL, logger, m, "Received LTF from ");
+         m << friends.manager->getTransmitterAddress(compound->getCommandPool());
+         m << " with ";
+         m << friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams();
+         m << " spatial streams";
+         MESSAGE_END();
+
         if(friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams() != (numSpatialStreamsLastPreambleFragment+1))
         {
             MESSAGE_BEGIN(NORMAL, logger, m, "Received LTF with ");
             m << friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams();
-            m << "spatial streams, but waiting for";
+            m << " spatial streams, but waiting for ";
             m << numSpatialStreamsLastPreambleFragment+1;
             m << " -> DROP";
             MESSAGE_END();
@@ -180,8 +187,10 @@ void FrameSynchronization::processPreamble(const wns::ldk::CompoundPtr& compound
 
         // the preamble comes from the same transmitter as the current
         // synchronization
-        this->syncToNewPreamble(fDur, synchronizedToAddress);
-        // deliver preamble
+        assure(wns::simulator::getEventScheduler()->getTime() + fDur <= lastFrameEnd + 1e-9,
+               "Received LTF tries to extend the synchronization time: Now" << wns::simulator::getEventScheduler()->getTime() << ", fDur " << fDur << ", lfe " << lastFrameEnd);
+        //this->syncToNewPreamble(fDur, synchronizedToAddress);
+        // deliver LTF
         getDeliverer()->getAcceptor(compound)->onData(compound);
         return;
     }
@@ -192,7 +201,6 @@ void FrameSynchronization::processPreamble(const wns::ldk::CompoundPtr& compound
         MESSAGE_SINGLE(NORMAL, logger, "Received LTF, but no preamble with one stream -> DROP");
         return;
     }
-    numSpatialStreamsLastPreambleFragment = 1;
 
 
     wns::Ratio captureThreshold;
@@ -294,12 +302,15 @@ void FrameSynchronization::failedSyncToNewPreamble(wns::simulator::Time fDur)
 
 void FrameSynchronization::syncToNewPreamble(const wns::simulator::Time fDur, const wns::service::dll::UnicastAddress transmitter)
 {
-    MESSAGE_SINGLE(NORMAL, logger, "Rx preamble, signal rxStart");
+    MESSAGE_SINGLE(NORMAL, logger, "Rx preamble from " << transmitter << ", signal rxStart");
     assure(fDur > 0, "Preamble must have duration larger than zero");
     this->wns::Subject<IRxStartEnd>::forEachObserver(OnRxStartEnd(fDur, true, false));
 
     this->setNewTimeout(fDur);
-    if((wns::simulator::getEventScheduler()->getTime() + fDur) > lastFrameEnd)
+
+    if(((wns::simulator::getEventScheduler()->getTime() + fDur) >= lastFrameEnd)
+       or
+       (lastFrameEnd - (wns::simulator::getEventScheduler()->getTime() + fDur) < 0.000001))
     {
         // only change lastFrameEnd if the new frame is longer than the current one
         lastFrameEnd = wns::simulator::getEventScheduler()->getTime() + fDur;
@@ -311,6 +322,7 @@ void FrameSynchronization::syncToNewPreamble(const wns::simulator::Time fDur, co
     }
     this->synchronizedToAddress = transmitter;
     curState = Synchronized;
+    numSpatialStreamsLastPreambleFragment = 1;
 }
 
 void FrameSynchronization::onTimeout()
@@ -371,6 +383,17 @@ void FrameSynchronization::processPSDU(const wns::ldk::CompoundPtr& compound)
             MESSAGE_SINGLE(NORMAL, logger, "Received matching psdu for current synchronization");
             sinrMIB->putMeasurement(friends.manager->getTransmitterAddress(compound->getCommandPool()), sinr);
             successRateProbe->put(compound, 1);
+
+            MESSAGE_SINGLE(NORMAL,logger,"lastFrameEnd: " << lastFrameEnd << " current time: " << wns::simulator::getEventScheduler()->getTime() << " -> till frame end: " << lastFrameEnd-wns::simulator::getEventScheduler()->getTime());
+            if ((lastFrameEnd-wns::simulator::getEventScheduler()->getTime() < 10e-9) 
+                and
+                (curState == Synchronized))
+            {
+                MESSAGE_SINGLE(NORMAL,logger," frame end reached, cancel timeout on last PSDU");
+                cancelTimeout();
+                onTimeout();
+            }
+
             getDeliverer()->getAcceptor(compound)->onData(compound);
         }
         else
