@@ -113,7 +113,7 @@ ARF::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
         assure(pm == pmDown or pm == pmUp,
                "pm " << pm << " is neither " << pmDown << " nor " << pmUp);
 
-        if(not this->hasTimeoutSet())
+        if(this->hasTimeoutSet())
         {
             this->cancelTimeout();
         }
