@@ -28,9 +28,9 @@
 #ifndef WIFIMAC_LOWERMAC_BUFFER_HPP
 #define WIFIMAC_LOWERMAC_BUFFER_HPP
 
+#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/lowerMAC/ITXOPWindow.hpp>
 #include <WIFIMAC/lowerMAC/RateAdaptation.hpp>
-#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/management/ProtocolCalculator.hpp>
 
 #include <WNS/ldk/buffer/Dropping.hpp>

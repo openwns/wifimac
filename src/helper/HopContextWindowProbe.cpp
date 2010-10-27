@@ -26,9 +26,9 @@
  *
  ******************************************************************************/
 
+#include <WIFIMAC/Layer2.hpp>
 #include <WIFIMAC/helper/HopContextWindowProbe.hpp>
 #include <WIFIMAC/pathselection/ForwardingCommand.hpp>
-#include <WIFIMAC/Layer2.hpp>
 
 #include <WNS/StaticFactory.hpp>
 #include <WNS/probe/bus/utils.hpp>

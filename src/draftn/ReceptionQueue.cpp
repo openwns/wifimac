@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/draftn/ReceptionQueue.hpp>
 #include <WIFIMAC/draftn/BlockACK.hpp>
+#include <WIFIMAC/draftn/ReceptionQueue.hpp>
 
 using namespace wifimac::draftn;
 

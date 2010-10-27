@@ -41,6 +41,7 @@ class PhyUserConfig(object):
     # Turnaround time must be below 2E-6 for OFDM-Phy, see IEEE 802.11-2007, Table 17-15
     txrxTurnaroundDelay = 1E-6
     phyModesDeliverer = None
+    bfEnabled = False
 
     def __init__(self, initFrequency, phyModesDeliverer = None):
         self.initFrequency = initFrequency

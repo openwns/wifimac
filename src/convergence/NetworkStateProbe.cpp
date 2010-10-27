@@ -27,7 +27,6 @@
  ******************************************************************************/
 
 #include <WIFIMAC/convergence/NetworkStateProbe.hpp>
-#include <WIFIMAC/convergence/TxDurationSetter.hpp>
 
 #include <WNS/probe/bus/utils.hpp>
 

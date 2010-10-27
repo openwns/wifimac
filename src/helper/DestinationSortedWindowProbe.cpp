@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/helper/DestinationSortedWindowProbe.hpp>
 #include <WIFIMAC/Layer2.hpp>
+#include <WIFIMAC/helper/DestinationSortedWindowProbe.hpp>
 #include <WIFIMAC/pathselection/IPathSelection.hpp>
 
 #include <WNS/StaticFactory.hpp>
@@ -101,7 +101,7 @@ DestinationSortedWindowProbe::processIncoming(const wns::ldk::CompoundPtr& compo
     wifimac::helper::DestinationSortedWindowProbe* peerFU = dynamic_cast<wifimac::helper::DestinationSortedWindowProbe*>(command->magic.probingFU);
     assure(peerFU != NULL, "Expected wifimac::helper::DestinationSortedWindowProbe as peer!");
 
-    peerFU->putProbe(peerFU->bitsAggregatedProbeHolder, destAddress, compoundLength);
+    peerFU->putAggregatedProbe(destAddress, compoundLength);
 
     // Now do the general (base class stuff)
     this->wns::ldk::probe::bus::Window::processIncoming(compound);
@@ -122,7 +122,8 @@ DestinationSortedWindowProbe::processOutgoing(const wns::ldk::CompoundPtr& compo
         // no destination address and STA -> destination is AP
         assure(this->getFUN()->getLayer<dll::ILayer2*>()->getControlService<dll::services::control::Association>("ASSOCIATION")->hasAssociation(),
                "Outgoing data, but no association");
-        destAdr = this->getFUN()->getLayer<dll::ILayer2*>()->getControlService<dll::services::control::Association>("ASSOCIATION")->getAssociation();
+        destAdr =
+        this->getFUN()->getLayer<dll::ILayer2*>()->getControlService<dll::services::control::Association>("ASSOCIATION")->getAssociation();
     }
 
     if((not destAdr.isValid()) and
@@ -144,6 +145,18 @@ DestinationSortedWindowProbe::processOutgoing(const wns::ldk::CompoundPtr& compo
     const long int compoundLength = commandPoolSize + dataSize;
 
     this->putProbe(bitsOutgoingProbeHolder, destAdr.getInteger(), compoundLength);
+}
+
+void
+DestinationSortedWindowProbe::putAggregatedProbe(unsigned int adr,
+                                                 double value)
+{
+    if(this->getFUN()->getLayer<dll::ILayer2*>()->getStationType() == wns::service::dll::StationTypes::UT())
+    {
+        // The STA can only have the associated AP/MP as peer --> change the adr
+        adr = this->getFUN()->getLayer<dll::ILayer2*>()->getControlService<dll::services::control::Association>("ASSOCIATION")->getAssociation().getInteger();
+    }
+    this->putProbe(bitsAggregatedProbeHolder, adr, value);
 }
 
 void

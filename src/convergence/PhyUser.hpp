@@ -29,8 +29,8 @@
 #ifndef WIFIMAC_CONVERGENCE_PHYUSER_HPP
 #define WIFIMAC_CONVERGENCE_PHYUSER_HPP
 
-#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/PhyModeProvider.hpp>
+#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 
 #include <WNS/service/phy/ofdma/Handler.hpp>
@@ -85,9 +85,9 @@ namespace wifimac { namespace convergence {
         }
 
         wns::Power getRSS() const
-            {
-                return (local.rxPower);
-            }
+        {
+            return (local.rxPower);
+        }
     };
 
     /**
@@ -156,6 +156,7 @@ namespace wifimac { namespace convergence {
         const std::string managerName;
         const std::string txDurationProviderCommandName;
         const wns::simulator::Time txrxTurnaroundDelay;
+        const bool bfEnabled;
 
         struct Friends
         {

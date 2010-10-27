@@ -26,8 +26,9 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/draftn/TransmissionQueue.hpp>
 #include <WIFIMAC/draftn/BlockACK.hpp>
+#include <WIFIMAC/draftn/TransmissionQueue.hpp>
+
 
 using namespace wifimac::draftn;
 

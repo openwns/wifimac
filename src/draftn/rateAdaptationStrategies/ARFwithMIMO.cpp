@@ -31,9 +31,12 @@
 
 #include <algorithm>
 
-using namespace wifimac::lowerMAC::rateAdaptationStrategies;
+using namespace wifimac::draftn::rateAdaptationStrategies;
 
-STATIC_FACTORY_REGISTER_WITH_CREATOR(ARFwithMIMO, IRateAdaptationStrategy, "ARFwithMIMO", IRateAdaptationStrategyCreator);
+STATIC_FACTORY_REGISTER_WITH_CREATOR(ARFwithMIMO, 
+                                     wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy,
+                                     "ARFwithMIMO",
+                                     wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategyCreator);
 
 ARFwithMIMO::ARFwithMIMO(
     const wns::pyconfig::View& _config,
@@ -43,7 +46,7 @@ ARFwithMIMO::ARFwithMIMO(
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    IRateAdaptationStrategy(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
+    wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     per(_per),
     arfTimer(_config.get<wns::simulator::Time>("arfTimer")),
     exponentialBackoff(_config.get<bool>("exponentialBackoff")),

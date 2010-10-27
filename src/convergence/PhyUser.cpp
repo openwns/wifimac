@@ -30,6 +30,8 @@
 #include <WIFIMAC/convergence/TxDurationSetter.hpp>
 #include <WIFIMAC/helper/CholeskyDecomposition.hpp>
 
+#include <DLL/StationManager.hpp>
+
 #include <WNS/ldk/fun/FUN.hpp>
 #include <WNS/pyconfig/View.hpp>
 #include <WNS/logger/Logger.hpp>
@@ -58,6 +60,7 @@ PhyUser::PhyUser(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& _config) :
     managerName(config.get<std::string>("managerName")),
     txDurationProviderCommandName(config.get<std::string>("txDurationProviderCommandName")),
     txrxTurnaroundDelay(config.get<wns::simulator::Time>("myConfig.txrxTurnaroundDelay")),
+    bfEnabled(config.get<bool>("myConfig.bfEnabled")),
     phyUserStatus(receiving),
     currentTxCompound(),
     lastTxRxTurnaround(0.0)
@@ -108,19 +111,40 @@ void PhyUser::doSendData(const wns::ldk::CompoundPtr& compound)
     // create a variable of the desired function signature type and assign using
     // desired member function.  This will resolve the correct function thanks
     // to the signature including the argument types.
-    void (wns::service::phy::ofdma::NonBFTransmission::*fn)(wns::osi::PDUPtr, int, wns::Power, int) =
-        &wns::service::phy::ofdma::NonBFTransmission::startBroadcast;
+    if(bfEnabled and friends.manager->getReceiverAddress(compound->getCommandPool()).isValid())
+    {
+        void (wns::service::phy::ofdma::NonBFTransmission::*fn)(wns::osi::PDUPtr, wns::node::Interface*, int, wns::Power, int) =
+            &wns::service::phy::ofdma::NonBFTransmission::startUnicast;
 
-    // Now boost::bind can be used to schedue the start of the transmission
-    wns::simulator::getEventScheduler()->scheduleDelay(
-        boost::bind(fn,
-                    this->getDataTransmissionService(),
-                    compound,
-                    0,
-                    defaultTxPower,
-                    friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams()),
-        0.0);
+        wns::service::dll::UnicastAddress destination = friends.manager->getReceiverAddress(compound->getCommandPool());
+        wns::node::Interface* n = this->getFUN()->getLayer<dll::ILayer2*>()->getStationManager()->getStationByMAC(destination)->getNode();
 
+        // Now boost::bind can be used to schedue the start of the transmission
+        wns::simulator::getEventScheduler()->scheduleDelay(
+            boost::bind(fn,
+                        this->getDataTransmissionService(),
+                        compound,
+                        n,
+                        0,
+                        defaultTxPower,
+                        friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams()),
+            0.0);
+    }
+    else
+    {
+        void (wns::service::phy::ofdma::NonBFTransmission::*fn)(wns::osi::PDUPtr, int, wns::Power, int) =
+            &wns::service::phy::ofdma::NonBFTransmission::startBroadcast;
+
+        // Now boost::bind can be used to schedue the start of the transmission
+        wns::simulator::getEventScheduler()->scheduleDelay(
+            boost::bind(fn,
+                        this->getDataTransmissionService(),
+                        compound,
+                        0,
+                        defaultTxPower,
+                        friends.manager->getPhyMode(compound->getCommandPool()).getNumberOfSpatialStreams()),
+            0.0);
+    }
     // schedule end of transmission similarly
     wns::simulator::getEventScheduler()->scheduleDelay(
         boost::bind(&wns::service::phy::ofdma::DataTransmission::stopTransmission,

@@ -29,14 +29,12 @@
 #ifndef WIFIMAC_DRAFTN_BLOCKACK_HPP
 #define WIFIMAC_DRAFTN_BLOCKACK_HPP
 
-#include <WIFIMAC/draftn/BlockACKCommand.hpp>
-#include <WIFIMAC/draftn/TransmissionQueue.hpp>
-#include <WIFIMAC/draftn/ReceptionQueue.hpp>
-
 #include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/management/PERInformationBase.hpp>
 #include <WIFIMAC/lowerMAC/ITransmissionCounter.hpp>
-
+#include <WIFIMAC/draftn/BlockACKCommand.hpp>
+#include <WIFIMAC/draftn/TransmissionQueue.hpp>
+#include <WIFIMAC/draftn/ReceptionQueue.hpp>
 #include <WIFIMAC/convergence/IRxStartEnd.hpp>
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 

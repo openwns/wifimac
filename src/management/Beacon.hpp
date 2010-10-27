@@ -29,9 +29,9 @@
 #ifndef WIFIMAC_MANAGEMENT_BEACON_HPP
 #define WIFIMAC_MANAGEMENT_BEACON_HPP
 
+#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/management/ILinkNotification.hpp>
 #include <WIFIMAC/pathselection/IPathSelection.hpp>
-#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>

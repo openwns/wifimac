@@ -65,6 +65,8 @@ namespace wifimac { namespace lowerMAC {
         wifimac::convergence::PhyMode
         getPhyMode(const wns::ldk::CompoundPtr& compound);
 
+
+
     private:
         void
         onFUNCreated();
@@ -73,10 +75,7 @@ namespace wifimac { namespace lowerMAC {
         void processIncoming(const wns::ldk::CompoundPtr& compound);
         void processOutgoing(const wns::ldk::CompoundPtr& compound);
 
-	wifimac::convergence::PhyMode
-        setCurrentPhyMode(wns::service::dll::UnicastAddress receiver, size_t numTransmissions);
-	
-	const std::string phyUserName;
+        const std::string phyUserName;
         const std::string managerName;
         const std::string arqName;
         const std::string sinrMIBServiceName;

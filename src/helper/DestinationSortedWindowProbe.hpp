@@ -59,6 +59,10 @@ namespace wifimac { namespace helper {
         virtual void processIncoming(const wns::ldk::CompoundPtr& compound);
         virtual void processOutgoing(const wns::ldk::CompoundPtr& compound);
 
+        void
+        putAggregatedProbe(unsigned int adr,
+                           double value);
+
     private:
         virtual void onFUNCreated();
 

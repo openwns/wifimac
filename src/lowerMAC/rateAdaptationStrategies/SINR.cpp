@@ -40,7 +40,7 @@ SINR::SINR(
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    PER(_config, receiver, _per, _sinr, _manager, _phyUser, _logger),
+    ARF(_config, receiver, _per, _sinr, _manager, _phyUser, _logger),
     per(_per),
     sinr(_sinr),
     myReceiver(receiver),
@@ -70,6 +70,17 @@ SINR::getPhyMode(size_t numTransmissions) const
     }
     else
     {
-        return(PER::getPhyMode(numTransmissions));
+        return(ARF::getPhyMode(numTransmissions));
     }
+}
+
+void
+SINR::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
+{
+    if(not sinr->knowsPeerSINR(myReceiver))
+    {
+        // no SINR known, phyMode setting is handled by ARF
+        ARF::setCurrentPhyMode(pm);
+    }
+    // otherwise do nothing, no internal state required
 }

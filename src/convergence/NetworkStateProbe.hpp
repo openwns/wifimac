@@ -29,6 +29,8 @@
 #ifndef WIFIMAC_CONVERGENCE_NETWORKSTATEPROBE_HPP
 #define WIFIMAC_CONVERGENCE_NETWORKSTATEPROBE_HPP
 
+#include <WIFIMAC/convergence/TxDurationSetter.hpp>
+
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Processor.hpp>
 #include <WNS/ldk/Command.hpp>

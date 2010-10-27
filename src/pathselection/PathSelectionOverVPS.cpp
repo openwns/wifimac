@@ -26,8 +26,8 @@
  *
  ******************************************************************************/
 
-#include <WIFIMAC/pathselection/PathSelectionOverVPS.hpp>
 #include <WIFIMAC/Layer2.hpp>
+#include <WIFIMAC/pathselection/PathSelectionOverVPS.hpp>
 #include <WNS/service/dll/StationTypes.hpp>
 
 using namespace wifimac::pathselection;

@@ -29,8 +29,8 @@
 #ifndef WIFIMAC_LOWERMAC_MANAGER_HPP
 #define WIFIMAC_LOWERMAC_MANAGER_HPP
 
-#include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
+#include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/FrameType.hpp>
 
 #include <WNS/logger/Logger.hpp>

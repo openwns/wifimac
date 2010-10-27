@@ -44,7 +44,7 @@ SINRwithMIMO::SINRwithMIMO(
     wifimac::lowerMAC::Manager* _manager,
     wifimac::convergence::PhyUser* _phyUser,
     wns::logger::Logger* _logger):
-    PERwithMIMO(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
+    ARFwithMIMO(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     sinr(dynamic_cast<wifimac::draftn::SINRwithMIMOInformationBase*>(_sinr)),
     singleStreamRA(_config, _receiver, _per, _sinr, _manager, _phyUser, _logger),
     retransmissionLQMReduction(_config.get<double>("retransmissionLQMReduction")),
@@ -154,6 +154,17 @@ SINRwithMIMO::getPhyMode(size_t numTransmissions) const
     }
     else
     {
-        return(PERwithMIMO::getPhyMode(numTransmissions));
+        return(ARFwithMIMO::getPhyMode(numTransmissions));
     }
+}
+
+void
+SINRwithMIMO::setCurrentPhyMode(wifimac::convergence::PhyMode pm)
+{
+    if(not sinr->knowsPeerSINR(myReceiver))
+    {
+        // no SINR known, phyMode setting is handled by ARF
+        ARFwithMIMO::setCurrentPhyMode(pm);
+    }
+    // otherwise do nothing, no internal state required
 }

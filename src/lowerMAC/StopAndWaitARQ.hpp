@@ -29,15 +29,14 @@
 #ifndef WIFIMAC_LOWERMAC_STOPANDWAITARQ_HPP
 #define WIFIMAC_LOWERMAC_STOPANDWAITARQ_HPP
 
-#include <WNS/ldk/arq/StopAndWait.hpp>
-#include <WIFIMAC/lowerMAC/ITransmissionCounter.hpp>
-
+#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/IRxStartEnd.hpp>
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
-#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/management/PERInformationBase.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
+#include <WIFIMAC/lowerMAC/ITransmissionCounter.hpp>
 
+#include <WNS/ldk/arq/StopAndWait.hpp>
 #include <WNS/Observer.hpp>
 #include <WNS/ldk/Layer.hpp>
 #include <WNS/simulator/Time.hpp>

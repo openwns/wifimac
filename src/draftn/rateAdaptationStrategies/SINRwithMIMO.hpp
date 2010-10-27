@@ -29,7 +29,7 @@
 #ifndef WIFIMAC_DRAFTN_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
 #define WIFIMAC_DRAFTN_RATEADAPTATIONSTRATEGIES_SINRWITHMIMO_HPP
 
-#include <WIFIMAC/draftn/rateAdaptationStrategies/PERwithMIMO.hpp>
+#include <WIFIMAC/draftn/rateAdaptationStrategies/ARFwithMIMO.hpp>
 #include <WIFIMAC/lowerMAC/rateAdaptationStrategies/SINR.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
@@ -51,7 +51,7 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
      * (averaged) link quality.
 	 */
     class SINRwithMIMO:
-        public PERwithMIMO
+        public ARFwithMIMO
     {
     public:
         SINRwithMIMO(
@@ -69,6 +69,9 @@ namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
         wifimac::convergence::PhyMode
         getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const;
+
+        void
+        setCurrentPhyMode(wifimac::convergence::PhyMode pm);
 
     private:
         struct Friends

@@ -57,14 +57,31 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
             {};
         virtual ~IRateAdaptationStrategy()
             {};
-
+        /**
+         * @brief getPhyMode: Return the PhyMode depending on the number of
+         * transmissions.
+         *
+         * This method returns the currently selected phyMode of the specific
+         * rate adaptation strategy, given the number of transmissions for the
+         * frame. This method is const and thus cannot change the internal state
+         * of the rate adaptation strategy. Hence, multiple calls to the method
+         * at the same simulation time and number of transmissions (e.g. to
+         * calculate transmit durations) return ALWAYS the same phyMode.
+         **/
         virtual wifimac::convergence::PhyMode
         getPhyMode(size_t numTransmissions) const = 0;
 
+        /**
+         * @brief getPhyMode with additional lqm
+         **/
         virtual wifimac::convergence::PhyMode
         getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const = 0;
 
+        /**
+         * @brief Notify the rate adaptation strategy of the used PhyMode
+         *
+         **/
         virtual void
         setCurrentPhyMode(wifimac::convergence::PhyMode pm) = 0;
     };

@@ -29,7 +29,7 @@
 #ifndef WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_SINR_HPP
 #define WIFIMAC_LOWERMAC_RATEADAPTATIONSTRATEGIES_SINR_HPP
 
-#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/PER.hpp>
+#include <WIFIMAC/lowerMAC/rateAdaptationStrategies/ARF.hpp>
 #include <WIFIMAC/convergence/PhyUser.hpp>
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <WIFIMAC/lowerMAC/Manager.hpp>
@@ -50,7 +50,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
      * quality.
 	 */
     class SINR:
-        public PER
+        public ARF
     {
     public:
         SINR(
@@ -68,6 +68,9 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
         wifimac::convergence::PhyMode
         getPhyMode(size_t numTransmissions,
                    const wns::Ratio lqm) const;
+
+        void
+        setCurrentPhyMode(wifimac::convergence::PhyMode pm);
 
     private:
         wifimac::management::PERInformationBase* per;

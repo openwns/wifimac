@@ -29,9 +29,9 @@
 #ifndef WIFIMAC_CONVERGENCE_FRAMESYNCHRONIZATION_HPP
 #define WIFIMAC_CONVERGENCE_FRAMESYNCHRONIZATION_HPP
 
+#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/IRxStartEnd.hpp>
 #include <WIFIMAC/management/SINRInformationBase.hpp>
-#include <WIFIMAC/lowerMAC/Manager.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Dropper.hpp>

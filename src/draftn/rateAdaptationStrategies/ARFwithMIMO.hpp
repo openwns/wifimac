@@ -40,7 +40,7 @@
 #include <WNS/logger/Logger.hpp>
 #include <WNS/events/CanTimeout.hpp>
 
-namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
+namespace wifimac { namespace draftn { namespace rateAdaptationStrategies {
 
     /**
 	 * @brief The ARFWITHMIMO Rate Adpation tries to find the maximum MCS with
@@ -52,7 +52,7 @@ namespace wifimac { namespace lowerMAC { namespace rateAdaptationStrategies {
      * the next lower MCS until the percieved PER changes again.
 	 */
     class ARFwithMIMO:
-        public IRateAdaptationStrategy,
+        public wifimac::lowerMAC::rateAdaptationStrategies::IRateAdaptationStrategy,
         public wns::events::CanTimeout
     {
     public:

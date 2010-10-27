@@ -63,7 +63,7 @@ class ARF:
     arfTimer = 1.0
     initialPhyMode = None
     exponentialBackoff = True
-    initialSuccessThreshold = 10
+    initialSuccessThreshold = 2
     maxSuccessThreshold = 50
 
     def __init__(self, phyMode = None):
@@ -93,13 +93,13 @@ class PERwithMIMO(PER):
         else:
             self.initialPhyMode = phyMode
 
-class SINR(PER):
+class SINR(ARF):
     __plugin__ = 'SINR'
 
     retransmissionLQMReduction = 3.0
     """ Reduce the expected lqm by this value [in dB] for every retransmission of the packet """
 
-class SINRwithMIMO(PERwithMIMO):
+class SINRwithMIMO(ARFwithMIMO):
     __plugin__ = 'SINRwithMIMO'
 
     retransmissionLQMReduction = 3.0

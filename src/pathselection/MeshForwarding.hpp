@@ -29,9 +29,9 @@
 #ifndef WIFIMAC_PATHSELECTION_MESHFORWARDING_HPP
 #define WIFIMAC_PATHSELECTION_MESHFORWARDING_HPP
 
+#include <WIFIMAC/Layer2.hpp>
 #include <WIFIMAC/pathselection/ForwardingCommand.hpp>
 #include <WIFIMAC/pathselection/IPathSelection.hpp>
-#include <WIFIMAC/Layer2.hpp>
 
 #include <WNS/ldk/ManagementServiceInterface.hpp>
 #include <WNS/logger/Logger.hpp>

@@ -29,10 +29,10 @@
 #ifndef WIFIMAC_PATHSELECTION_BEACONLINKQUALITYMEASUREMENT_HPP
 #define WIFIMAC_PATHSELECTION_BEACONLINKQUALITYMEASUREMENT_HPP
 
+#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/pathselection/Metric.hpp>
 #include <WIFIMAC/pathselection/IPathSelection.hpp>
 #include <WIFIMAC/management/Beacon.hpp>
-#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/draftn/SINRwithMIMOInformationBase.hpp>
 
 #include <WNS/ldk/Command.hpp>

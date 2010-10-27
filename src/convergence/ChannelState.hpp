@@ -29,12 +29,12 @@
 #ifndef WIFIMAC_CONVERGENCE_CHANNELSTATE_HPP
 #define WIFIMAC_CONVERGENCE_CHANNELSTATE_HPP
 
+#include <WIFIMAC/lowerMAC/Manager.hpp>
 #include <WIFIMAC/convergence/IChannelState.hpp>
 #include <WIFIMAC/convergence/INetworkAllocationVector.hpp>
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 #include <WIFIMAC/convergence/IRxStartEnd.hpp>
 #include <WIFIMAC/FrameType.hpp>
-#include <WIFIMAC/lowerMAC/Manager.hpp>
 
 #include <WNS/ldk/fu/Plain.hpp>
 #include <WNS/ldk/Processor.hpp>
