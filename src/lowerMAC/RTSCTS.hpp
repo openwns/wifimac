@@ -38,8 +38,11 @@
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 #include <WIFIMAC/management/ProtocolCalculator.hpp>
 
-#include <WNS/ldk/fu/Plain.hpp>
-#include <WNS/ldk/Delayed.hpp>
+#include <WNS/ldk/FunctionalUnitRC.hpp>
+#include <WNS/ldk/CommandTypeSpecifier.hpp>
+#include <WNS/ldk/IPortID.hpp>
+#include <WNS/ldk/HasDownPort.hpp>
+#include <WNS/ldk/HasUpPort.hpp>
 
 #include <WNS/ldk/probe/Probe.hpp>
 #include <WNS/probe/bus/ContextCollector.hpp>
@@ -50,6 +53,20 @@
 #include <WNS/Observer.hpp>
 
 namespace wifimac { namespace lowerMAC {
+
+    class RTSCTSControl:
+        public virtual wns::ldk::IPortID
+    {
+    public:
+        static const std::string name;
+    };
+
+    class RTSCTSData:
+        public virtual wns::ldk::IPortID
+    {
+    public:
+        static const std::string name;
+    };
 
     class RTSProviderCommand
     {
@@ -98,7 +115,12 @@ namespace wifimac { namespace lowerMAC {
     */
    class RTSCTS:
         public wns::ldk::fu::Plain<RTSCTS, RTSCTSCommand>,
-        public wns::ldk::Delayed<RTSCTS>,
+        /*public wns::ldk::FunctionalUnit< RTSCTS >,
+        public wns::ldk::CommandTypeSpecifier< RTSCTSCommand >,
+        public wns::ldk::HasUpPort< RTSCTS >,
+        public wns::ldk::HasDownPort< RTSCTS, Port<RTSCTSControl> >,
+        public wns::ldk::HasDownPort< RTSCTS, Port<RTSCTSData> >,
+        public wns::Cloneable< RTSCTS >,*/
         public wns::events::CanTimeout,
         public wns::Observer<wifimac::convergence::INetworkAllocationVector>,
         public wns::Observer<wifimac::convergence::IRxStartEnd>,
@@ -138,12 +160,18 @@ namespace wifimac { namespace lowerMAC {
         void calculateSizes(const wns::ldk::CommandPool* commandPool, Bit& commandPoolSize, Bit& dataSize) const;
 
     private:
-        /** @brief Delayed Interface */
-        void processIncoming(const wns::ldk::CompoundPtr& compound);
-        void processOutgoing(const wns::ldk::CompoundPtr& compound);
-        bool hasCapacity() const;
-        const wns::ldk::CompoundPtr hasSomethingToSend() const;
-        wns::ldk::CompoundPtr getSomethingToSend();
+        virtual
+        void doWakeup();
+
+        virtual
+        void
+        doOnData(const wns::ldk::CompoundPtr& compound);
+
+        virtual bool
+        doIsAccepting(const wns::ldk::CompoundPtr& compound) const;
+
+        virtual void
+        doSendData(const wns::ldk::CompoundPtr& compound);
 
         void onFUNCreated();
 

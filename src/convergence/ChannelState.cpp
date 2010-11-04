@@ -27,7 +27,7 @@
  ******************************************************************************/
 
 #include <WIFIMAC/convergence/ChannelState.hpp>
-#include <WIFIMAC/lowerMAC/NewRTSCTS.hpp>
+#include <WIFIMAC/lowerMAC/RTSCTS.hpp>
 
 #include <WNS/probe/bus/utils.hpp>
 

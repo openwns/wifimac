@@ -30,6 +30,7 @@
 #include <WIFIMAC/convergence/PhyMode.hpp>
 #include <DLL/Layer2.hpp>
 #include <WNS/probe/bus/utils.hpp>
+#include <WNS/ldk/Port.hpp>
 
 using namespace wifimac::lowerMAC;
 
@@ -45,10 +46,18 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
     "wifimac.lowerMAC.RTSCTS",
     wns::ldk::FUNConfigCreator);
 
+const std::string RTSCTSControl::name = "RTSCTSControl";
+const std::string RTSCTSData::name = "RTSCTSData";
 
 RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     wns::ldk::fu::Plain<RTSCTS, RTSCTSCommand>(fun),
 
+/*    wns::ldk::FunctionalUnitRC<RTSCTS>(this),
+    wns::ldk::CommandTypeSpecifier<RTSCTS>(fun),
+    wns::ldk::HasUpPort<RTSCTS>(this),
+    wns::ldk::HasDownPort<RTSCTS, wns::ldk::Port<RTSCTSControl> >(this),
+    wns::ldk::HasDownPort<RTSCTS, wns::ldk::Port<RTSCTSData> >(this),
+*/
     phyUserName(config_.get<std::string>("phyUserName")),
     managerName(config_.get<std::string>("managerName")),
     protocolCalculatorName(config_.get<std::string>("protocolCalculatorName")),
@@ -130,103 +139,38 @@ void RTSCTS::onFUNCreated()
     protocolCalculator = getFUN()->getLayer<dll::ILayer2*>()->getManagementService<wifimac::management::ProtocolCalculator>(protocolCalculatorName);
 }
 
-void
-RTSCTS::processIncoming(const wns::ldk::CompoundPtr& compound)
+bool
+RTSCTS::doIsAccepting(const wns::ldk::CompoundPtr& compound) const
 {
-    if(getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this))
+    switch(friends.manager->getFrameType(compound->getCommandPool()))
     {
-        if(getCommand(compound->getCommandPool())->peer.isRTS)
+    case DATA_TXOP:
+        if(not this->rtsctsOnTxopData)
         {
-            if(nav)
-            {
-                if(friends.manager->getTransmitterAddress(compound->getCommandPool()) == navSetter)
-                {
-                    MESSAGE_BEGIN(NORMAL, this->logger, m, "Incoming RTS from ");
-                    m << friends.manager->getTransmitterAddress(compound->getCommandPool());
-                    m << ", nav busy from " << navSetter;
-                    m << " -> reply with CTS";
-                    MESSAGE_END();
-
-                    assure(this->pendingCTS == wns::ldk::CompoundPtr(),
-                           "Old pending CTS not transmitted");
-                    this->pendingCTS = this->prepareCTS(compound);
-                }
-                else
-                {
-                    MESSAGE_BEGIN(NORMAL, this->logger, m, "Incoming RTS from ");
-                    m << friends.manager->getTransmitterAddress(compound->getCommandPool());
-                    m << ", nav busy from " << navSetter;
-                    m << " -> Drop";
-                    MESSAGE_END();
-                }
-            } // nav
-            else
-            {
-                MESSAGE_SINGLE(NORMAL, this->logger, "Incoming RTS, nav idle -> reply with CTS");
-
-                assure(this->pendingCTS == wns::ldk::CompoundPtr(),
-                       "Old pending CTS not transmitted");
-                this->pendingCTS = this->prepareCTS(compound);
-            } // not nav
-        } // is RTS
+            return(getConnector()->hasAcceptor(compound));
+        }
+    case DATA:
+        if(compound->getLengthInBits() < this->rtsctsThreshold)
+        {
+            return(getConnector()->hasAcceptor(compound));
+        }
         else
         {
-            // received CTS on transmitted RTS --> successfully reserved the channel
-            // for data
-            assure(this->pendingMPDU, "Received CTS, but no pending MPDU");
-            if(state == idle)
-            {
-                MESSAGE_BEGIN(NORMAL, this->logger, m, "received CTS although state is idle, now: ");
-                m << wns::simulator::getEventScheduler()->getTime();
-                m << ", last timeout: " << this->lastTimeout << "\n";
-                if(state == transmitRTS)
-                    m << "state is transmitRTS\n";
-                if(state == waitForCTS)
-                    m << "state is waitForCTS\n";
-                if(state == receiveCTS)
-                    m << "state is receiveCTS\n";
-                MESSAGE_END();
-            }
-            assure(state == receptionFinished,
-                   "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout);
-
-            if(friends.manager->getTransmitterAddress(compound->getCommandPool())
-               != friends.manager->getReceiverAddress(this->pendingMPDU->getCommandPool()))
-            {
-                MESSAGE_SINGLE(NORMAL, this->logger,
-                               "Incoming CTS does not match the receiver's address on the pending MPDU -> do nothing");
-            }
-            else
-            {
-                assure(this->pendingMPDU, "Received CTS, but no pending MPDU");
-                MESSAGE_SINGLE(NORMAL, this->logger,
-                               "Incoming awaited CTS -> send data");
-                rtsSuccessProbe->put(this->pendingMPDU, 1);
-                state = idle;
-                if(this->hasTimeoutSet())
-                {
-                    this->cancelTimeout();
-                }
-            }
-        } // is not RTS
-    } // is activated
-    else
-    {
-        // deliver frame
-        MESSAGE_SINGLE(NORMAL, this->logger, "Received frame -> deliver");
-        getDeliverer()->getAcceptor(compound)->onData(compound);
-    } // no RTSCTS command
+            return (this->pendingMPDU == wns::ldk::CompoundPtr());
+        }
+    default:
+        throw wns::Exception("Unknown frame type");
+        break;
+    }
 }
 
 void
-RTSCTS::processOutgoing(const wns::ldk::CompoundPtr& compound)
+RTSCTS::doSendData(const wns::ldk::CompoundPtr& compound)
 {
     assure(this->pendingMPDU == wns::ldk::CompoundPtr(),
            "Cannot have two MPDUs");
     assure(this->pendingRTS == wns::ldk::CompoundPtr(),
            "Cannot have two RTSs");
-
-    this->pendingMPDU = compound;
 
     switch(friends.manager->getFrameType(compound->getCommandPool()))
     {
@@ -246,73 +190,218 @@ RTSCTS::processOutgoing(const wns::ldk::CompoundPtr& compound)
         {
             MESSAGE_SINGLE(NORMAL, this->logger,
                            "Outgoing DATA with size " << compound->getLengthInBits() << "-> Save and send RTS");
+            this->pendingMPDU = compound;
             this->pendingRTS = this->prepareRTS(this->pendingMPDU);
 
             // RTS/CTS initializes mini-TXOP for compound, it can be send
             // directly after SIFS
             friends.manager->setFrameType(this->pendingMPDU->getCommandPool(), DATA_TXOP);
+
+            // try to send RTS
+            if(getConnector()->hasAcceptor(this->pendingRTS))
+            {
+                state = transmitRTS;
+                getConnector()->getAcceptor(compound)->sendData(this->pendingRTS);
+                this->pendingRTS = wns::ldk::CompoundPtr();
+            }
+            return;
         }
         break;
     default:
         throw wns::Exception("Unknown frame type");
         break;
     }
+
+    // try to send data
+    if(getConnector()->hasAcceptor(compound))
+    {
+        getConnector()->getAcceptor(compound)->sendData(compound);
+    }
+    else
+    {
+        this->pendingMPDU = compound;
+    }
 }
 
-const wns::ldk::CompoundPtr
-RTSCTS::hasSomethingToSend() const
+void
+RTSCTS::doWakeup()
 {
-
     if(this->pendingCTS)
     {
-        return(this->pendingCTS);
+        throw wns::Exception("Received wakeup, but CTS is pending");
+
+        /*
+        MESSAGE_SINGLE(NORMAL, this->logger, "CTS to "<< friends.manager->getReceiverAddress(this->pendingCTS->getCommandPool()) << " pending");
+        if(getConnector()->hasAcceptor(this->pendingCTS))
+        {
+            MESSAGE_SINGLE(NORMAL, this->logger, "Sending CTS frame to "<< friends.manager->getReceiverAddress(this->pendingCTS->getCommandPool()));
+            assure(this->ctsPrepared == wns::simulator::getEventScheduler()->getTime(),
+                   "ctsPrepared is " << this->ctsPrepared << ", but time is " <<  wns::simulator::getEventScheduler()->getTime());
+            getConnector()->getAcceptor(this->pendingCTS)->sendData(this->pendingCTS->copy());
+            this->pendingCTS =  wns::ldk::CompoundPtr();
+        }
+        else
+        {
+            return;
+        }
+        */
     }
+
     if(this->pendingRTS)
     {
-        return(this->pendingRTS);
+        assure(this->pendingMPDU, "pendingRTS but no pendingMPDU");
+        MESSAGE_SINGLE(NORMAL, this->logger, "RTS to "<< friends.manager->getReceiverAddress(this->pendingRTS->getCommandPool()) << " pending");
+        if(getConnector()->hasAcceptor(this->pendingRTS))
+        {
+            MESSAGE_SINGLE(NORMAL, this->logger, "Sending RTS frame to "<< friends.manager->getReceiverAddress(this->pendingRTS->getCommandPool()));
+            state = transmitRTS;
+            getConnector()->getAcceptor(this->pendingRTS)->sendData(this->pendingRTS->copy());
+            this->pendingRTS =  wns::ldk::CompoundPtr();
+        }
+        else
+        {
+            return;
+        }
     }
-    if(state == idle)
-    {
-        return(this->pendingMPDU);
-    }
-    return wns::ldk::CompoundPtr();
 
+    if(this->pendingMPDU)
+    {
+        if(state == idle)
+        {
+            throw wns::Exception("Received wakeup, but MPDU is pending");
+        }
+        else
+        {
+            // waiting for CTS...
+            return;
+        }
+        /*
+        MESSAGE_SINGLE(NORMAL, this->logger, "MPDU to "<< friends.manager->getReceiverAddress(this->pendingMPDU->getCommandPool()) << " pending");
+        if(getConnector()->hasAcceptor(this->pendingMPDU))
+        {
+            MESSAGE_SINGLE(NORMAL, this->logger, "Sending MPDU to "<< friends.manager->getReceiverAddress(this->pendingMPDU->getCommandPool()));
+            getConnector()->getAcceptor(this->pendingMPDU)->sendData(this->pendingMPDU->copy());
+            this->pendingMPDU =  wns::ldk::CompoundPtr();
+            getReceptor()->wakeup();
+        }
+        else
+        {
+            return;
+        }
+        */
+    }
+    getReceptor()->wakeup();
 }
 
-wns::ldk::CompoundPtr
-RTSCTS::getSomethingToSend()
+void
+RTSCTS::doOnData(const wns::ldk::CompoundPtr& compound)
 {
-    assure(this->hasSomethingToSend(), "Called getSomethingToSend without pending compound");
-
-    wns::ldk::CompoundPtr it;
-    if(this->pendingCTS)
+    if(not getFUN()->getProxy()->commandIsActivated(compound->getCommandPool(), this))
     {
-        it = this->pendingCTS;
-        assure(this->ctsPrepared == wns::simulator::getEventScheduler()->getTime(),
-               "ctsPrepared is " << this->ctsPrepared << ", but time is " <<  wns::simulator::getEventScheduler()->getTime());
-        this->pendingCTS = wns::ldk::CompoundPtr();
-        MESSAGE_SINGLE(NORMAL, this->logger, "Sending CTS frame to "<< friends.manager->getReceiverAddress(it->getCommandPool()));
-        return(it);
-    }
-    if(this->pendingRTS)
+        // deliver frame
+        MESSAGE_SINGLE(NORMAL, this->logger, "Received frame -> deliver");
+        getDeliverer()->getAcceptor(compound)->onData(compound);
+        return;
+    } // no RTSCTS command
+
+    if(getCommand(compound->getCommandPool())->peer.isRTS)
     {
-        it = this->pendingRTS;
-        this->pendingRTS = wns::ldk::CompoundPtr();
-        state = transmitRTS;
-        MESSAGE_SINGLE(NORMAL, this->logger, "Send RTS frame to "<< friends.manager->getReceiverAddress(it->getCommandPool()));
-        return(it);
+        if(nav)
+        {
+            if(friends.manager->getTransmitterAddress(compound->getCommandPool()) == navSetter)
+            {
+                MESSAGE_BEGIN(NORMAL, this->logger, m, "Incoming RTS from ");
+                m << friends.manager->getTransmitterAddress(compound->getCommandPool());
+                m << ", nav busy from " << navSetter;
+                m << " -> reply with CTS";
+                MESSAGE_END();
+
+                assure(this->pendingCTS == wns::ldk::CompoundPtr(),
+                       "Old pending CTS not transmitted");
+                this->pendingCTS = this->prepareCTS(compound);
+            }
+            else
+            {
+                MESSAGE_BEGIN(NORMAL, this->logger, m, "Incoming RTS from ");
+                m << friends.manager->getTransmitterAddress(compound->getCommandPool());
+                m << ", nav busy from " << navSetter;
+                m << " -> Drop";
+                MESSAGE_END();
+                return;
+            }
+        }
+        else
+        {
+            MESSAGE_SINGLE(NORMAL, this->logger, "Incoming RTS, nav idle -> reply with CTS");
+            assure(this->pendingCTS == wns::ldk::CompoundPtr(),
+                   "Old pending CTS not transmitted");
+            this->pendingCTS = this->prepareCTS(compound); 
+        }
+
+        // try to send CTS
+        assure(this->pendingCTS, "CTS should be pending now");
+        if(getConnector()->hasAcceptor(this->pendingCTS))
+        {
+            getConnector()->getAcceptor(this->pendingCTS)->sendData(this->pendingCTS);
+            this->pendingCTS = wns::ldk::CompoundPtr();
+        }
+        else
+        {
+            throw wns::Exception("pending CTS is not accepted");
+        }
+    } // is RTS
+    else
+    {
+        // received CTS on transmitted RTS --> successfully reserved the channel
+        // for data
+        assure(this->pendingMPDU, "Received CTS, but no pending MPDU");
+        if(state != receptionFinished)
+        {
+            MESSAGE_BEGIN(NORMAL, this->logger, m, "received CTS although state is not receptionFinished, now: ");
+            m << wns::simulator::getEventScheduler()->getTime();
+            m << ", last timeout: " << this->lastTimeout << "\n";
+            if(state == transmitRTS)
+                m << "state is transmitRTS\n";
+            if(state == waitForCTS)
+                m << "state is waitForCTS\n";
+            if(state == receiveCTS)
+                m << "state is receiveCTS\n";
+            if(state == idle)
+                m << "state is idle\n";
+            MESSAGE_END();
+        }
+        assure(state == receptionFinished,
+               "received CTS although state is idle, now: " << wns::simulator::getEventScheduler()->getTime() << ", last timeout: " << this->lastTimeout);
+        if(friends.manager->getTransmitterAddress(compound->getCommandPool())
+           != friends.manager->getReceiverAddress(this->pendingMPDU->getCommandPool()))
+        {
+                MESSAGE_SINGLE(NORMAL, this->logger,
+                               "Incoming CTS does not match the receiver's address on the pending MPDU -> do nothing");
+                return;
+        }
+        else
+        {
+            assure(this->pendingMPDU, "Received CTS, but no pendingMPDU");
+            MESSAGE_SINGLE(NORMAL, this->logger, "Received CTS, sending MPDU to "<< friends.manager->getReceiverAddress(this->pendingMPDU->getCommandPool()));
+            rtsSuccessProbe->put(this->pendingMPDU, 1);
+            state = idle;
+            if(this->hasTimeoutSet())
+            {
+                this->cancelTimeout();
+            }
+            if(getConnector()->hasAcceptor(this->pendingMPDU))
+            {
+                getConnector()->getAcceptor(this->pendingMPDU)->sendData(this->pendingMPDU->copy());
+                this->pendingMPDU =  wns::ldk::CompoundPtr();
+                // ready for new MPDU
+                getReceptor()->wakeup();
+            }
+            else
+            {
+                throw wns::Exception("pending MPDU is not accepted");
+            }
+        }
     }
-
-    it = this->pendingMPDU;
-    this->pendingMPDU = wns::ldk::CompoundPtr();
-    MESSAGE_SINGLE(NORMAL, this->logger, "Send MPDU to "<< friends.manager->getReceiverAddress(it->getCommandPool()));
-    return(it);
-}
-
-bool
-RTSCTS::hasCapacity() const
-{
-    return(this->pendingMPDU == wns::ldk::CompoundPtr());
 }
 
 void
@@ -423,7 +512,7 @@ RTSCTS::onTimeout()
 
     this->lastTimeout = wns::simulator::getEventScheduler()->getTime();
 
-    this->tryToSend();
+    getReceptor()->wakeup();
 }
 
 wns::ldk::CompoundPtr
