@@ -38,12 +38,6 @@
 #include <WIFIMAC/convergence/ITxStartEnd.hpp>
 #include <WIFIMAC/management/ProtocolCalculator.hpp>
 
-#include <WNS/ldk/FunctionalUnitRC.hpp>
-#include <WNS/ldk/CommandTypeSpecifier.hpp>
-#include <WNS/ldk/IPortID.hpp>
-#include <WNS/ldk/HasDownPort.hpp>
-#include <WNS/ldk/HasUpPort.hpp>
-
 #include <WNS/ldk/probe/Probe.hpp>
 #include <WNS/probe/bus/ContextCollector.hpp>
 
@@ -53,20 +47,6 @@
 #include <WNS/Observer.hpp>
 
 namespace wifimac { namespace lowerMAC {
-
-    class RTSCTSControl:
-        public virtual wns::ldk::IPortID
-    {
-    public:
-        static const std::string name;
-    };
-
-    class RTSCTSData:
-        public virtual wns::ldk::IPortID
-    {
-    public:
-        static const std::string name;
-    };
 
     class RTSProviderCommand
     {
@@ -115,12 +95,6 @@ namespace wifimac { namespace lowerMAC {
     */
    class RTSCTS:
         public wns::ldk::fu::Plain<RTSCTS, RTSCTSCommand>,
-        /*public wns::ldk::FunctionalUnit< RTSCTS >,
-        public wns::ldk::CommandTypeSpecifier< RTSCTSCommand >,
-        public wns::ldk::HasUpPort< RTSCTS >,
-        public wns::ldk::HasDownPort< RTSCTS, Port<RTSCTSControl> >,
-        public wns::ldk::HasDownPort< RTSCTS, Port<RTSCTSData> >,
-        public wns::Cloneable< RTSCTS >,*/
         public wns::events::CanTimeout,
         public wns::Observer<wifimac::convergence::INetworkAllocationVector>,
         public wns::Observer<wifimac::convergence::IRxStartEnd>,

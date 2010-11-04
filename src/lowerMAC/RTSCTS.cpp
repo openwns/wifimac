@@ -46,18 +46,8 @@ STATIC_FACTORY_REGISTER_WITH_CREATOR(
     "wifimac.lowerMAC.RTSCTS",
     wns::ldk::FUNConfigCreator);
 
-const std::string RTSCTSControl::name = "RTSCTSControl";
-const std::string RTSCTSData::name = "RTSCTSData";
-
 RTSCTS::RTSCTS(wns::ldk::fun::FUN* fun, const wns::pyconfig::View& config_) :
     wns::ldk::fu::Plain<RTSCTS, RTSCTSCommand>(fun),
-
-/*    wns::ldk::FunctionalUnitRC<RTSCTS>(this),
-    wns::ldk::CommandTypeSpecifier<RTSCTS>(fun),
-    wns::ldk::HasUpPort<RTSCTS>(this),
-    wns::ldk::HasDownPort<RTSCTS, wns::ldk::Port<RTSCTSControl> >(this),
-    wns::ldk::HasDownPort<RTSCTS, wns::ldk::Port<RTSCTSData> >(this),
-*/
     phyUserName(config_.get<std::string>("phyUserName")),
     managerName(config_.get<std::string>("managerName")),
     protocolCalculatorName(config_.get<std::string>("protocolCalculatorName")),
