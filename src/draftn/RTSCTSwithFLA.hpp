@@ -29,7 +29,7 @@
 #ifndef WIFIMAC_DRAFTN_RTSCTSWITHFLA_HPP
 #define WIFIMAC_DRAFTN_RTSCTSWITHFLA_HPP
 
-#include <WIFIMAC/lowerMAC/RTSCTS.hpp>
+#include <WIFIMAC/lowerMAC/NewRTSCTS.hpp>
 
 
 #include <WIFIMAC/convergence/PhyUser.hpp>

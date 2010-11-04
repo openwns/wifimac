@@ -188,7 +188,7 @@ namespace wifimac { namespace lowerMAC {
         wns::ldk::CompoundPtr pendingCTS;
         wns::ldk::CompoundPtr pendingMPDU;
 
-	wifimac::management::ProtocolCalculator *protocolCalculator;
+        wifimac::management::ProtocolCalculator *protocolCalculator;
         struct Friends
         {
             wifimac::convergence::PhyUser* phyUser;

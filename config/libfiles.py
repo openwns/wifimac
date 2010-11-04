@@ -44,7 +44,7 @@ srcFiles = [
 
     # lower MAC
     'src/lowerMAC/Manager.cpp',
-    'src/lowerMAC/RTSCTS.cpp',
+    'src/lowerMAC/NewRTSCTS.cpp',
     'src/lowerMAC/StopAndWaitARQ.cpp',
     'src/lowerMAC/RateAdaptation.cpp',
     'src/lowerMAC/TXOP.cpp',
@@ -146,7 +146,7 @@ hppFiles = [
     'src/lowerMAC/DuplicateFilter.hpp',
     'src/lowerMAC/ITransmissionCounter.hpp',
     'src/lowerMAC/Manager.hpp',
-    'src/lowerMAC/RTSCTS.hpp',
+    'src/lowerMAC/NewRTSCTS.hpp',
     'src/lowerMAC/RateAdaptation.hpp',
     'src/lowerMAC/StopAndWaitARQ.hpp',
     'src/lowerMAC/TXOP.hpp',
