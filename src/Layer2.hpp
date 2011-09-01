@@ -71,7 +71,6 @@ namespace wifimac
 		// ComponentInterface
 		virtual void onNodeCreated();
 		virtual void onWorldCreated();
-		virtual void onShutdown();
 
 		/** @brief Registration of transceiver management entity*/
         void registerManager(wifimac::lowerMAC::Manager* manager,
