@@ -122,7 +122,7 @@ Layer2::registerManager(wifimac::lowerMAC::Manager* manager,
         // Hop-cost from this transceiver to the DLL is always for free and
         // works in both directions
         ps->createPeerLink(address, this->dll::Layer2::getDLLAddress(),
-                           wifimac::pathselection::Metric::Metric(0));
+                           wifimac::pathselection::Metric(0));
         ps->createPeerLink(this->dll::Layer2::getDLLAddress(), address,
                            wifimac::pathselection::Metric(0));
     }
